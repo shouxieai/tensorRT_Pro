@@ -35,3 +35,4 @@
 
 *.trtmodel
 *.onnx
+/workspace/pro
