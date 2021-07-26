@@ -23,6 +23,7 @@ python export.py
 3. 复制模型并执行
 ```bash
 cp yolov5/yolov5s.onnx tensorRT_cpp/workspace/
+cd tensorRT_cpp
 make run -j32
 ```
 
