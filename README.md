@@ -29,6 +29,7 @@ make run -j32
 - 下面是效果图workspace/2.draw.jpg
 ---
 <img src="workspace/2.draw.jpg" width="300px" />
+
 ---
 
 ## 项目的配置
@@ -48,7 +49,7 @@ TRTBuilder::compile(
   TRTBuilder::TRTMode_FP32,   // 使用fp32模型编译
   {},                         // caffe时指定输出节点
   3,                          // max batch size
-  TRTBuilder::ModelSource("plugin.onnx"),  // onnx 文件
+  "plugin.onnx",  // onnx 文件
   "plugin.fp32.trtmodel",     // 保存的文件路径
   {},                         // 重新定制输入的shape
   false                       // 是否动态batch size
@@ -79,7 +80,7 @@ TRTBuilder::compile(
   TRTBuilder::TRTMode_INT8,   // 选择INT8
   {},                         // 对于caffe的输出节点名称
   3,                          // max batch size
-  TRTBuilder::ModelSource("yolov5s.onnx"),   // onnx文件
+  "yolov5s.onnx",             // onnx文件
   model_file,                 // 编译后保存的文件
   {},                         // 重定义输入的shape
   false,                      // 是否为动态batch size
