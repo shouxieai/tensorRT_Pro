@@ -27,7 +27,7 @@ make run -j32
 ```
 
 - 下面是效果图workspace/2.draw.jpg
-<div style="text-align: center"><img style="width:300px" src="workspace/2.draw.jpg"/></div>
+![](workspace/2.draw.jpg)
 
 
 ## 项目的配置
