@@ -28,7 +28,6 @@ make run -j32
 
 - 下面是效果图workspace/2.draw.jpg
 ---
-<img src="workspace/5.draw.jpg" width="300px" />
 <img src="workspace/2.draw.jpg" width="300px" />
 ---
 
