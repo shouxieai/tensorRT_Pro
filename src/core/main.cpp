@@ -273,7 +273,7 @@ void forward_engine(const string& engine_file){
             }
         }
 
-        // 对整个图做nms
+        // 对整个图做nms，不同类别之间互不干扰
         nms(image_based_boxes);
     }
 
@@ -283,10 +283,13 @@ void forward_engine(const string& engine_file){
         auto image = cv::imread(iLogger::format("%d.jpg", ibatch + 1));
         auto& image_based_boxes = batch_object_boxes[ibatch];
         for(auto& obj : image_based_boxes){
+
+            // 使用根据类别计算的随机颜色填充
             uint8_t b, g, r;
             tie(r, g, b) = iLogger::random_color(obj.class_label);
             cv::rectangle(image, cv::Point(obj.left, obj.top), cv::Point(obj.right, obj.bottom), cv::Scalar(b, g, r), 5);
 
+            // 绘制类别名字
             auto name = cocolabels[obj.class_label];
             int width = strlen(name) * 18 + 10;
             cv::rectangle(image, cv::Point(obj.left-3, obj.top-33), cv::Point(obj.left + width, obj.top), cv::Scalar(b, g, r), -1);
@@ -297,6 +300,8 @@ void forward_engine(const string& engine_file){
 }
 
 void test_plugin(){
+
+    // plugin.onnx是通过test_plugin.py生成的
     TRTBuilder::compile(
         TRTBuilder::TRTMode_FP32, {}, 3, "plugin.onnx", "plugin.fp32.trtmodel", {}, false
     );
@@ -308,6 +313,7 @@ void test_plugin(){
     auto input1 = engine->input(1);
     auto output = engine->output(0);
 
+    // 推理使用到了插件
     INFO("input0: %s", input0->shape_string());
     INFO("input1: %s", input1->shape_string());
     INFO("output: %s", output->shape_string());
