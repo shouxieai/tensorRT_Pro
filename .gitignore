@@ -30,3 +30,8 @@
 *.exe
 *.out
 *.app
+
+/objs
+
+*.trtmodel
+*.onnx

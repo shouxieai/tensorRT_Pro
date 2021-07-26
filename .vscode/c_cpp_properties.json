@@ -1,0 +1,32 @@
+{
+    "configurations": [
+        {
+            "name": "Linux",
+            "includePath": [
+                "${workspaceFolder}/src/**",
+                "/data/datav/expstation/lean/protobuf3.11.4/include/**",
+                "/data/datav/expstation/lean/opencv4.2.0/include/opencv4/**",
+                "/data/datav/expstation/lean/cuda-10.2/include/**",
+                "/data/datav/sxai/lean/TensorRT-8.0.1.6/include/**"
+            ],
+            "defines": ["HAS_CUDA_HALF", "__CUDACC__"],
+            "compilerPath": "/usr/bin/gcc", 
+            "cStandard": "gnu11",
+            "cppStandard": "gnu++11",
+            "intelliSenseMode": "linux-gcc-x64",
+            "configurationProvider": "ms-vscode.makefile-tools",
+            "browse": {
+                "path": [
+                    "${workspaceFolder}/src/**",
+                    "/data/datav/expstation/lean/protobuf3.11.4/include/**",
+                    "/data/datav/expstation/lean/opencv4.2.0/include/opencv4/**",
+                    "/data/datav/expstation/lean/cuda-10.2/include/**",
+                    "/data/datav/sxai/lean/TensorRT-8.0.1.6/include/**"
+                ],
+                "limitSymbolsToIncludedHeaders": false,
+                "databaseFilename": ""
+            }
+        }
+    ],
+    "version": 4
+}
