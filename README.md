@@ -49,7 +49,7 @@ TRTBuilder::compile(
   TRTBuilder::TRTMode_FP32,   // 使用fp32模型编译
   {},                         // caffe时指定输出节点
   3,                          // max batch size
-  "plugin.onnx",  // onnx 文件
+  "plugin.onnx",              // onnx 文件
   "plugin.fp32.trtmodel",     // 保存的文件路径
   {},                         // 重新定制输入的shape
   false                       // 是否动态batch size
