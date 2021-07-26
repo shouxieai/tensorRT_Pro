@@ -109,78 +109,6 @@ namespace iLogger{
 		return time_string;
 	}
 
-	time_t last_modify(const string& file){
-
-#if defined(U_OS_LINUX)
-		struct stat st;
-		stat(file.c_str(), &st);
-		return st.st_mtim.tv_sec;
-#elif defined(U_OS_WINDOWS)
-		INFOW("LastModify has not support on windows os");
-		return 0;
-#endif
-	}
-
-	void sleep(int ms) {
-		this_thread::sleep_for(std::chrono::milliseconds(ms));
-	}
-
-	int get_month_by_name(char* month){
-		if(strcmp(month,"Jan") == 0)return 0;
-		if(strcmp(month,"Feb") == 0)return 1;
-		if(strcmp(month,"Mar") == 0)return 2;
-		if(strcmp(month,"Apr") == 0)return 3;
-		if(strcmp(month,"May") == 0)return 4;
-		if(strcmp(month,"Jun") == 0)return 5;
-		if(strcmp(month,"Jul") == 0)return 6;
-		if(strcmp(month,"Aug") == 0)return 7;
-		if(strcmp(month,"Sep") == 0)return 8;
-		if(strcmp(month,"Oct") == 0)return 9;
-		if(strcmp(month,"Nov") == 0)return 10;
-		if(strcmp(month,"Dec") == 0)return 11;
-		return -1;
-	}
-
-	int get_week_day_by_name(char* wday){
-		if(strcmp(wday,"Sun") == 0)return 0;
-		if(strcmp(wday,"Mon") == 0)return 1;
-		if(strcmp(wday,"Tue") == 0)return 2;
-		if(strcmp(wday,"Wed") == 0)return 3;
-		if(strcmp(wday,"Thu") == 0)return 4;
-		if(strcmp(wday,"Fri") == 0)return 5;
-		if(strcmp(wday,"Sat") == 0)return 6;
-		return -1;
-	}
-
-	time_t gmtime2ctime(const string& gmt){
-
-		char week[4] = {0};
-		char month[4] = {0};
-		tm date;
-		sscanf(gmt.c_str(),"%3s, %2d %3s %4d %2d:%2d:%2d GMT",week,&date.tm_mday,month,&date.tm_year,&date.tm_hour,&date.tm_min,&date.tm_sec);
-		date.tm_mon = get_month_by_name(month);
-		date.tm_wday = get_week_day_by_name(week);
-		date.tm_year = date.tm_year - 1900;
-		return mktime(&date);
-	}
-
-	string gmtime(time_t t){
-		t += 28800;
-		tm* gmt = ::gmtime(&t);
-
-		// http://en.cppreference.com/w/c/chrono/strftime
-		// e.g.: Sat, 22 Aug 2015 11:48:50 GMT
-		//       5+   3+4+   5+   9+       3   = 29
-		const char* fmt = "%a, %d %b %Y %H:%M:%S GMT";
-		char tstr[30];
-		strftime(tstr, sizeof(tstr), fmt, gmt);
-		return tstr;
-	}
-
-	string gmtime_now() {
-		return gmtime(time(nullptr));
-	}
-
     bool mkdir(const string& path){
 #ifdef U_OS_WINDOWS
 		return CreateDirectoryA(path.c_str(), nullptr);
@@ -224,18 +152,6 @@ namespace iLogger{
 			iter_ptr++;
 		}
 		return true;
-	}
-
-	bool isfile(const string& file){
-
-#if defined(U_OS_LINUX)
-		struct stat st;
-		stat(file.c_str(), &st);
-		return S_ISREG(st.st_mode);
-#elif defined(U_OS_WINDOWS)
-		INFOW("is_file has not support on windows os");
-		return 0;
-#endif
 	}
 
     FILE* fopen_mkdirs(const string& path, const string& mode){
@@ -300,21 +216,6 @@ namespace iLogger{
 		return path.substr(p, u - p);
 	}
 
-	bool begin_with(const string& str, const string& with){
-
-		if (str.length() < with.length())
-			return false;
-		return strncmp(str.c_str(), with.c_str(), with.length()) == 0;
-	}
-
-	bool end_with(const string& str, const string& with){
-
-		if (str.length() < with.length())
-			return false;
-
-		return strncmp(str.c_str() + str.length() - with.length(), with.c_str(), with.length()) == 0;
-	}
-
     long long timestamp_now() {
 		return chrono::duration_cast<chrono::milliseconds>(chrono::system_clock::now().time_since_epoch()).count();
 	}
@@ -327,13 +228,9 @@ namespace iLogger{
 		shared_ptr<thread> flush_thread_;
 		atomic<bool> keep_run_{false};
 		shared_ptr<FILE> handler;
-		bool logger_shutdown{false};
 
 		void write(const string& line) {
-
 			lock_guard<mutex> l(logger_lock_);
-			if(logger_shutdown) 
-				return;
 
 			if (!keep_run_) {
 
@@ -419,14 +316,9 @@ namespace iLogger{
 		}
 
 		void close(){
-			{
-				lock_guard<mutex> l(logger_lock_);
-				if (logger_shutdown) return;
-
-				logger_shutdown = true;
-			};
 
 			if (!keep_run_) return;
+
 			keep_run_ = false;
 			flush_thread_->join();
 			flush_thread_.reset();
@@ -438,7 +330,7 @@ namespace iLogger{
 		}
 	}__g_logger;
 
-	void destroy_logger(){
+	void destroy(){
 		__g_logger.close();
 	}
 
@@ -471,7 +363,7 @@ namespace iLogger{
 		}
 	}
 
-    void set_logger_save_directory(const string& loggerDirectory){
+    void set_save_directory(const string& loggerDirectory){
         __g_logger.set_save_directory(loggerDirectory);
     }
 
@@ -527,17 +419,15 @@ namespace iLogger{
             fprintf(stdout, "%s\n", buffer);
         }
 
-		if(!__g_logger.logger_directory.empty()){
-	#ifdef U_OS_LINUX
-			// remove save color txt
-			remove_color_text(buffer);
-	#endif 
-			__g_logger.write(buffer);
-			if (level == ILOGGER_FATAL) {
-				__g_logger.flush();
-				fflush(stdout);
-				abort();
-			}
+#ifdef U_OS_LINUX
+		// remove save color txt
+		remove_color_text(buffer);
+#endif 
+		__g_logger.write(buffer);
+		if (level == ILOGGER_FATAL) {
+			__g_logger.flush();
+			fflush(stdout);
+			abort();
 		}
     }
 
