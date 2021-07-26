@@ -27,8 +27,10 @@ make run -j32
 ```
 
 - 下面是效果图workspace/2.draw.jpg
-![](workspace/2.draw.jpg)
+---
+<img src="workspace/2.draw.jpg" width="300px" />
 
+---
 
 ## 项目的配置
 1. 推荐使用Linux、VSCode，当然也可以支持windows
