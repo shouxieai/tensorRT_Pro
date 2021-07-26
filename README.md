@@ -27,7 +27,7 @@ make run -j32
 ```
 
 - 下面是效果图workspace/2.draw.jpg
-![](workspace/2.draw.jpg)
+<div style="text-align: center"><img style="width:300px" src="workspace/2.draw.jpg"/></div>
 
 
 ## 项目的配置
@@ -195,9 +195,3 @@ Engine 0x23dd7780 detail
 [2021-07-22 14:37:42][info][_main.cpp:124]:outputs[1].size = 5
 [2021-07-22 14:37:42][info][_main.cpp:124]:outputs[2].size = 1
 ```
-
-
-## 关于手写AI的讨论社区-群
-关于这方面的讨论，可以添加微信进群
-<div style="text-align: center"><img style="width:200px;" src="http://www.zifuture.com:8090/upload/2021/07/WchatQR-0e86265a15894f339bea06e7b1b9fe29.jpg"/>
-</div>
