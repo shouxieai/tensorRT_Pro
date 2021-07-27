@@ -376,6 +376,8 @@ void test_fp32(){
     auto model_file = "yolov5s.fp32.trtmodel";
     int test_batch_size = 5;
     
+    // 动态batch和静态batch，如果你想要弄清楚，请打开http://www.zifuture.com:8090/
+    // 找到右边的二维码，扫码加好友后进群交流（免费哈，就是技术人员一起沟通）
     if(!iLogger::exists(model_file)){
         TRTBuilder::compile(
             TRTBuilder::TRTMode_FP32,   // 编译方式有，FP32、FP16、INT8
@@ -399,5 +401,6 @@ int main(){
     }
 
     test_fp32();
+    test_plugin();
     return 0;
 }
