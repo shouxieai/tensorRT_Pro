@@ -20,6 +20,7 @@ make run -j32
 ## YoloV5-ONNX推理支持-官方导出模型
 - yolov5的onnx，你的pytorch版本>=1.7时，导出的onnx模型可以直接被当前框架所使用
 - 你的pytorch版本低于1.7时，或者对于yolov5其他版本（2.0、3.0、4.0），可以对opset进行简单改动后直接被框架所支持
+- 如果你想实现低版本pytorch的tensorRT推理、动态batchsize等更多更高级的问题，请打开我们[博客地址](http://zifuture.com:8090)后找到二维码进群交流
 1. 下载yolov5
 ```bash
 git clone git@github.com:ultralytics/yolov5.git
