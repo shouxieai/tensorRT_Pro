@@ -11,8 +11,15 @@ class HSwishImplementation(torch.autograd.Function):
     # 属性的定义会在对应节点生成attributes，并传给tensorRT的onnx解析器做处理
     @staticmethod
     def symbolic(g, input, bias):
+        # 如果配合当前tensorRT框架，则必须名称为Plugin，参考：tensorRT/src/tensorRT/onnx_parser/builtin_op_importers.cpp的160行定义
+        # 若你想自己命名，可以考虑做类似修改即可
+        #
+        # name_s表示，name是string类型的，对应于C++插件的名称，参考：tensorRT/src/tensorRT/onnxplugin/plugins/HSwish.cu的82行定义的名称
+        # info_s表示，info是string类型的，通常我们可以利用json.dumps，传一个复杂的字符串结构，然后在CPP中json解码即可。参考：
+        #             sxai/tensorRT/src/tensorRT/onnxplugin/plugins/HSwish.cu的39行
         return g.op("Plugin", input, bias, name_s="HSwish", info_s=json.dumps({"alpha": 3.5, "beta": 2.88}))
 
+    # 这里的forward只是为了让onnx导出时可以执行，实际上写与不写意义不大，只需要返回同等的输出维度即可
     @staticmethod
     def forward(ctx, i, bias):
         ctx.save_for_backward(i)
