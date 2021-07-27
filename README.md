@@ -43,6 +43,8 @@ make run -j32
 ---
 
 ## 项目依赖的配置
+- 考虑方便，这里有打包好的依赖项
+    - 下载地址：[lean-tensorRT8.0.1.6-protobuf3.11.4-cudnn8.2.2.tar.gz](http://zifuture.com:1556/fs/25.shared/lean-tensorRT8.0.1.6-protobuf3.11.4-cudnn8.2.2.tar.gz)
 1. 推荐使用Linux、VSCode，当然也可以支持windows
 2. 在Makefile中配置你的cudnn、cuda、tensorRT8.0、protobuf路径
 3. 在.vscode/c_cpp_properties.json中配置你的库路径
