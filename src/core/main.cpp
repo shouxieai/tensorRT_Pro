@@ -301,6 +301,10 @@ void forward_engine(const string& engine_file){
 
 void test_plugin(){
 
+    // 通过以下代码即可生成plugin.onnx
+    // cd workspace
+    // python test_plugin.py
+
     // plugin.onnx是通过test_plugin.py生成的
     TRTBuilder::compile(
         TRTBuilder::TRTMode_FP32, {}, 3, "plugin.onnx", "plugin.fp32.trtmodel", {}, false
@@ -388,6 +392,12 @@ void test_fp32(){
 }
 
 int main(){
+
+    if(!iLogger::exists("yolov5s.onnx")){
+        INFO("Auto download yolov5s.onnx");
+        system("wget http://zifuture.com:1556/fs/25.shared/yolov5s.onnx");
+    }
+
     test_fp32();
     return 0;
 }

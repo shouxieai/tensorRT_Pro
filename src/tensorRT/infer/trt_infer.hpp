@@ -16,7 +16,7 @@
 #endif // USE_OPENCV
 
 #ifdef HAS_CUDA_HALF
-class __half;
+struct __half;
 #endif // HAS_CUDA_HALF
 
 struct CUstream_st;
@@ -91,6 +91,7 @@ namespace TRTInfer {
 		}
 
 		int numel();
+		int ndims(){return shape_.size();}
 		inline int size(int index) {return shape_[index];}
 		inline int shape(int index) {return shape_[index];}
 		inline DataType type() const { return dtType_; }
@@ -177,6 +178,7 @@ namespace TRTInfer {
 		}
 
 		void compute_shape_string();
+		void adajust_memory_by_update_dims_or_type();
 
 	private:
 		std::vector<int> resized_dim_, offset_index_;

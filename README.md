@@ -8,7 +8,16 @@
 7. yolov5的推理作为案例
 8. c++类库，对编译和推理做了封装，对tensor做了封装，支持n维的tensor管理
 
-## YoloV5-ONNX推理支持
+## YoloV5-ONNX推理支持-下载的模型
+- 这个yolov5s.onnx模型使用官方最新版本直接导出得到
+- 配置好依赖的tensorRT、cuda、cudnn，参考下面的配置节点
+```bash
+git clone git@github.com:shouxieai/tensorRT_cpp.git
+cd tensorRT_cpp
+make run -j32
+```
+
+## YoloV5-ONNX推理支持-官方导出模型
 - yolov5的onnx，你的pytorch版本>=1.7时，导出的onnx模型可以直接被当前框架所使用
 - 你的pytorch版本低于1.7时，或者对于yolov5其他版本（2.0、3.0、4.0），可以对opset进行简单改动后直接被框架所支持
 1. 下载yolov5
@@ -33,7 +42,7 @@ make run -j32
 
 ---
 
-## 项目的配置
+## 项目依赖的配置
 1. 推荐使用Linux、VSCode，当然也可以支持windows
 2. 在Makefile中配置你的cudnn、cuda、tensorRT8.0、protobuf路径
 3. 在.vscode/c_cpp_properties.json中配置你的库路径

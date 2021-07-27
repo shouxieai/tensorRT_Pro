@@ -51,8 +51,13 @@ include_paths := $(foreach item,$(include_paths),-I$(item))
 library_paths := $(foreach item,$(library_paths),-L$(item))
 link_librarys := $(foreach item,$(link_librarys),-l$(item))
 
-cpp_compile_flags := -std=c++11 -fPIC -m64 -g -fopenmp -w -O0 -DHAS_CUDA_HALF
-cu_compile_flags  := -std=c++11 -m64 -Xcompiler -fPIC -g -w -gencode=arch=compute_75,code=sm_75 -O0 -DHAS_CUDA_HALF
+# 如果要支持FP16的插件推理（非插件不需要），请在编译选项上加-DHAS_CUDA_HALF，CPP和CU都加
+# 这种特殊的宏可以在.vscode/c_cpp_properties.json文件中configurations下的defines中也加进去，使得看代码的时候
+# 效果与编译一致
+# support_define    := -DHAS_CUDA_HALF
+support_define    := 
+cpp_compile_flags := -std=c++11 -fPIC -m64 -g -fopenmp -w -O0 $(support_define)
+cu_compile_flags  := -std=c++11 -m64 -Xcompiler -fPIC -g -w -gencode=arch=compute_75,code=sm_75 -O0 $(support_define)
 link_flags        := -pthread -fopenmp
 
 cpp_compile_flags += $(include_paths)

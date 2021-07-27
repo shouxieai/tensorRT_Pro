@@ -3,15 +3,11 @@
 #include "HSwish.hpp"
 
 #ifdef HAS_CUDA_HALF
+#include <cuda_fp16.hpp>
 typedef TRTInfer::halfloat halfloat;
 #endif
 
-template<typename _T>
-__global__ void HSwishKernel(_T* input, _T* output, int edge);
-
-
-template<>
-__global__ void HSwishKernel(float* input, float* output, int edge) {
+static __global__ void hswish_kernel_fp32(float* input, float* output, int edge) {
 
     KernelPositionBlock;
     float x = input[position];
@@ -21,8 +17,7 @@ __global__ void HSwishKernel(float* input, float* output, int edge) {
 }
 
 #ifdef HAS_CUDA_HALF
-template<>
-__global__ void HSwishKernel(halfloat* input, halfloat* output, int edge) {
+static __global__ void hswish_kernel_fp16(halfloat* input, halfloat* output, int edge) {
 
 	KernelPositionBlock;
 
@@ -51,8 +46,14 @@ nvinfer1::Dims HSwish::outputDims(int index, const nvinfer1::Dims* inputDims, in
 std::shared_ptr<LayerConfig> HSwish::config(const std::string& layerName) {
 	auto cfg = std::shared_ptr<LayerConfig>(new HSwishConfig());
 
-	//定义我们这个插件支持half和float格式
-	cfg->supportDataType_ = {nvinfer1::DataType::kHALF, nvinfer1::DataType::kFLOAT};
+	#ifdef HAS_CUDA_HALF
+		// 定义我们这个插件支持half和float格式
+		// 如果支持多个，则tensorRT会实际执行不同格式，进行推理测试，以获取速度最快的那个类型
+		// cfg->supportDataType_ = {nvinfer1::DataType::kHALF, nvinfer1::DataType::kFLOAT};
+		cfg->supportDataType_ = {nvinfer1::DataType::kHALF};
+	#else
+		cfg->supportDataType_ = {nvinfer1::DataType::kFLOAT};
+	#endif // HAS_CUDA_HALF
 	return cfg;
 }
 
@@ -63,16 +64,18 @@ int HSwish::enqueue(const std::vector<GTensor>& inputs, std::vector<GTensor>& ou
 	auto block = cuda::block_dims(count);
 
 	if (config_->configDataType_ == TRTInfer::DataType::dtFloat) {
-		HSwishKernel <<<grid, block, 0, stream >>> (inputs[0].ptr<float>(), outputs[0].ptr<float>(), count);
+		INFO("enqueue for float");
+		hswish_kernel_fp32 <<<grid, block, 0, stream >>> (inputs[0].ptr<float>(), outputs[0].ptr<float>(), count);
 	}
 
 	#ifdef HAS_CUDA_HALF
 		else if (config_->configDataType_ == TRTInfer::DataType::dtHalfloat) {
-			HSwishKernel <<<grid, block, 0, stream >>> (inputs[0].ptr<halfloat>(), outputs[0].ptr<halfloat>(), count);
+			INFO("enqueue for half");
+			hswish_kernel_fp16 <<<grid, block, 0, stream >>> (inputs[0].ptr<halfloat>(), outputs[0].ptr<halfloat>(), count);
 		}
 	#else
 		else{
-			LOG(LFATAL) << "not implement function";
+			INFOF("not implement function");
 		}
 	#endif
 

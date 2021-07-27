@@ -9,7 +9,7 @@
                 "/data/datav/expstation/lean/cuda-10.2/include/**",
                 "/data/datav/sxai/lean/TensorRT-8.0.1.6/include/**"
             ],
-            "defines": ["HAS_CUDA_HALF", "__CUDACC__"],
+            "defines": ["__CUDACC__"],
             "compilerPath": "/usr/bin/gcc", 
             "cStandard": "gnu11",
             "cppStandard": "gnu++11",

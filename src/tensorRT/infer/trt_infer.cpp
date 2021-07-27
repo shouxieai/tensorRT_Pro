@@ -134,6 +134,10 @@ namespace TRTInfer {
 	}
 
 	void Tensor::compute_shape_string(){
+
+		// clean string
+		shape_string_[0] = 0;
+
 		char* buffer = shape_string_;
 		size_t buffer_size = sizeof(shape_string_);
 		for(int i = 0; i < shape_.size(); ++i){
@@ -158,7 +162,10 @@ namespace TRTInfer {
 		release();
 	}
 
-	Tensor::Tensor(const std::vector<int>& dims, DataType dtType):Tensor(dims.size(), dims.data(), dtType){}
+	Tensor::Tensor(const std::vector<int>& dims, DataType dtType){
+		this->dtType_ = dtType;
+		resize(dims);
+	}
 
 	Tensor::Tensor(int ndims, const int* dims, DataType dtType) {
 
@@ -166,7 +173,9 @@ namespace TRTInfer {
 		resize(ndims, dims);
 	}
 
-	Tensor::Tensor(){}
+	Tensor::Tensor(){
+		shape_string_[0] = 0;
+	}
 
 	void Tensor::release() {
 		memory_.release_all();
@@ -216,7 +225,6 @@ namespace TRTInfer {
 	void Tensor::resize(int ndims, const int* dims) {
 
 		vector<int> setup_dims(ndims);
-		int numel = ndims == 0 ? 0 : 1;
 		for(int i = 0; i < ndims; ++i){
 			int dim = dims[i];
 			if(dim == -1){
@@ -225,20 +233,23 @@ namespace TRTInfer {
 				dim = shape_[i];
 			}
 			setup_dims[i] = dim;
-			numel *= setup_dims[i];
 		}
+		this->shape_ = setup_dims;
+		this->adajust_memory_by_update_dims_or_type();
+		this->compute_shape_string();
+	}
 
-		int needed_size = numel * element_size();
+	void Tensor::adajust_memory_by_update_dims_or_type(){
+		
+		int needed_size = this->numel() * element_size();
 		if (needed_size > capacity_) {
-			release();
-
-			this->bytes_ = needed_size;
+			memory_.release_all();
+			capacity_ = 0;
+			bytes_ = 0;
+			head_ = DataHead_Init;
 			this->capacity_ = needed_size;
 		}
-
-		this->shape_ = setup_dims;
 		this->bytes_ = needed_size;
-		this->compute_shape_string();
 	}
 
 	void Tensor::synchronize(){ 
@@ -292,13 +303,12 @@ namespace TRTInfer {
 				*dst++ = *src++;
 
 			this->dtType_ = DataType::dtFloat;
-
-			resize(-1);
+			adajust_memory_by_update_dims_or_type();
 			memcpy(cpu(), convert_memory, bytes_);
 			free(convert_memory);
 
 		#else
-			LOG(LFATAL) << "not implement function";
+			INFOF("not implement function");
 		#endif
 	}
 
@@ -321,7 +331,7 @@ namespace TRTInfer {
 			*dst++ = *src++;
 
 		this->dtType_ = DataType::dtHalfloat;
-		resize(-1);
+		adajust_memory_by_update_dims_or_type();
 		memcpy(cpu(), convert_memory, bytes_);
 		free(convert_memory);
 	}
@@ -340,7 +350,7 @@ namespace TRTInfer {
 				for (int i = 0; i < c; ++i)
 					*ptr++ = value;
 			#else
-				LOG(LFATAL) << "not implement function";
+				INFOF("not implement function");
 			#endif
 		}
 	}
