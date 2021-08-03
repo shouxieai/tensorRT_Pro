@@ -19,9 +19,9 @@ cu_objs := $(subst src/,objs/,$(cu_objs))
 #    tensorRT下载GA版本（通用版、稳定版），EA（尝鲜版本）不要
 # 5. cuda10.2，也可以是11.x看搭配（请自行下载安装）
 
-lean_protobuf  := /data/datav/sxai/lean/protobuf3.11.4
-lean_tensor_rt := /data/datav/sxai/lean/TensorRT-8.0.1.6
-lean_cudnn     := /data/datav/sxai/lean/cudnn8.2.2.26
+lean_protobuf  := /data/sxai/lean/protobuf3.11.4
+lean_tensor_rt := /data/sxai/lean/TensorRT-8.0.1.6
+lean_cudnn     := /data/sxai/lean/cudnn8.2.2.26
 lean_opencv    := /data/datav/expstation/lean/opencv4.2.0
 lean_cuda      := /data/datav/expstation/lean/cuda-10.2
 

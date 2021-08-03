@@ -29,6 +29,9 @@
 // 日志打印使用的文件
 #include <common/ilogger.hpp>
 
+// 封装的方式测试
+#include "yolov5.hpp"
+
 using namespace std;
 
 
@@ -111,10 +114,6 @@ struct AffineMatrix{
     cv::Mat i2d_mat(){
         return cv::Mat(2, 3, CV_32F, i2d);
     }
-
-    cv::Mat d2i_mat(){
-        return cv::Mat(2, 3, CV_32F, d2i);
-    }
 };
 
 struct ObjectBox{
@@ -145,22 +144,10 @@ float iou(const ObjectBox& a, const ObjectBox& b){
 // 执行完后还原即可，这样不同类别之间的iou会很小甚至为0
 void nms(vector<ObjectBox>& objs, float threshold=0.5){
 
-    // 这里定义日常的图像最大大小，每个框的坐标会增加class * MAX_IMAGE_SIZE
-    const int MAX_IMAGE_SIZE = 4096;
-
     // 对框排序，基于置信度
     std::sort(objs.begin(), objs.end(), [](ObjectBox& a, ObjectBox& b){
         return a.confidence > b.confidence;
     });
-
-    // 这里把框的坐标增加类别号 * MAX_IMAGE_SIZE，避免不同类别之间产生影响
-    for(int i = 0; i < objs.size(); ++i){
-        auto& obj = objs[i];
-        obj.left += obj.class_label * MAX_IMAGE_SIZE;
-        obj.top += obj.class_label * MAX_IMAGE_SIZE;
-        obj.right += obj.class_label * MAX_IMAGE_SIZE;
-        obj.bottom += obj.class_label * MAX_IMAGE_SIZE;
-    }
 
     vector<bool> removed_flags(objs.size());
     for(int i = 0; i < objs.size(); ++i){
@@ -169,22 +156,17 @@ void nms(vector<ObjectBox>& objs, float threshold=0.5){
             continue;
 
         for(int j = i + 1; j < objs.size(); ++j){
-            if(iou(objs[i], objs[j]) >= threshold)
-                removed_flags[j] = true;
+            if(objs[i].class_label == objs[j].class_label){
+                if(iou(objs[i], objs[j]) >= threshold)
+                    removed_flags[j] = true;
+            }
         }
     }
 
-    // 移除被删掉的框，同时恢复需要保留的框
+    // 移除被删掉的框
     for(int i = (int)objs.size() - 1; i >= 0; --i){
         if(removed_flags[i])
             objs.erase(objs.begin() + i);
-        else{
-            auto& obj = objs[i];
-            obj.left -= obj.class_label * MAX_IMAGE_SIZE;
-            obj.top -= obj.class_label * MAX_IMAGE_SIZE;
-            obj.right -= obj.class_label * MAX_IMAGE_SIZE;
-            obj.bottom -= obj.class_label * MAX_IMAGE_SIZE;
-        }
     }
 }
 
@@ -201,6 +183,7 @@ void forward_engine(const string& engine_file){
     iLogger::set_log_level(ILOGGER_VERBOSE);
 
     // 加载tensorRT编译好的模型，并打印模型的情况
+    INFO("Load engine %s", engine_file.c_str());
     auto engine = TRTInfer::load_engine(engine_file);
     int test_batch_size = engine->get_max_batch_size();
     engine->print();
@@ -225,10 +208,8 @@ void forward_engine(const string& engine_file){
 
         cv::cvtColor(image, image, cv::COLOR_BGR2RGB);
         cv::warpAffine(image, image, affine_matrix.i2d_mat(), input_size, 1, cv::BORDER_CONSTANT, cv::Scalar::all(114));
-
-        float mean[] = {0, 0, 0};
-        float std[] = {1, 1, 1};
-        input->set_norm_mat(ibatch, image, mean, std);
+        image.convertTo(image, CV_32F, 1 / 255.0f);
+        input->set_mat(ibatch, image);
     }
 
     // 进行推理，这里的false是指，执行异步操作，即立马返回
@@ -296,6 +277,8 @@ void forward_engine(const string& engine_file){
             cv::rectangle(image, cv::Point(obj.left-3, obj.top-33), cv::Point(obj.left + width, obj.top), cv::Scalar(b, g, r), -1);
             cv::putText(image, iLogger::format("%s", name), cv::Point(obj.left, obj.top-5), 0, 1, cv::Scalar::all(0), 2, 16);
         }
+
+        INFO("Save to %d.draw.jpg", ibatch + 1);
         cv::imwrite(iLogger::format("%d.draw.jpg", ibatch + 1), image);
     }
 }
@@ -394,6 +377,61 @@ void test_fp32(){
     forward_engine(model_file);
 }
 
+void test_library_yolov5_hpp(){
+
+    iLogger::set_log_level(ILOGGER_VERBOSE);
+    INFO("===================== test library yolov5.hpp ==================================");
+
+    auto onnx_file      = "yolov5s.onnx";
+    auto model_file     = "yolov5s.fp32.trtmodel";
+    int test_batch_size = 5;
+    
+    // 动态batch和静态batch，如果你想要弄清楚，请打开http://www.zifuture.com:8090/
+    // 找到右边的二维码，扫码加好友后进群交流（免费哈，就是技术人员一起沟通）
+    if(!iLogger::exists(model_file)){
+        TRTBuilder::compile(
+            TRTBuilder::TRTMode_FP32,   // 编译方式有，FP32、FP16、INT8
+            {},                         // onnx时无效，caffe的输出节点标记
+            test_batch_size,            // 指定编译的batch size
+            onnx_file,                  // 需要编译的onnx文件
+            model_file,                 // 储存的模型文件
+            {},                         // 指定需要重定义的输入shape，这里可以对onnx的输入shape进行重定义
+            false                       // 是否采用动态batch维度，true采用，false不采用，使用静态固定的batch size
+        );
+    }
+
+    auto engine = YoloV5::create_infer(model_file, 0);
+    if(engine == nullptr){
+        INFOE("Engine is nullptr");
+        return;
+    }
+
+    vector<cv::Mat> images;
+    for(int i = 0; i < 5; ++i){
+        auto image = cv::imread(iLogger::format("%d.jpg", i + 1));
+
+        // 使用eingine->commits一次推理一批，越多越好，性能最好
+        auto box   = engine->commit(image).get();
+
+        for(auto& obj : box){
+
+            // 使用根据类别计算的随机颜色填充
+            uint8_t b, g, r;
+            tie(r, g, b) = iLogger::random_color(obj.class_label);
+            cv::rectangle(image, cv::Point(obj.left, obj.top), cv::Point(obj.right, obj.bottom), cv::Scalar(b, g, r), 5);
+
+            // 绘制类别名字
+            auto name = cocolabels[obj.class_label];
+            int width = strlen(name) * 18 + 10;
+            cv::rectangle(image, cv::Point(obj.left-3, obj.top-33), cv::Point(obj.left + width, obj.top), cv::Scalar(b, g, r), -1);
+            cv::putText(image, iLogger::format("%s", name), cv::Point(obj.left, obj.top-5), 0, 1, cv::Scalar::all(0), 2, 16);
+        }
+
+        INFO("Save to %d.draw2.jpg", i + 1);
+        cv::imwrite(iLogger::format("%d.draw2.jpg", i + 1), image);
+    }
+}
+
 int main(){
 
     if(!iLogger::exists("yolov5s.onnx")){
@@ -401,7 +439,8 @@ int main(){
         system("wget http://zifuture.com:1556/fs/25.shared/yolov5s.onnx");
     }
 
-    test_fp32();
-    test_plugin();
+    test_library_yolov5_hpp();
+    // test_fp32();
+    // test_plugin();
     return 0;
 }

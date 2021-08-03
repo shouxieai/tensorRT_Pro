@@ -7,7 +7,7 @@
                 "/data/datav/expstation/lean/protobuf3.11.4/include/**",
                 "/data/datav/expstation/lean/opencv4.2.0/include/opencv4/**",
                 "/data/datav/expstation/lean/cuda-10.2/include/**",
-                "/data/datav/sxai/lean/TensorRT-8.0.1.6/include/**"
+                "/data/sxai/lean/TensorRT-8.0.1.6/include/**"
             ],
             "defines": ["__CUDACC__"],
             "compilerPath": "/usr/bin/gcc", 
@@ -21,7 +21,7 @@
                     "/data/datav/expstation/lean/protobuf3.11.4/include/**",
                     "/data/datav/expstation/lean/opencv4.2.0/include/opencv4/**",
                     "/data/datav/expstation/lean/cuda-10.2/include/**",
-                    "/data/datav/sxai/lean/TensorRT-8.0.1.6/include/**"
+                    "/data/sxai/lean/TensorRT-8.0.1.6/include/**"
                 ],
                 "limitSymbolsToIncludedHeaders": false,
                 "databaseFilename": ""

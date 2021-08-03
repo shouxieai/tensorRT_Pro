@@ -8,6 +8,19 @@
 7. yolov5的推理作为案例
 8. c++类库，对编译和推理做了封装，对tensor做了封装，支持n维的tensor管理
 
+## 3行代码实现YoloV5推理
+```C++
+
+// 创建推理引擎在0显卡上
+auto engine = YoloV5::create_infer(model_file, 0);
+
+// 加载图像
+auto image = cv::imread("1.jpg");
+
+// 推理并获取结果
+auto box = engine->commit(image).get();
+```
+
 ## YoloV5-ONNX推理支持-下载的模型
 - 这个yolov5s.onnx模型使用官方最新版本直接导出得到
 - 配置好依赖的tensorRT、cuda、cudnn，参考下面的配置节点
