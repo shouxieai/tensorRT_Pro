@@ -12,7 +12,7 @@
 ```C++
 
 // 创建推理引擎在0显卡上
-auto engine = YoloV5::create_infer(model_file, 0);
+auto engine = YoloV5::create_infer("yolov5s.fp32.trtmodel", 0);
 
 // 加载图像
 auto image = cv::imread("1.jpg");
