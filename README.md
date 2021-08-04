@@ -50,7 +50,7 @@ cd tensorRT_cpp
 make run -j32
 ```
 
-- 下面是效果图workspace/2.draw.jpg
+- 下面是效果图workspace/detect_result/yq.jpg
 ---
 <img src="workspace/detect_result/yq.jpg" width="300px" />
 <img src="workspace/detect_result/car.jpg" width="300px" />
