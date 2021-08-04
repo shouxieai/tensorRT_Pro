@@ -69,6 +69,8 @@ namespace iLogger{
     void set_log_level(int level);
     void __log_func(const char* file, int line, int level, const char* fmt, ...);
     void destroy_logger();
+
+    bool rmtree(const string& directory, bool ignore_fail=false);
 };
 
 

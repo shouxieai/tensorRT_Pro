@@ -776,4 +776,36 @@ namespace iLogger{
 	bool save_file(const string& file, const vector<uint8_t>& data, bool mk_dirs){
 		return save_file(file, data.data(), data.size(), mk_dirs);
 	}
+
+	bool rmtree(const string& directory, bool ignore_fail){
+
+		auto files = find_files(directory, "*", false);
+		auto dirs = find_files(directory, "*", true);
+
+		bool success = true;
+		for (int i = 0; i < files.size(); ++i){
+			if (::remove(files[i].c_str()) != 0){
+				success = false;
+
+				if (!ignore_fail){
+					return false;
+				}
+			}
+		}
+
+		dirs.insert(dirs.begin(), directory);
+		for (int i = (int)dirs.size() - 1; i >= 0; --i){
+
+#ifdef U_OS_WINDOWS
+			if (!::RemoveDirectoryA(dirs[i].c_str())){
+#else
+			if (::rmdir(dirs[i].c_str()) != 0){
+#endif
+				success = false;
+				if (!ignore_fail)
+					return false;
+			}
+		}
+		return success;
+	}
 }; // namespace Logger
