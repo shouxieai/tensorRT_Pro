@@ -50,10 +50,9 @@ cd tensorRT_cpp
 make run -j32
 ```
 
-- 下面是效果图workspace/detect_result/yq.jpg
+- 下面是效果图workspace/yq.jpg
 ---
-<img src="workspace/detect_result/yq.jpg" width="300px" style="display: line-block" />
-<img src="workspace/detect_result/car.jpg" width="300px" style="display: line-block" />
+![](workspace/yq.jpg)
 ---
 
 ## 项目依赖的配置
