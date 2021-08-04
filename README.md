@@ -52,8 +52,8 @@ make run -j32
 
 - 下面是效果图workspace/detect_result/yq.jpg
 ---
-<img src="workspace/detect_result/yq.jpg" width="300px" />
-<img src="workspace/detect_result/car.jpg" width="300px" />
+<img src="workspace/detect_result/yq.jpg" width="300px" style="display: line-block" />
+<img src="workspace/detect_result/car.jpg" width="300px" style="display: line-block" />
 ---
 
 ## 项目依赖的配置
