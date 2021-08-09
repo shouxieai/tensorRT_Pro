@@ -386,7 +386,9 @@ namespace TRTInfer {
 		if(inputframe.size() != cv::Size(width, height))
 			cv::resize(inputframe, inputframe, cv::Size(width, height));
 
-		inputframe.convertTo(inputframe, CV_32F, scale);
+		if(CV_MAT_DEPTH(inputframe.type()) != CV_32F){
+			inputframe.convertTo(inputframe, CV_32F, scale);
+		}
 
 		cv::Mat ms[3];
 		for (int c = 0; c < 3; ++c)

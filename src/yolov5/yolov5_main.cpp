@@ -52,7 +52,7 @@ static const char* cocolabels[] = {
     "scissors", "teddy bear", "hair drier", "toothbrush"
 };
 
-void forward_engine(const string& engine_file){
+static void forward_engine(const string& engine_file){
 
     iLogger::set_log_level(ILOGGER_VERBOSE);
 
@@ -94,7 +94,7 @@ void forward_engine(const string& engine_file){
     }
 }
 
-void test_plugin(){
+static void test_plugin(){
 
     // 通过以下代码即可生成plugin.onnx
     // cd workspace
@@ -122,7 +122,7 @@ void test_plugin(){
     INFO("output %f", output->at<float>(0, 0, 0, 0));
 }
 
-void test_int8(){
+static void test_int8(){
 
     INFO("===================== test int8 ==================================");
     auto int8process = [](int current, int count, vector<string>& images, shared_ptr<TRTInfer::Tensor>& tensor){
@@ -163,7 +163,7 @@ void test_int8(){
     forward_engine(model_file);
 }
 
-void test_fp32(){
+static void test_fp32(){
 
     TRTBuilder::set_device(0);
     iLogger::set_log_level(ILOGGER_VERBOSE);
@@ -190,7 +190,7 @@ void test_fp32(){
     forward_engine(model_file);
 }
 
-int main(){
+int yolov5_main(){
 
     if(!iLogger::exists("yolov5s.onnx")){
         INFO("Auto download yolov5s.onnx");

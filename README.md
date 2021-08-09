@@ -53,6 +53,30 @@ cd tensorRT_cpp
 make run -j32
 ```
 
+## YoloX的支持
+- https://github.com/Megvii-BaseDetection/YOLOX
+- 你可以选择直接make run，会从镜像地址下载onnx并推理运行看到效果。不需要自行导出
+1. 下载YoloX
+```bash
+git clone git@github.com:Megvii-BaseDetection/YOLOX.git
+cd YOLOX
+```
+2. 导出onnx模型
+```bash
+# 下载模型，或许你需要翻墙
+wget https://github.com/Megvii-BaseDetection/storage/releases/download/0.0.1/yolox_m.pth
+
+# 导出模型
+python tools/export_onnx.py -c yolox_m.pth -f exps/default/yolox_m.py --output-name=yolox_m.onnx
+```
+3. 执行程序
+```bash
+cp YOLOX/yolox_m.onnx tensorRT_cpp/workspace/
+cd tensorRT_cpp
+make run -j32
+```
+- 如果你需要多batch跑，需要修改yolox/models/yolo_head.py的308行，将x.flatten(start_dim=2)修改成x.view(-1, int(x.size(1)), int(x.size(2) * x.size(3)))
+
 ## 项目依赖的配置
 - 考虑方便，这里有打包好的依赖项
     - 下载地址：[lean-tensorRT8.0.1.6-protobuf3.11.4-cudnn8.2.2.tar.gz](http://zifuture.com:1556/fs/25.shared/lean-tensorRT8.0.1.6-protobuf3.11.4-cudnn8.2.2.tar.gz)
