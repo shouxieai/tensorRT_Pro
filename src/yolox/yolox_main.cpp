@@ -134,8 +134,8 @@ static void test_int8(){
             auto image = cv::imread(images[i]);
             cv::cvtColor(image, image, cv::COLOR_BGR2RGB);
             cv::resize(image, image, cv::Size(tensor->size(3), tensor->size(2)));
-            float mean[] = {0, 0, 0};
-            float std[]  = {1, 1, 1};
+            float mean[] = {0.485, 0.456, 0.406};
+            float std[]  = {0.229, 0.224, 0.225};
             tensor->set_norm_mat(i, image, mean, std);
         }
     };
@@ -144,7 +144,7 @@ static void test_int8(){
 
     auto onnx_file = "yolox_m.onnx";
     auto model_file = "yolox_m.int8.trtmodel";
-    int test_batch_size = 1;
+    int test_batch_size = 1;  // 当你需要修改batch大于1时，请查看yolox.cpp:260行备注
     
     if(!iLogger::exists(model_file)){
         TRTBuilder::compile(
@@ -156,7 +156,7 @@ static void test_int8(){
             {},                         // 指定需要重定义的输入shape，这里可以对onnx的输入shape进行重定义
             false,                      // 是否采用动态batch维度，true采用，false不采用，使用静态固定的batch size
             int8process,                // int8标定时的数据输入处理函数
-            "."                         // 图像数据的路径，在当前路径下找到用以标定的图像
+            "inference"                 // 图像数据的路径，在当前路径下找到用以标定的图像，图像可以随意给，不需要标注
         );
     }
 

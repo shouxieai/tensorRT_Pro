@@ -5,6 +5,6 @@ int yolox_main();
 
 int main(){
 
-    yolov5_main();
+    yolox_main();
     return 0;
 }

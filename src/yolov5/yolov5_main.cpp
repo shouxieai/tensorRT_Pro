@@ -156,7 +156,7 @@ static void test_int8(){
             {},                         // 指定需要重定义的输入shape，这里可以对onnx的输入shape进行重定义
             false,                      // 是否采用动态batch维度，true采用，false不采用，使用静态固定的batch size
             int8process,                // int8标定时的数据输入处理函数
-            "."                         // 图像数据的路径，在当前路径下找到用以标定的图像
+            "inference"                 // 图像数据的路径，在当前路径下找到用以标定的图像，图像可以随意给，不需要标注
         );
     }
 
