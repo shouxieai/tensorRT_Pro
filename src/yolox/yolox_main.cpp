@@ -4,7 +4,7 @@
  * @author 手写AI (zifuture.com:8090)
  * @date 2021-07-26
  * 
- *   实现了基于TensorRT对yolov5-5.0的推理工作 
+ *   实现了基于TensorRT对yolox的推理工作 
  *   1. 基于FP32的模型编译、和推理执行
  *   2. 基于INT8的模型编译、和推理执行
  *   3. 自定义插件的实现，从pytorch导出到推理编译，并支持FP16

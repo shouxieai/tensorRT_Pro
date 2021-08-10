@@ -77,6 +77,19 @@ make run -j32
 ```
 - 如果你需要多batch跑，需要修改yolox/models/yolo_head.py的308行，将x.flatten(start_dim=2)修改成x.view(-1, int(x.size(1)), int(x.size(2) * x.size(3)))
 
+## 推理
+```C++
+
+// 创建推理引擎在0显卡上
+auto engine = YoloX::create_infer("yolox_m.fp32.trtmodel", 0);
+
+// 加载图像
+auto image = cv::imread("1.jpg");
+
+// 推理并获取结果
+auto box = engine->commit(image).get();
+```
+
 ## 项目依赖的配置
 - 考虑方便，这里有打包好的依赖项
     - 下载地址：[lean-tensorRT8.0.1.6-protobuf3.11.4-cudnn8.2.2.tar.gz](http://zifuture.com:1556/fs/25.shared/lean-tensorRT8.0.1.6-protobuf3.11.4-cudnn8.2.2.tar.gz)
