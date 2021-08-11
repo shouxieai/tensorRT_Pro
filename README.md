@@ -36,6 +36,8 @@ auto box = engine->commit(image).get();
     cd build
     cmake ..
     make run_yolov5 -j32
+
+    # 或者make run_yolox -j32
     ```
 
 - Makefile
