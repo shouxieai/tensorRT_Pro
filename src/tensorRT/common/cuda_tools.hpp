@@ -18,7 +18,6 @@
     if (position >= (edge)) return;
 
 
-#define checkCudaDriver(call) cuda::check_driver(call, #call, __LINE__, __FILE__)
 #define checkCudaRuntime(call) cuda::check_runtime(call, #call, __LINE__, __FILE__)
 
 #define checkCudaKernel(...)                                                                         \
@@ -38,16 +37,10 @@
 	}while(false)
 
 
-struct CUctx_st;
 struct CUstream_st;
-
 typedef CUstream_st* ICUStream;
-typedef CUctx_st* ICUContext;
-typedef void* ICUDeviceptr;
-typedef int DeviceID;
 
 namespace cuda{
-    bool check_driver(CUresult e, const char* call, int iLine, const char *szFile);
     bool check_runtime(cudaError_t e, const char* call, int iLine, const char *szFile);
 
     dim3 grid_dims(int numJobs);
