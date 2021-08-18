@@ -4,7 +4,7 @@
 
 #ifdef HAS_CUDA_HALF
 #include <cuda_fp16.hpp>
-typedef TRTInfer::halfloat halfloat;
+typedef TRT::halfloat halfloat;
 #endif
 
 static __global__ void hswish_kernel_fp32(float* input, float* output, int edge) {
@@ -60,16 +60,16 @@ std::shared_ptr<LayerConfig> HSwish::config(const std::string& layerName) {
 int HSwish::enqueue(const std::vector<GTensor>& inputs, std::vector<GTensor>& outputs, const std::vector<GTensor>& weights, void* workspace, cudaStream_t stream) {
 
 	int count = inputs[0].count();
-	auto grid = cuda::grid_dims(count);
-	auto block = cuda::block_dims(count);
+	auto grid = CUDATools::grid_dims(count);
+	auto block = CUDATools::block_dims(count);
 
-	if (config_->configDataType_ == TRTInfer::DataType::dtFloat) {
+	if (config_->configDataType_ == TRT::DataType::dtFloat) {
 		INFO("enqueue for float");
 		hswish_kernel_fp32 <<<grid, block, 0, stream >>> (inputs[0].ptr<float>(), outputs[0].ptr<float>(), count);
 	}
 
 	#ifdef HAS_CUDA_HALF
-		else if (config_->configDataType_ == TRTInfer::DataType::dtHalfloat) {
+		else if (config_->configDataType_ == TRT::DataType::dtHalfloat) {
 			INFO("enqueue for half");
 			hswish_kernel_fp16 <<<grid, block, 0, stream >>> (inputs[0].ptr<halfloat>(), outputs[0].ptr<halfloat>(), count);
 		}

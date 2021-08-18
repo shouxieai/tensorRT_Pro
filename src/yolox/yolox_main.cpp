@@ -99,14 +99,14 @@ static void test_plugin(){
     // 通过以下代码即可生成plugin.onnx
     // cd workspace
     // python test_plugin.py
-    TRTBuilder::set_device(0);
+    TRT::set_device(0);
 
     // plugin.onnx是通过test_plugin.py生成的
-    TRTBuilder::compile(
-        TRTBuilder::TRTMode_FP32, {}, 3, "plugin.onnx", "plugin.fp32.trtmodel", {}, false
+    TRT::compile(
+        TRT::TRTMode_FP32, {}, 3, "plugin.onnx", "plugin.fp32.trtmodel", {}, false
     );
  
-    auto engine = TRTInfer::load_engine("plugin.fp32.trtmodel");
+    auto engine = TRT::load_infer("plugin.fp32.trtmodel");
     engine->print();
 
     auto input0 = engine->input(0);
@@ -118,14 +118,20 @@ static void test_plugin(){
     INFO("input1: %s", input1->shape_string());
     INFO("output: %s", output->shape_string());
     input0->set_to(0.80);
+
+    // output = input1 + hswish(input0)
+    // output = 0 + hswish(0.8)
+    // output = 0 + 0.8 * relu6(0.8 + 3) / 6
+    // output = 0.8 * 3.8f / 6
+    float output_real = 0.8f * 3.8f / 6.0f;
     engine->forward(true);
-    INFO("output %f", output->at<float>(0, 0, 0, 0));
+    INFO("output %f, output_real = %f", output->at<float>(0), output_real);
 }
 
 static void test_int8(){
 
     INFO("===================== test int8 ==================================");
-    auto int8process = [](int current, int count, vector<string>& images, shared_ptr<TRTInfer::Tensor>& tensor){
+    auto int8process = [](int current, int count, vector<string>& images, shared_ptr<TRT::Tensor>& tensor){
 
         INFO("Int8 %d / %d", current, count);
 
@@ -147,8 +153,8 @@ static void test_int8(){
     int test_batch_size = 1;  // 当你需要修改batch大于1时，请查看yolox.cpp:260行备注
     
     if(!iLogger::exists(model_file)){
-        TRTBuilder::compile(
-            TRTBuilder::TRTMode_INT8,   // 编译方式有，FP32、FP16、INT8
+        TRT::compile(
+            TRT::TRTMode_INT8,   // 编译方式有，FP32、FP16、INT8
             {},                         // onnx时无效，caffe的输出节点标记
             test_batch_size,            // 指定编译的batch size
             onnx_file,                  // 需要编译的onnx文件
@@ -165,9 +171,9 @@ static void test_int8(){
 
 static void test_fp32(){
 
-    TRTBuilder::set_device(0);
+    TRT::set_device(0);
     iLogger::set_log_level(ILOGGER_VERBOSE);
-    INFO("===================== test fp32 ==================================");
+    INFO("===================== test yolox fp32 ==================================");
 
     auto onnx_file = "yolox_m.onnx";
     auto model_file = "yolox_m.fp32.trtmodel";
@@ -176,8 +182,8 @@ static void test_fp32(){
     // 动态batch和静态batch，如果你想要弄清楚，请打开http://www.zifuture.com:8090/
     // 找到右边的二维码，扫码加好友后进群交流（免费哈，就是技术人员一起沟通）
     if(!iLogger::exists(model_file)){
-        TRTBuilder::compile(
-            TRTBuilder::TRTMode_FP32,   // 编译方式有，FP32、FP16、INT8
+        TRT::compile(
+            TRT::TRTMode_FP32,   // 编译方式有，FP32、FP16、INT8
             {},                         // onnx时无效，caffe的输出节点标记
             test_batch_size,            // 指定编译的batch size
             onnx_file,                  // 需要编译的onnx文件

@@ -13,7 +13,6 @@
 #include <sstream>
 #include <assert.h>
 #include <stdarg.h>
-#include <infer/trt_infer.hpp>
 #include <common/cuda_tools.hpp>
 
 using namespace nvinfer1;
@@ -41,7 +40,7 @@ public:
 
 static Logger gLogger;
 
-namespace TRTBuilder {
+namespace TRT {
 
 	static string join_dims(const vector<int>& dims){
 		stringstream output;
@@ -335,7 +334,7 @@ namespace TRTBuilder {
 				images_[i] = allimgs_[cursor_++];
 
 			if (!tensor_) 
-				tensor_.reset(new TRTInfer::Tensor(dims_.nbDims, dims_.d));
+				tensor_.reset(new Tensor(dims_.nbDims, dims_.d));
 
 			preprocess_(cursor_, allimgs_.size(), images_, tensor_);
 			return true;
@@ -372,7 +371,7 @@ namespace TRTBuilder {
 		int cursor_ = 0;
 		nvinfer1::Dims dims_;
 		vector<string> images_;
-		shared_ptr<TRTInfer::Tensor> tensor_;
+		shared_ptr<Tensor> tensor_;
 		vector<uint8_t> entropyCalibratorData_;
 		bool fromCalibratorData_ = false;
 	};
@@ -642,9 +641,5 @@ namespace TRTBuilder {
 		// serialize the engine, then close everything down
 		shared_ptr<IHostMemory> seridata(engine->serialize(), destroy_nvidia_pointer<IHostMemory>);
 		return iLogger::save_file(savepath, seridata->data(), seridata->size());
-	}
-
-	void set_device(int device_id) {
-		cudaSetDevice(device_id);
 	}
 }; //namespace TRTBuilder

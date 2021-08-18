@@ -33,7 +33,7 @@
 #include <google/protobuf/extension_set.h>  // IWYU pragma: export
 #include <google/protobuf/generated_enum_reflection.h>
 #include <google/protobuf/unknown_field_set.h>
-#include "onnx/onnx_ONNX_NAMESPACE-ml.pb.h"
+#include "onnx/onnx-ml.pb.h"
 // @@protoc_insertion_point(includes)
 #include <google/protobuf/port_def.inc>
 #define PROTOBUF_INTERNAL_EXPORT_onnx_2fonnx_2doperators_5fONNX_5fNAMESPACE_2dml_2eproto ONNX_API

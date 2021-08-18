@@ -120,8 +120,8 @@ auto box = engine->commit(image).get();
 
 ## 模型编译-FP32/16
 ```cpp
-TRTBuilder::compile(
-  TRTBuilder::TRTMode_FP32,   // 使用fp32模型编译
+TRT::compile(
+  TRT::TRTMode_FP32,   // 使用fp32模型编译
   {},                         // caffe时指定输出节点
   3,                          // max batch size
   "plugin.onnx",              // onnx 文件
@@ -137,7 +137,7 @@ TRTBuilder::compile(
 - 众所周知，int8的推理效果比fp32稍微差一点（预计-5%的损失），但是速度确快很多很多，这里通过集成的编译方式，很容易实现int8的编译工作
 ```cpp
 // 定义int8的标定数据处理函数，读取数据并交给tensor的函数
-auto int8process = [](int current, int count, vector<string>& images, shared_ptr<TRTInfer::Tensor>& tensor){
+auto int8process = [](int current, int count, vector<string>& images, shared_ptr<TRT::Tensor>& tensor){
     for(int i = 0; i < images.size(); ++i){
 
 	// 对于int8的编译需要进行标定，这里读取图像数据并通过set_norm_mat到tensor中
@@ -151,8 +151,8 @@ auto int8process = [](int current, int count, vector<string>& images, shared_ptr
 
 // 编译模型指定为INT8
 auto model_file = "yolov5s.int8.trtmodel";
-TRTBuilder::compile(
-  TRTBuilder::TRTMode_INT8,   // 选择INT8
+TRT::compile(
+  TRT::TRTMode_INT8,   // 选择INT8
   {},                         // 对于caffe的输出节点名称
   3,                          // max batch size
   "yolov5s.onnx",             // onnx文件
@@ -171,7 +171,7 @@ TRTBuilder::compile(
 - 封装了Engine类，实现模型推理和管理
 ```cpp
 // 模型加载，得到一个共享指针，如果为空表示加载失败
-auto engine = TRTInfer::load_engine("yolov5s.fp32.trtmodel");
+auto engine = TRT::load_infer("yolov5s.fp32.trtmodel");
 
 // 打印模型信息
 engine->print();
@@ -213,8 +213,8 @@ __global__ void HSwishKernel(float* input, float* output, int edge) {
 int HSwish::enqueue(const std::vector<GTensor>& inputs, std::vector<GTensor>& outputs, const std::vector<GTensor>& weights, void* workspace, cudaStream_t stream) {
 
     int count = inputs[0].count();
-    auto grid = cuda::grid_dims(count);
-    auto block = cuda::block_dims(count);
+    auto grid = CUDATools::grid_dims(count);
+    auto block = CUDATools::block_dims(count);
     HSwishKernel <<<grid, block, 0, stream >>> (inputs[0].ptr<float>(), outputs[0].ptr<float>(), count);
     return 0;
 }

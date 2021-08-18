@@ -41,6 +41,6 @@
 // This solution is similar to
 // https://github.com/pytorch/pytorch/blob/master/caffe2/core/common.h
 #define ONNX_API
-#include "onnx_ONNX_NAMESPACE-ml.pb.h"
+#include "onnx-ml.pb.h"
 
 #endif // ! ONNX_ONNX_PB_H

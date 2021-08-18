@@ -6,7 +6,20 @@
 
 #include "cuda_tools.hpp"
 
-namespace cuda{
+namespace CUDATools{
+    bool check_driver(CUresult e, const char* call, int line, const char *file) {
+        if (e != CUDA_SUCCESS) {
+
+            const char* message = nullptr;
+            const char* name = nullptr;
+            cuGetErrorString(e, &message);
+            cuGetErrorName(e, &name);
+            INFOE("CUDA Driver error %s # %s, code = %s [ %d ] in file %s:%d", call, message, name, e, file, line);
+            return false;
+        }
+        return true;
+    }
+
     bool check_runtime(cudaError_t e, const char* call, int line, const char *file){
         if (e != cudaSuccess) {
             INFOE("CUDA Runtime error %s # %s, code = %s [ %d ] in file %s:%d", call, cudaGetErrorString(e), cudaGetErrorName(e), e, file, line);

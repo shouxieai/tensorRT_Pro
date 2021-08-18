@@ -192,11 +192,11 @@ DEFINE_BUILTIN_OP_IMPORTER(Plugin)
         ASSERT(false, ErrorCode::kUNSUPPORTED_NODE);
     }
 
-    std::vector<std::shared_ptr<TRTInfer::Tensor>> weightTensors;
+    std::vector<std::shared_ptr<TRT::Tensor>> weightTensors;
     for(int i = 0; i < weights.size(); ++i){
         auto& weight = weights[i];
         std::vector<int> dims(weight.shape.d, weight.shape.d + weight.shape.nbDims);
-        std::shared_ptr<TRTInfer::Tensor> dweight(new TRTInfer::Tensor(dims));
+        std::shared_ptr<TRT::Tensor> dweight(new TRT::Tensor(dims));
         
         if(weight.type != ::ONNX_NAMESPACE::TensorProto::FLOAT){
             LOG_ERROR("unsupport weight type: " << weight.type);
@@ -4512,6 +4512,9 @@ DEFINE_BUILTIN_OP_IMPORTER(Upsample)
     ASSERT(attrs.count("scales") && "Attribute scales is missing.", ErrorCode::kUNSUPPORTED_NODE);
     // Get scale factors from OnnxAttrs.
     auto scales = attrs.get<std::vector<float>>("scales");
+    if(scales.size() == 3){
+        scales.insert(scales.begin(), 1);
+    }
     // Scale factors has batch dimension.
     ASSERT( (static_cast<int>(scales.size()) == nbDims) && "The shape of the scales input must aligin with the dimensions of the input.", ErrorCode::kUNSUPPORTED_NODE);
     for (int i = 0; i < nbDims; i++)

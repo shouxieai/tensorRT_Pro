@@ -10,7 +10,7 @@ namespace ONNXPlugin {
 	GTensor::GTensor(float* ptr, int ndims, int* dims) {
 		this->ptr_ = ptr;
 		this->shape_.insert(shape_.end(), dims, dims + ndims);
-		this->dtType_ = TRTInfer::DataType::dtFloat;
+		this->dtType_ = TRT::DataType::dtFloat;
 	}
 
 	int GTensor::offset(const std::vector<int>& index){
@@ -31,17 +31,17 @@ namespace ONNXPlugin {
 	}
 
 	#ifdef HAS_CUDA_HALF
-	GTensor::GTensor(TRTInfer::halfloat* ptr, int ndims, int* dims) {
+	GTensor::GTensor(TRT::halfloat* ptr, int ndims, int* dims) {
 		this->ptr_ = ptr;
 		this->shape_.insert(shape_.end(), dims, dims + ndims);
-		this->dtType_ = TRTInfer::DataType::dtHalfloat;
+		this->dtType_ = TRT::DataType::dtHalfloat;
 	}
 	#endif
 
-	GTensor::GTensor(const TRTInfer::Tensor& tensor) {
+	GTensor::GTensor(const TRT::Tensor& tensor) {
 		this->ptr_ = (float*)tensor.gpu();
 		this->shape_ = tensor.dims();
-		this->dtType_ = TRTInfer::DataType::dtFloat;
+		this->dtType_ = TRT::DataType::dtFloat;
 	}
 
 	int GTensor::count(int start_axis) const {
@@ -59,7 +59,7 @@ namespace ONNXPlugin {
 	LayerConfig::LayerConfig() {
 		supportDataType_ = {nvinfer1::DataType::kFLOAT};
 		supportPluginFormat_ = {nvinfer1::PluginFormat::kLINEAR};
-		configDataType_ = TRTInfer::DataType::dtFloat;
+		configDataType_ = TRT::DataType::dtFloat;
 		configPluginFormat_ = nvinfer1::PluginFormat::kLINEAR;
 	}
 
@@ -82,12 +82,12 @@ namespace ONNXPlugin {
 		out << (int)weights_.size();
 		for (int i = 0; i < weights_.size(); ++i) {
 
-			if (configDataType_ == TRTInfer::DataType::dtFloat) {
+			if (configDataType_ == TRT::DataType::dtFloat) {
 				weights_[i]->to_float();
 			}
 			
 			#ifdef HAS_CUDA_HALF
-			else if (configDataType_ == TRTInfer::DataType::dtHalfloat) {
+			else if (configDataType_ == TRT::DataType::dtHalfloat) {
 				weights_[i]->to_half();
 			}
 			#endif
@@ -125,17 +125,17 @@ namespace ONNXPlugin {
 			std::vector<int> dims;
 			in >> dims;
 
-			TRTInfer::DataType dt;
+			TRT::DataType dt;
 			in >> dt;
 
-			weights_[i].reset(new TRTInfer::Tensor(dims, dt));
+			weights_[i].reset(new TRT::Tensor(dims, dt));
 			in.read(weights_[i]->cpu(), weights_[i]->bytes());
 			weights_[i]->gpu();
 		}
 		deseril(in);
 	}
 
-	void LayerConfig::setup(const std::string& info, const std::vector<std::shared_ptr<TRTInfer::Tensor>>& weights) {
+	void LayerConfig::setup(const std::string& info, const std::vector<std::shared_ptr<TRT::Tensor>>& weights) {
 
 		this->info_ = info;
 		this->weights_ = weights;
@@ -146,7 +146,7 @@ namespace ONNXPlugin {
 	TRTPlugin::~TRTPlugin() {
 	}
 
-	void TRTPlugin::pluginInit(const std::string& name, const std::string& info, const std::vector<std::shared_ptr<TRTInfer::Tensor>>& weights) {
+	void TRTPlugin::pluginInit(const std::string& name, const std::string& info, const std::vector<std::shared_ptr<TRT::Tensor>>& weights) {
 		phase_ = CompilePhase;
 		layerName_ = name;
 		config_ = this->config(name);
@@ -185,12 +185,12 @@ namespace ONNXPlugin {
 
 		//INFO("configureWithFormat: type: %d, format: %d", type, format);
 		if (type == nvinfer1::DataType::kFLOAT) {
-			this->config_->configDataType_ = TRTInfer::DataType::dtFloat;
+			this->config_->configDataType_ = TRT::DataType::dtFloat;
 		}
 
 		#ifdef HAS_CUDA_HALF
 		else if (type == nvinfer1::DataType::kHALF) {
-			this->config_->configDataType_ = TRTInfer::DataType::dtHalfloat;
+			this->config_->configDataType_ = TRT::DataType::dtHalfloat;
 		}
 		#endif
 		

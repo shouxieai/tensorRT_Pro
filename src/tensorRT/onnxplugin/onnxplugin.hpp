@@ -23,11 +23,11 @@ namespace ONNXPlugin {
 
 	struct GTensor {
 		GTensor() {}
-		GTensor(const TRTInfer::Tensor& tensor);
+		GTensor(const TRT::Tensor& tensor);
 		GTensor(float* ptr, int ndims, int* dims);
 
 		#ifdef HAS_CUDA_HALF
-		GTensor(TRTInfer::halfloat* ptr, int ndims, int* dims);
+		GTensor(TRT::halfloat* ptr, int ndims, int* dims);
 		#endif
 
 		int count(int start_axis = 0) const;
@@ -52,14 +52,14 @@ namespace ONNXPlugin {
 		inline float* ptr_float(int t, _Args&& ... args) const { return (float*)ptr_ + offset(t, args...); }
 
 		#ifdef HAS_CUDA_HALF
-		inline TRTInfer::halfloat* ptr_half() const { return (TRTInfer::halfloat*)ptr_; }
+		inline TRT::halfloat* ptr_half() const { return (TRT::halfloat*)ptr_; }
 
 		template<typename ... _Args>
-		inline TRTInfer::halfloat* ptr_half(int t, _Args&& ... args) const { return (TRTInfer::halfloat*)ptr_ + offset(t, args...); }
+		inline TRT::halfloat* ptr_half(int t, _Args&& ... args) const { return (TRT::halfloat*)ptr_ + offset(t, args...); }
 		#endif
 
 		void* ptr_ = nullptr;
-		TRTInfer::DataType dtType_ = TRTInfer::DataType::dtFloat;
+		TRT::DataType dtType_ = TRT::DataType::dtFloat;
 		std::vector<int> shape_;
 
 	private:
@@ -86,8 +86,8 @@ namespace ONNXPlugin {
 		std::set<nvinfer1::DataType> supportDataType_;
 		std::set<nvinfer1::PluginFormat> supportPluginFormat_;
 
-		std::vector<std::shared_ptr<TRTInfer::Tensor>> weights_;
-		TRTInfer::DataType configDataType_;
+		std::vector<std::shared_ptr<TRT::Tensor>> weights_;
+		TRT::DataType configDataType_;
 		nvinfer1::PluginFormat configPluginFormat_;
 		int configMaxbatchSize_ = 0;
 		std::string info_;
@@ -101,7 +101,7 @@ namespace ONNXPlugin {
 		void serialCopyTo(void* buffer);
 		int serialize();
 		void deserialize(const void* ptr, size_t length);
-		void setup(const std::string& info, const std::vector<std::shared_ptr<TRTInfer::Tensor>>& weights);
+		void setup(const std::string& info, const std::vector<std::shared_ptr<TRT::Tensor>>& weights);
 		virtual void seril(Plugin::BinIO& out) {}
 		virtual void deseril(Plugin::BinIO& in) {}
 		virtual void init(){}
@@ -164,7 +164,7 @@ namespace ONNXPlugin {
 		virtual nvinfer1::Dims outputDims(int index, const nvinfer1::Dims* inputDims, int nbInputDims) = 0;
 		virtual int enqueue(const std::vector<GTensor>& inputs, std::vector<GTensor>& outputs, const std::vector<GTensor>& weights, void* workspace, cudaStream_t stream) = 0;
 
-		void pluginInit(const std::string& name, const std::string& info, const std::vector<std::shared_ptr<TRTInfer::Tensor>>& weights);
+		void pluginInit(const std::string& name, const std::string& info, const std::vector<std::shared_ptr<TRT::Tensor>>& weights);
 		void pluginInit(const std::string& name, const void* serialData, size_t serialLength);
 		virtual void pluginConfigFinish() {};
 

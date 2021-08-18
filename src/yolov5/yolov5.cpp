@@ -158,8 +158,8 @@ namespace YoloV5{
 
         void worker(string file, int gpuid, promise<bool>& result){
 
-            TRTInfer::set_device(gpuid);
-            auto engine = TRTInfer::load_engine(file);
+            TRT::set_device(gpuid);
+            auto engine = TRT::load_infer(file);
             if(engine == nullptr){
                 INFOE("Engine %s load failed", file.c_str());
                 result.set_value(false);
@@ -177,7 +177,7 @@ namespace YoloV5{
             input_width_  = input->size(3);
             input_height_ = input->size(2);
             result.set_value(true);
-            input->resize_dim(0, max_batch_size);
+            input->resize_single_dim(0, max_batch_size);
 
             vector<Job> fetch_jobs;
             while(run_){

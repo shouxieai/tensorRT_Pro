@@ -82,7 +82,7 @@ objs/%.cuo : src/%.cu
 	@nvcc -c $< -o $@ $(cu_compile_flags)
 
 run : workspace/pro
-	@cd workspace && ./pro
+	@cd workspace && ./pro yolox
 
 debug :
 	@echo $(includes)

@@ -8,9 +8,9 @@
 #include <functional>
 #include <infer/trt_infer.hpp>
 
-namespace TRTBuilder {
+namespace TRT {
 
-	typedef std::function<void(int current, int count, std::vector<std::string>& images, std::shared_ptr<TRTInfer::Tensor>& tensor)> Int8Process;
+	typedef std::function<void(int current, int count, std::vector<std::string>& images, std::shared_ptr<Tensor>& tensor)> Int8Process;
 
 	enum ModelSourceType {
 		ModelSourceType_FromCaffe,
@@ -53,7 +53,6 @@ namespace TRTBuilder {
 	};
 
 	const char* mode_string(TRTMode type);
-	void set_device(int device_id);
 
 	//当处于INT8模式时，int8process必须制定
 	//     int8ImageDirectory和int8EntropyCalibratorFile指定一个即可

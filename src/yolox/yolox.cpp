@@ -158,8 +158,8 @@ namespace YoloX{
 
         void worker(string file, int gpuid, promise<bool>& result){
 
-            TRTInfer::set_device(gpuid);
-            auto engine = TRTInfer::load_engine(file);
+            TRT::set_device(gpuid);
+            auto engine = TRT::load_infer(file);
             if(engine == nullptr){
                 INFOE("Engine %s load failed", file.c_str());
                 result.set_value(false);
@@ -197,7 +197,7 @@ namespace YoloX{
             input_width_  = input->size(3);
             input_height_ = input->size(2);
             result.set_value(true);
-            input->resize_dim(0, max_batch_size);
+            input->resize_single_dim(0, max_batch_size);
 
             vector<Job> fetch_jobs;
             while(run_){
@@ -221,7 +221,6 @@ namespace YoloX{
                 for(int ibatch = 0; ibatch < infer_batch_size; ++ibatch){
                     input->set_norm_mat(ibatch, fetch_jobs[ibatch].image, mean, std);
                 }
-
                 // 模型推理
                 engine->forward(false);
 
