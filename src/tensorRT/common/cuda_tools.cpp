@@ -36,4 +36,15 @@ namespace CUDATools{
     dim3 block_dims(int numJobs) {
         return numJobs < GPU_BLOCK_THREADS ? numJobs : GPU_BLOCK_THREADS;
     }
+
+    AutoDevice::AutoDevice(int device_id){
+        cudaGetDevice(&old_);
+        checkCudaRuntime(cudaSetDevice(device_id));
+    }
+
+    AutoDevice::~AutoDevice(){
+        if(old_ != -1){
+            checkCudaRuntime(cudaSetDevice(old_));
+        }
+    }
 }

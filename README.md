@@ -1,18 +1,19 @@
-## 3行代码实现YoloV5推理，TensorRT C++库
+## 3行代码实现极致性能YoloV5/YoloX推理，TensorRT C++库
 1. 支持最新版tensorRT8.0，具有最新的解析器算子支持
 2. 支持静态显性batch size，和动态非显性batch size，这是官方所不支持的
 3. 支持自定义插件，简化插件的实现过程
 4. 支持fp32、fp16、int8的编译
 5. 优化代码结构，打印编译网络信息
 6. 优化内存分配
-7. yolov5的推理作为案例
+7. yolov5/yolox的推理作为案例
 8. c++类库，对编译和推理做了封装，对tensor做了封装，支持n维的tensor管理
 
-## 3行代码实现YoloV5推理
+## 3行代码实现YoloV5的高性能推理
 ```C++
 
 // 创建推理引擎在0显卡上
-auto engine = YoloV5::create_infer("yolov5s.fp32.trtmodel", 0);
+//auto engine = Yolo::create_infer("yolox_m.fp32.trtmodel", Yolo::Type::X, 0);
+auto engine = Yolo::create_infer("yolov5m.fp32.trtmodel", Yolo::Type::V5, 0);
 
 // 加载图像
 auto image = cv::imread("1.jpg");
@@ -25,7 +26,7 @@ auto box = engine->commit(image).get();
 ![](workspace/yq.jpg)
 
 ## YoloV5-ONNX推理支持-第一种，使用提供的onnx
-- 这个yolov5s.onnx模型使用官方最新版本直接导出得到
+- 这个yolov5m.onnx模型使用官方最新版本直接导出得到
 - CMake
     - 在CMakeLists.txt中配置依赖路径tensorRT、cuda、cudnn、protobuf
     ```bash
@@ -35,9 +36,9 @@ auto box = engine->commit(image).get();
     mkdir build
     cd build
     cmake ..
-    make run_yolov5 -j32
+    make run_yolo -j32
 
-    # 或者make run_yolox -j32
+    # 或者make run_alphapose -j32
     ```
 
 - Makefile
@@ -45,7 +46,7 @@ auto box = engine->commit(image).get();
     ```bash
     git clone git@github.com:shouxieai/tensorRT_cpp.git
     cd tensorRT_cpp
-    make run -j32
+    make run_yolo -j32
     ```
 
 ## YoloV5-ONNX推理支持-第二种，自行从官方导出onnx
@@ -63,7 +64,7 @@ python export.py
 ```
 3. 复制模型并执行
 ```bash
-cp yolov5/yolov5s.onnx tensorRT_cpp/workspace/
+cp yolov5/yolov5m.onnx tensorRT_cpp/workspace/
 cd tensorRT_cpp
 make run -j32
 ```
@@ -76,27 +77,52 @@ make run -j32
 git clone git@github.com:Megvii-BaseDetection/YOLOX.git
 cd YOLOX
 ```
-2. 导出onnx模型
+
+2. 修改代码
+```Python
+# yolox/models/yolo_head.py的208行forward函数，替换为下面代码
+# [batch, n_anchors_all, 85]
+# outputs = torch.cat(
+#     [x.flatten(start_dim=2) for x in outputs], dim=2
+# ).permute(0, 2, 1)
+proc_view = lambda x: x.view(-1, int(x.size(1)), int(x.size(2) * x.size(3)))
+outputs = torch.cat(
+    [proc_view(x) for x in outputs], dim=2
+).permute(0, 2, 1)
+
+# yolox/models/yolo_head.py的253行decode_outputs函数，替换为下面代码
+#outputs[..., :2] = (outputs[..., :2] + grids) * strides
+#outputs[..., 2:4] = torch.exp(outputs[..., 2:4]) * strides
+#return outputs
+xy = (outputs[..., :2] + grids) * strides
+wh = torch.exp(outputs[..., 2:4]) * strides
+return torch.cat((xy, wh, outputs[..., 4:]), dim=-1)
+
+# tools/export_onnx.py的77行
+model.head.decode_in_inference = True
+```
+
+3. 导出onnx模型
 ```bash
 # 下载模型，或许你需要翻墙
-wget https://github.com/Megvii-BaseDetection/storage/releases/download/0.0.1/yolox_m.pth
+# wget https://github.com/Megvii-BaseDetection/storage/releases/download/0.0.1/yolox_m.pth
 
 # 导出模型
 python tools/export_onnx.py -c yolox_m.pth -f exps/default/yolox_m.py --output-name=yolox_m.onnx
 ```
-3. 执行程序
+
+4. 执行程序
 ```bash
 cp YOLOX/yolox_m.onnx tensorRT_cpp/workspace/
 cd tensorRT_cpp
 make run -j32
 ```
-- 如果你需要多batch跑，需要修改yolox/models/yolo_head.py的308行，将x.flatten(start_dim=2)修改成x.view(-1, int(x.size(1)), int(x.size(2) * x.size(3)))
 
 ## 推理
 ```C++
 
 // 创建推理引擎在0显卡上
-auto engine = YoloX::create_infer("yolox_m.fp32.trtmodel", 0);
+auto engine = Yolo::create_infer("yolox_m.fp32.trtmodel"， Yolo::Type::X, 0);
 
 // 加载图像
 auto image = cv::imread("1.jpg");
@@ -150,12 +176,12 @@ auto int8process = [](int current, int count, vector<string>& images, shared_ptr
 };
 
 // 编译模型指定为INT8
-auto model_file = "yolov5s.int8.trtmodel";
+auto model_file = "yolov5m.int8.trtmodel";
 TRT::compile(
   TRT::TRTMode_INT8,   // 选择INT8
   {},                         // 对于caffe的输出节点名称
   3,                          // max batch size
-  "yolov5s.onnx",             // onnx文件
+  "yolov5m.onnx",             // onnx文件
   model_file,                 // 编译后保存的文件
   {},                         // 重定义输入的shape
   false,                      // 是否为动态batch size
@@ -171,7 +197,7 @@ TRT::compile(
 - 封装了Engine类，实现模型推理和管理
 ```cpp
 // 模型加载，得到一个共享指针，如果为空表示加载失败
-auto engine = TRT::load_infer("yolov5s.fp32.trtmodel");
+auto engine = TRT::load_infer("yolov5m.fp32.trtmodel");
 
 // 打印模型信息
 engine->print();
@@ -229,7 +255,7 @@ RegisterPlugin(HSwish);
 ## 执行结果
 ```bash
 [2021-07-22 14:37:11][info][_main.cpp:160]:===================== test fp32 ==================================
-[2021-07-22 14:37:11][info][trt_builder.cpp:430]:Compile FP32 Onnx Model 'yolov5s.onnx'.
+[2021-07-22 14:37:11][info][trt_builder.cpp:430]:Compile FP32 Onnx Model 'yolov5m.onnx'.
 [2021-07-22 14:37:18][warn][trt_infer.cpp:27]:NVInfer WARNING: src/tensorRT/onnx_parser/ModelImporter.cpp:257: Change input batch size: images, final dimensions: (1, 3, 640, 640), origin dimensions: (5, 3, 640, 640)
 [2021-07-22 14:37:18][info][trt_builder.cpp:548]:Input shape is 1 x 3 x 640 x 640
 [2021-07-22 14:37:18][info][trt_builder.cpp:549]:Set max batch size = 3

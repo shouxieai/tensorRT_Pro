@@ -22,8 +22,8 @@ cu_objs := $(subst src/,objs/,$(cu_objs))
 lean_protobuf  := /data/sxai/lean/protobuf3.11.4
 lean_tensor_rt := /data/sxai/lean/TensorRT-8.0.1.6
 lean_cudnn     := /data/sxai/lean/cudnn8.2.2.26
-lean_opencv    := /data/datav/expstation/lean/opencv4.2.0
-lean_cuda      := /data/datav/expstation/lean/cuda-10.2
+lean_opencv    := /data/sxai/lean/opencv4.2.0
+lean_cuda      := /data/sxai/lean/cuda10.2
 
 include_paths := src \
 			src/core \
@@ -81,8 +81,14 @@ objs/%.cuo : src/%.cu
 	@mkdir -p $(dir $@)
 	@nvcc -c $< -o $@ $(cu_compile_flags)
 
-run : workspace/pro
-	@cd workspace && ./pro yolox
+run_yolo : workspace/pro
+	@cd workspace && ./pro yolo
+
+run_alphapose : workspace/pro
+	@cd workspace && ./pro alphapose
+
+run_fall : workspace/pro
+	@cd workspace && ./pro app_fall_recognize
 
 debug :
 	@echo $(includes)

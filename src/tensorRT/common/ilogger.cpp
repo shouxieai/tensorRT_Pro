@@ -354,6 +354,10 @@ namespace iLogger{
         return chrono::duration_cast<chrono::milliseconds>(chrono::system_clock::now().time_since_epoch()).count();
     }
 
+    double timestamp_now_float() {
+        return chrono::duration_cast<chrono::microseconds>(chrono::system_clock::now().time_since_epoch()).count() / 1000.0;
+    }
+
     static struct Logger{
         mutex logger_lock_;
         string logger_directory;
@@ -1109,6 +1113,7 @@ namespace iLogger{
 
     bool rmtree(const string& directory, bool ignore_fail){
 
+        if(directory.empty()) return false;
 		auto files = find_files(directory, "*", false);
 		auto dirs = find_files(directory, "*", true);
 

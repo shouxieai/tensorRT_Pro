@@ -78,7 +78,7 @@ namespace TRT{
 		release_gpu();
 	}
 
-	void Tensor::compute_shape_string(){
+	Tensor& Tensor::compute_shape_string(){
 
 		// clean string
 		shape_string_[0] = 0;
@@ -96,6 +96,7 @@ namespace TRT{
 			buffer += size;
 			buffer_size -= size;
 		}
+		return *this;
 	}
 
 	Tensor::Tensor(int n, int c, int h, int w, DataType dtType) {
@@ -118,9 +119,10 @@ namespace TRT{
 		resize(ndims, dims);
 	}
 
-	Tensor::Tensor(){
+	Tensor::Tensor(DataType dtType){
 		shape_string_[0] = 0;
-		data_ = make_shared<MixMemory>();
+		dtype_ = dtType;
+		data_  = make_shared<MixMemory>();
 	}
 
 	shared_ptr<Tensor> Tensor::clone(){
@@ -136,12 +138,69 @@ namespace TRT{
 		return new_tensor;
 	}
 
-	void Tensor::release() {
+	Tensor& Tensor::copy_from_gpu(size_t offset, const void* src, size_t num_element){
+
+		if(head_ == DataHead_Init)
+			to_gpu(false);
+
+		size_t offset_location = offset * element_size();
+		if(offset_location >= bytes_){
+			INFOE("Offset location[%lld] >= bytes_[%lld], out of range", offset_location, bytes_);
+			return *this;
+		}
+
+		size_t copyed_bytes = num_element * element_size();
+		size_t remain_bytes = bytes_ - offset_location;
+		if(copyed_bytes > remain_bytes){
+			INFOE("Copyed bytes[%lld] > remain bytes[%lld], out of range", copyed_bytes, remain_bytes);
+			return *this;
+		}
+
+		if(head_ == DataHead_InGPU){
+			checkCudaRuntime(cudaMemcpyAsync(data_->gpu() + offset_location, src, copyed_bytes, cudaMemcpyDeviceToDevice, stream_));
+		}else if(head_ == DataHead_InCPU){
+			checkCudaRuntime(cudaMemcpyAsync(data_->cpu() + offset_location, src, copyed_bytes, cudaMemcpyDeviceToHost, stream_));
+		}else{
+			INFOE("Unsupport head type %d", head_);
+		}
+		return *this;
+	}
+
+	Tensor& Tensor::copy_from_cpu(size_t offset, const void* src, size_t num_element){
+
+		if(head_ == DataHead_Init)
+			to_cpu(false);
+
+		size_t offset_location = offset * element_size();
+		if(offset_location >= bytes_){
+			INFOE("Offset location[%lld] >= bytes_[%lld], out of range", offset_location, bytes_);
+			return *this;
+		}
+
+		size_t copyed_bytes = num_element * element_size();
+		size_t remain_bytes = bytes_ - offset_location;
+		if(copyed_bytes > remain_bytes){
+			INFOE("Copyed bytes[%lld] > remain bytes[%lld], out of range", copyed_bytes, remain_bytes);
+			return *this;
+		}
+
+		if(head_ == DataHead_InGPU){
+			checkCudaRuntime(cudaMemcpyAsync(data_->gpu() + offset_location, src, copyed_bytes, cudaMemcpyHostToDevice, stream_));
+		}else if(head_ == DataHead_InCPU){
+			checkCudaRuntime(cudaMemcpyAsync(data_->cpu() + offset_location, src, copyed_bytes, cudaMemcpyHostToHost, stream_));
+		}else{
+			INFOE("Unsupport head type %d", head_);
+		}
+		return *this;
+	}
+
+	Tensor& Tensor::release() {
 		data_->release_all();
 		shape_.clear();
 		capacity_ = 0;
 		bytes_ = 0;
 		head_ = DataHead_Init;
+		return *this;
 	}
 
 	bool Tensor::empty() {
@@ -160,8 +219,8 @@ namespace TRT{
 		}
 	}
 
-	void Tensor::resize(const std::vector<int>& dims) {
-		resize(dims.size(), dims.data());
+	Tensor& Tensor::resize(const std::vector<int>& dims) {
+		return resize(dims.size(), dims.data());
 	}
 
 	int Tensor::numel(){
@@ -172,16 +231,16 @@ namespace TRT{
 		return value;
 	}
 
-	void Tensor::resize_single_dim(int idim, int size){
+	Tensor& Tensor::resize_single_dim(int idim, int size){
 
 		Assert(idim >= 0 && idim < shape_.size());
 
 		auto new_shape = shape_;
 		new_shape[idim] = size;
-		resize(new_shape);
+		return resize(new_shape);
 	}
 
-	void Tensor::resize(int ndims, const int* dims) {
+	Tensor& Tensor::resize(int ndims, const int* dims) {
 
 		vector<int> setup_dims(ndims);
 		for(int i = 0; i < ndims; ++i){
@@ -196,9 +255,10 @@ namespace TRT{
 		this->shape_ = setup_dims;
 		this->adajust_memory_by_update_dims_or_type();
 		this->compute_shape_string();
+		return *this;
 	}
 
-	void Tensor::adajust_memory_by_update_dims_or_type(){
+	Tensor& Tensor::adajust_memory_by_update_dims_or_type(){
 		
 		if(data_ == nullptr)
 			data_ = make_shared<MixMemory>();
@@ -212,16 +272,18 @@ namespace TRT{
 			this->capacity_ = needed_size;
 		}
 		this->bytes_ = needed_size;
+		return *this;
 	}
 
-	void Tensor::synchronize(){ 
+	Tensor& Tensor::synchronize(){ 
 		checkCudaRuntime(cudaStreamSynchronize(stream_));
+		return *this;
 	}
 
-	void Tensor::to_gpu(bool copyedIfCPU) {
+	Tensor& Tensor::to_gpu(bool copyedIfCPU) {
 
 		if (head_ == DataHead_InGPU)
-			return;
+			return *this;
 
 		head_ = DataHead_InGPU;
 		data_->gpu(this->bytes_);
@@ -229,12 +291,13 @@ namespace TRT{
 		if (copyedIfCPU && data_->cpu() != nullptr) {
 			checkCudaRuntime(cudaMemcpyAsync(data_->gpu(), data_->cpu(), bytes_, cudaMemcpyHostToDevice, stream_));
 		}
+		return *this;
 	}
 	
-	void Tensor::to_cpu(bool copyedIfGPU) {
+	Tensor& Tensor::to_cpu(bool copyedIfGPU) {
 
 		if (head_ == DataHead_InCPU)
-			return;
+			return *this;
 
 		head_ = DataHead_InCPU;
 		data_->cpu(bytes_);
@@ -243,12 +306,13 @@ namespace TRT{
 			checkCudaRuntime(cudaMemcpyAsync(data_->cpu(), data_->gpu(), bytes_, cudaMemcpyDeviceToHost, stream_));
 			checkCudaRuntime(cudaStreamSynchronize(stream_));
 		}
+		return *this;
 	}
 
-	void Tensor::to_float() {
+	Tensor& Tensor::to_float() {
 
 		if (type() == DataType::dtFloat)
-			return;
+			return *this;
 
 		#ifdef HAS_CUDA_HALF
 
@@ -272,13 +336,14 @@ namespace TRT{
 		#else
 			INFOF("not implement function");
 		#endif
+		return *this;
 	}
 
 	#ifdef HAS_CUDA_HALF
-	void Tensor::to_half() {
+	Tensor& Tensor::to_half() {
 
 		if (type() == DataType::dtHalfloat)
-			return;
+			return *this;
 
 		if (type() != DataType::dtFloat) {
 			INFOF("not implement function");
@@ -296,10 +361,11 @@ namespace TRT{
 		adajust_memory_by_update_dims_or_type();
 		memcpy(cpu(), convert_memory, bytes_);
 		free(convert_memory);
+		return *this;
 	}
 	#endif
 
-	void Tensor::set_to(float value) {
+	Tensor& Tensor::set_to(float value) {
 		int c = count();
 		if (dtype_ == DataType::dtFloat) {
 			float* ptr = cpu<float>();
@@ -315,6 +381,7 @@ namespace TRT{
 				INFOF("not implement function");
 			#endif
 		}
+		return *this;
 	}
 
 	int Tensor::offset(const std::vector<int>& index){
@@ -335,7 +402,7 @@ namespace TRT{
 	}
 
 	#ifdef USE_OPENCV
-	void Tensor::set_norm_mat(int n, const cv::Mat& image, float mean[3], float std[3]) {
+	Tensor& Tensor::set_norm_mat(int n, const cv::Mat& image, float mean[3], float std[3]) {
 
 		Assert(image.channels() == 3 && !image.empty() && type() == DataType::dtFloat);
 		Assert(ndims() == 4 && n < shape_[0]);
@@ -361,9 +428,10 @@ namespace TRT{
 
 		for (int c = 0; c < 3; ++c)
 			ms[c] = (ms[c] - mean[c]) / std[c];
+		return *this;
 	}
 
-	void Tensor::set_mat(int n, const cv::Mat& _image) {
+	Tensor& Tensor::set_mat(int n, const cv::Mat& _image) {
 
 		cv::Mat image = _image;
 		Assert(!image.empty() && CV_MAT_DEPTH(image.type()) == CV_32F && type() == DataType::dtFloat);
@@ -377,7 +445,7 @@ namespace TRT{
 
 		if (image.channels() == 1) {
 			memcpy(cpu<float>(n), image.data, width * height * sizeof(float));
-			return;
+			return *this;
 		}
 
 		vector<cv::Mat> ms(image.channels());
@@ -386,6 +454,7 @@ namespace TRT{
 
 		cv::split(image, &ms[0]);
 		Assert((void*)ms[0].data == (void*)cpu<float>(n));
+		return *this;
 	}
 	#endif // USE_OPENCV
 

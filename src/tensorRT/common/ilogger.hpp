@@ -41,6 +41,7 @@ namespace iLogger{
     string file_name(const string& path, bool include_suffix);
     string directory(const string& path);
     long long timestamp_now();
+    double timestamp_now_float();
     time_t last_modify(const string& file);
     vector<uint8_t> load_file(const string& file);
     string load_text_file(const string& file);

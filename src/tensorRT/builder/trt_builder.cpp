@@ -210,7 +210,11 @@ namespace TRT {
 	bool layer_has_input_tensor(nvinfer1::ILayer* layer){
 		int num_input = layer->getNbInputs();
 		for(int i = 0; i < num_input; ++i){
-			if(layer->getInput(i)->isNetworkInput())
+			auto input = layer->getInput(i);
+			if(input == nullptr)
+				continue;
+
+			if(input->isNetworkInput())
 				return true;
 		}
 		return false;
@@ -219,7 +223,12 @@ namespace TRT {
 	bool layer_has_output_tensor(nvinfer1::ILayer* layer){
 		int num_output = layer->getNbOutputs();
 		for(int i = 0; i < num_output; ++i){
-			if(layer->getOutput(i)->isNetworkOutput())
+
+			auto output = layer->getOutput(i);
+			if(output == nullptr)
+				continue;
+
+			if(output->isNetworkOutput())
 				return true;
 		}
 		return false;

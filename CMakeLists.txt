@@ -62,15 +62,15 @@ target_link_libraries(pro protobuf pthread plugin_list)
 target_link_libraries(pro ${OpenCV_LIBS})
 
 add_custom_target(
-    run_yolov5
+    run_yolo
     DEPENDS pro
     WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}/workspace
-    COMMAND ./pro yolov5
+    COMMAND ./pro yolo
 )
 
 add_custom_target(
-    run_yolox 
+    run_alphapose 
     DEPENDS pro
     WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}/workspace
-    COMMAND ./pro yolox
+    COMMAND ./pro alphapose
 )

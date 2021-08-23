@@ -2,27 +2,31 @@
 #include <stdio.h>
 #include <string.h>
 
-int yolov5_main();
-int yolox_main();
+int yolo_main();
+int alphapose_main();
+int app_fall_recognize();
 
 int main(int argc, char** argv){
 
-    const char* method = "yolov5";
+    const char* method = "yolo";
     if(argc > 1){
         method = argv[1];
     }
 
-    if(strcmp(method, "yolov5") == 0){
-        yolov5_main();
-    }else if(strcmp(method, "yolox") == 0){
-        yolox_main();
+    if(strcmp(method, "yolo") == 0){
+        yolo_main();
+    }else if(strcmp(method, "alphapose") == 0){
+        alphapose_main();
+    }else if(strcmp(method, "app_fall_recognize") == 0){
+        app_fall_recognize();
     }else{
         printf(
             "Help: \n"
-            "    ./pro method[yolov5 or yolox]\n"
+            "    ./pro method[yolo、alphapose、app_fall_recognize]\n"
             "\n"
-            "    ./pro yolov5\n"
-            "    ./pro yolox\n"
+            "    ./pro yolo\n"
+            "    ./pro alphapose\n"
+            "    ./pro app_fall_recognize\n"
         );
     }
     return 0;

@@ -161,21 +161,21 @@ namespace TRT {
 			return;
 		}
 
-		INFOV("Infer %p detail", this);
-		INFOV("\tMax Batch Size: %d", this->get_max_batch_size());
-		INFOV("\tDynamic Batch Dimension: %s", this->is_dynamic_batch_dimension() ? "true" : "false");
-		INFOV("\tInputs: %d", inputs_.size());
+		INFO("Infer %p detail", this);
+		INFO("\tMax Batch Size: %d", this->get_max_batch_size());
+		INFO("\tDynamic Batch Dimension: %s", this->is_dynamic_batch_dimension() ? "true" : "false");
+		INFO("\tInputs: %d", inputs_.size());
 		for(int i = 0; i < inputs_.size(); ++i){
 			auto& tensor = inputs_[i];
 			auto& name = inputs_name_[i];
-			INFOV("\t\t%d.%s : shape {%s}", i, name.c_str(), tensor->shape_string());
+			INFO("\t\t%d.%s : shape {%s}", i, name.c_str(), tensor->shape_string());
 		}
 
-		INFOV("\tOutputs: %d", outputs_.size());
+		INFO("\tOutputs: %d", outputs_.size());
 		for(int i = 0; i < outputs_.size(); ++i){
 			auto& tensor = outputs_[i];
 			auto& name = outputs_name_[i];
-			INFOV("\t\t%d.%s : shape {%s}", i, name.c_str(), tensor->shape_string());
+			INFO("\t\t%d.%s : shape {%s}", i, name.c_str(), tensor->shape_string());
 		}
 	}
 

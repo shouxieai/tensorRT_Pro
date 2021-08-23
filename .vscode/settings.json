@@ -4,6 +4,7 @@
     "files.associations": {
         "*.cpp": "cpp",
         "*.cu": "cpp",
+        "*.cuh": "cpp",
         "unordered_map": "cpp",
         "chrono": "cpp",
         "thread": "cpp",

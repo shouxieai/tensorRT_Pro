@@ -52,6 +52,15 @@ namespace CUDATools{
 
     dim3 grid_dims(int numJobs);
     dim3 block_dims(int numJobs);
+
+    class AutoDevice{
+    public:
+        AutoDevice(int device_id = 0);
+        virtual ~AutoDevice();
+    
+    private:
+        int old_ = -1;
+    };
 }
 
 

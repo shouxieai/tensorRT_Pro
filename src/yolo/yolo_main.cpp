@@ -9,9 +9,6 @@
  *   2. 基于INT8的模型编译、和推理执行
  *   3. 自定义插件的实现，从pytorch导出到推理编译，并支持FP16
  * 
- *   预处理、后处理采用CPU实现（若想GPU可以自行实现）
- *   一次推理5张图获取结果
- * 
  *   我们是一群热血的个人组织者，力图发布免费高质量内容
  *   我们的博客地址：http://zifuture.com:8090
  *   我们的B站地址：https://space.bilibili.com/1413433465
@@ -30,7 +27,7 @@
 #include <common/ilogger.hpp>
 
 // 封装的方式测试
-#include "yolox.hpp"
+#include "yolo.hpp"
 
 using namespace std;
 
@@ -52,28 +49,30 @@ static const char* cocolabels[] = {
     "scissors", "teddy bear", "hair drier", "toothbrush"
 };
 
-static void forward_engine(const string& engine_file){
+bool requires(const char* name);
 
-    iLogger::set_log_level(ILOGGER_VERBOSE);
+static void forward_engine(const string& engine_file, Yolo::Type type){
 
-    auto engine = YoloX::create_infer(engine_file, 0);
+    auto engine = Yolo::create_infer(engine_file, type, 0, 0.4f);
     if(engine == nullptr){
         INFOE("Engine is nullptr");
         return;
     }
 
-    iLogger::rmtree("detect_result");
-    iLogger::mkdir("detect_result");
+    string root = iLogger::format("detect_result_%s", Yolo::type_name(type));
+    iLogger::rmtree(root);
+    iLogger::mkdir(root);
 
     auto files = iLogger::find_files("inference", "*.jpg;*.jpeg;*.png;*.gif;*.tif");
     for(int i = 0; i < files.size(); ++i){
         auto image = cv::imread(files[i]);
 
-        // 使用eingine->commits一次推理一批，越多越好，性能最好
-        auto box   = engine->commit(image).get();
+        auto t0    = iLogger::timestamp_now_float();
+        auto boxes = engine->commit(image).get();
+        float inference_time = iLogger::timestamp_now_float() - t0;
 
         // 框给画到图上
-        for(auto& obj : box){
+        for(auto& obj : boxes){
 
             // 使用根据类别计算的随机颜色填充
             uint8_t b, g, r;
@@ -82,14 +81,14 @@ static void forward_engine(const string& engine_file){
 
             // 绘制类别名字
             auto name = cocolabels[obj.class_label];
-            int width = strlen(name) * 18 + 10;
+            int width = cv::getTextSize(name, 0, 1, 2, nullptr).width + 10;
             cv::rectangle(image, cv::Point(obj.left-3, obj.top-33), cv::Point(obj.left + width, obj.top), cv::Scalar(b, g, r), -1);
             cv::putText(image, iLogger::format("%s", name), cv::Point(obj.left, obj.top-5), 0, 1, cv::Scalar::all(0), 2, 16);
         }
 
         string file_name = iLogger::file_name(files[i], false);
-        string save_path = iLogger::format("detect_result/%s.jpg", file_name.c_str());
-        INFO("Save to %s", save_path.c_str());
+        string save_path = iLogger::format("%s/%s.jpg", root.c_str(), file_name.c_str());
+        INFO("Save to %s, %d object, %.2f ms", save_path.c_str(), boxes.size(), inference_time);
         cv::imwrite(save_path, image);
     }
 }
@@ -128,9 +127,9 @@ static void test_plugin(){
     INFO("output %f, output_real = %f", output->at<float>(0), output_real);
 }
 
-static void test_int8(){
+static void test_int8(Yolo::Type type){
 
-    INFO("===================== test int8 ==================================");
+    INFO("===================== test %s int8 ==================================", Yolo::type_name(type));
     auto int8process = [](int current, int count, vector<string>& images, shared_ptr<TRT::Tensor>& tensor){
 
         INFO("Int8 %d / %d", current, count);
@@ -146,13 +145,21 @@ static void test_int8(){
         }
     };
 
-    iLogger::set_log_level(ILOGGER_VERBOSE);
+    const char* name = nullptr;
+    if(type == Yolo::Type::V5){
+        name = "yolov5m";
+    }else if(type == Yolo::Type::X){
+        name = "yolox_m";
+    }
 
-    auto onnx_file = "yolox_m.onnx";
-    auto model_file = "yolox_m.int8.trtmodel";
+    if(not requires(name))
+        return;
+
+    string onnx_file = iLogger::format("%s.onnx", name);
+    string model_file = iLogger::format("%s.int8.trtmodel", name);
     int test_batch_size = 1;  // 当你需要修改batch大于1时，请查看yolox.cpp:260行备注
-    
-    if(!iLogger::exists(model_file)){
+
+    if(not iLogger::exists(model_file)){
         TRT::compile(
             TRT::TRTMode_INT8,   // 编译方式有，FP32、FP16、INT8
             {},                         // onnx时无效，caffe的输出节点标记
@@ -166,22 +173,31 @@ static void test_int8(){
         );
     }
 
-    forward_engine(model_file);
+    forward_engine(model_file, type);
 }
 
-static void test_fp32(){
+static void test_fp32(Yolo::Type type){
 
     TRT::set_device(0);
-    iLogger::set_log_level(ILOGGER_VERBOSE);
-    INFO("===================== test yolox fp32 ==================================");
+    INFO("===================== test %s fp32 ==================================", Yolo::type_name(type));
 
-    auto onnx_file = "yolox_m.onnx";
-    auto model_file = "yolox_m.fp32.trtmodel";
-    int test_batch_size = 1;  // 当你需要修改batch大于1时，请查看yolox.cpp:260行备注
+    const char* name = nullptr;
+    if(type == Yolo::Type::V5){
+        name = "yolov5m";
+    }else if(type == Yolo::Type::X){
+        name = "yolox_m";
+    }
+
+    if(not requires(name))
+        return;
+
+    string onnx_file = iLogger::format("%s.onnx", name);
+    string model_file = iLogger::format("%s.fp32.trtmodel", name);
+    int test_batch_size = 5;  // 当你需要修改batch大于1时，请查看yolox.cpp:260行备注
     
     // 动态batch和静态batch，如果你想要弄清楚，请打开http://www.zifuture.com:8090/
     // 找到右边的二维码，扫码加好友后进群交流（免费哈，就是技术人员一起沟通）
-    if(!iLogger::exists(model_file)){
+    if(not iLogger::exists(model_file)){
         TRT::compile(
             TRT::TRTMode_FP32,   // 编译方式有，FP32、FP16、INT8
             {},                         // onnx时无效，caffe的输出节点标记
@@ -193,17 +209,14 @@ static void test_fp32(){
         );
     }
 
-    forward_engine(model_file);
+    forward_engine(model_file, type);
 }
 
-int yolox_main(){
+int yolo_main(){
 
-    if(!iLogger::exists("yolox_m.onnx")){
-        INFO("Auto download yolox_m.onnx");
-        system("wget http://zifuture.com:1556/fs/25.shared/yolox_m.onnx");
-    }
-
-    test_fp32();
+    test_fp32(Yolo::Type::V5);
+    test_fp32(Yolo::Type::X);
     // test_plugin();
+    // test_int8(Yolo::Type::X);
     return 0;
 }

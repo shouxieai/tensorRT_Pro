@@ -80,7 +80,7 @@ namespace TRT {
 		Tensor(const Tensor& other) = delete;
 		Tensor& operator = (const Tensor& other) = delete;
 
-		explicit Tensor();
+		explicit Tensor(DataType dtType = DataType::dtFloat);
 		explicit Tensor(int n, int c, int h, int w, DataType dtType = DataType::dtFloat);
 		explicit Tensor(int ndims, const int* dims, DataType dtType = DataType::dtFloat);
 		explicit Tensor(const std::vector<int>& dims, DataType dtType = DataType::dtFloat);
@@ -104,29 +104,29 @@ namespace TRT {
 		inline int element_size()             const { return data_type_size(dtype_); }
 
 		std::shared_ptr<Tensor> clone();
-		void release();
-		void set_to(float value);
+		Tensor& release();
+		Tensor& set_to(float value);
 		bool empty();
 
 		template<typename ... _Args>
-		void resize(int t, _Args&& ... args){
+		Tensor& resize(int t, _Args&& ... args){
 			resized_dim_.clear();
-			resize_impl(t, args...);
+			return resize_impl(t, args...);
 		}
 
-		void resize(int ndims, const int* dims);
-		void resize(const std::vector<int>& dims);
-		void resize_single_dim(int idim, int size);
+		Tensor& resize(int ndims, const int* dims);
+		Tensor& resize(const std::vector<int>& dims);
+		Tensor& resize_single_dim(int idim, int size);
 		int  count(int start_axis = 0) const;
 
-		void to_gpu(bool copyedIfCPU = true);
-		void to_cpu(bool copyedIfGPU = true);
+		Tensor& to_gpu(bool copyedIfCPU = true);
+		Tensor& to_cpu(bool copyedIfGPU = true);
 
 		#ifdef HAS_CUDA_HALF
-		void to_half();
+		Tensor& to_half();
 		#endif
 
-		void to_float();
+		Tensor& to_float();
 		inline void* cpu() const { ((Tensor*)this)->to_cpu(); return data_->cpu(); }
 		inline void* gpu() const { ((Tensor*)this)->to_gpu(); return data_->gpu(); }
 
@@ -154,25 +154,29 @@ namespace TRT {
 
 		template<typename DataT, typename ... _Args> 
 		inline DataT& at(int t, _Args&& ... args) { return *(cpu<DataT>() + offset(t, args...)); }
-
+		
+		std::shared_ptr<MixMemory> get_data()                    {return data_;}
 		std::shared_ptr<MixMemory> get_workspace()               {return workspace_;}
-		void set_workspace(std::shared_ptr<MixMemory> workspace) {workspace_ = workspace;}
+		Tensor& set_workspace(std::shared_ptr<MixMemory> workspace) {workspace_ = workspace;}
 
 		CUStream get_stream(){return stream_;}
-		void     set_stream(CUStream stream){stream_ = stream;}
+		Tensor& set_stream(CUStream stream){stream_ = stream;}
 
 		#ifdef USE_OPENCV
-		void    set_mat     (int n, const cv::Mat& image);
-		void    set_norm_mat(int n, const cv::Mat& image, float mean[3], float std[3]);
+		Tensor& set_mat     (int n, const cv::Mat& image);
+		Tensor& set_norm_mat(int n, const cv::Mat& image, float mean[3], float std[3]);
 		cv::Mat at_mat(int n = 0, int c = 0) { return cv::Mat(height(), width(), CV_32F, cpu<float>(n, c)); }
 		#endif // USE_OPENCV
 
-		void        synchronize();
+		Tensor& synchronize();
 		const char* shape_string() const{return shape_string_;}
+
+		Tensor& copy_from_gpu(size_t offset, const void* src, size_t num_element);
+		Tensor& copy_from_cpu(size_t offset, const void* src, size_t num_element);
 
 		/**
 		
-		# 以下代码是python中加载数据
+		# 以下代码是python中加载Tensor
 		import numpy as np
 
 		def load_tensor(file):
@@ -198,15 +202,15 @@ namespace TRT {
 		bool save_to_file(const std::string& file);
 
 	private:
-		void resize_impl(int value){
+		Tensor& resize_impl(int value){
 			resized_dim_.push_back(value);
-			resize(resized_dim_);
+			return resize(resized_dim_);
 		}
 
 		template<typename ... _Args>
-		void resize_impl(int t, _Args&& ... args){
+		Tensor& resize_impl(int t, _Args&& ... args){
 			resized_dim_.push_back(t);
-			resize_impl(args...);
+			return resize_impl(args...);
 		}
 
 		int offset_impl(int value){
@@ -220,8 +224,8 @@ namespace TRT {
 			return offset_impl(args...);
 		}
 
-		void compute_shape_string();
-		void adajust_memory_by_update_dims_or_type();
+		Tensor& compute_shape_string();
+		Tensor& adajust_memory_by_update_dims_or_type();
 
 	private:
 		std::vector<int> resized_dim_, offset_index_;

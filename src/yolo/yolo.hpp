@@ -1,5 +1,5 @@
-#ifndef YOLOV5_HPP
-#define YOLOV5_HPP
+#ifndef YOLO_HPP
+#define YOLO_HPP
 
 #include <vector>
 #include <memory>
@@ -7,10 +7,19 @@
 #include <future>
 #include <opencv2/opencv.hpp>
 
-namespace YoloV5{
+/**
+ * @brief 发挥极致的性能体验
+ * 支持YoloX和YoloV5
+ */
+namespace Yolo{
 
     using namespace std;
     using namespace cv;
+
+    enum class Type : int{
+        V5 = 0,
+        X  = 1
+    };    
 
     struct ObjectBox{
         float left, top, right, bottom, confidence;
@@ -28,12 +37,12 @@ namespace YoloV5{
     class Infer{
     public:
         virtual shared_future<box_array> commit(const Mat& image) = 0;
-        virtual vector<shared_future<box_array>> commits(const vector<Mat>& images) = 0;
     };
 
     // RAII，如果创建失败，返回空指针
-    shared_ptr<Infer> create_infer(const string& engine_file, int gpuid);
+    shared_ptr<Infer> create_infer(const string& engine_file, Type type, int gpuid, float confidence_threshold=0.25f);
+    const char* type_name(Type type);
 
-}; // namespace YoloV5
+}; // namespace Yolo
 
-#endif // YOLOV5_HPP
+#endif // YOLO_HPP
