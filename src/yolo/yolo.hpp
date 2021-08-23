@@ -37,6 +37,7 @@ namespace Yolo{
     class Infer{
     public:
         virtual shared_future<box_array> commit(const Mat& image) = 0;
+        virtual vector<shared_future<box_array>> commits(const vector<Mat>& images) = 0;
     };
 
     // RAII，如果创建失败，返回空指针

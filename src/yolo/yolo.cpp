@@ -136,6 +136,7 @@ namespace Yolo{
             int max_batch_size = engine->get_max_batch_size();
             auto input         = engine->tensor("images");
             auto output        = engine->tensor("output");
+            bool dynamic_batch = engine->is_dynamic_batch_dimension();
             int num_classes    = output->size(2) - 5;
 
             input_width_       = input->size(3);
@@ -144,36 +145,50 @@ namespace Yolo{
             stream_            = engine->get_stream();
             gpu_               = gpuid;
             result.set_value(true);
-            input->resize_single_dim(0, max_batch_size);
+
+            // 余弦分配好内存
+            input->resize_single_dim(0, max_batch_size).to_gpu();
+            affin_matrix_device.set_stream(stream_);
+
+            // 这里8个值的目的是保证 8 * 4 % 32 == 0
             affin_matrix_device.resize(max_batch_size, 8).to_gpu();
+
+            // 这里的 1 + MAX_IMAGE_BBOX结构是，counter + bboxes ...
             output_array_device.resize(max_batch_size, 1 + MAX_IMAGE_BBOX * 6).to_gpu();   // left, top, right, bottom, confidence, class
 
             vector<Job> fetch_jobs;
             while(get_jobs_and_wait(fetch_jobs, max_batch_size)){
 
                 int infer_batch_size = fetch_jobs.size();
+                if(dynamic_batch){
+                    // 如果是动态batch，则修改当前推理的batch数量，能有效降低时间
+                    input->resize_single_dim(0, infer_batch_size);
+                }
+
                 for(int ibatch = 0; ibatch < infer_batch_size; ++ibatch){
                     auto& job  = fetch_jobs[ibatch];
                     auto& mono = job.mono_tensor->data();
                     affin_matrix_device.copy_from_gpu(affin_matrix_device.offset(ibatch), mono->get_workspace()->gpu(), 6);
-                    input->copy_from_gpu(input->offset(ibatch), mono->gpu(), input->count(1));
+                    input->copy_from_gpu(input->offset(ibatch), mono->gpu(), mono->count());
                     job.mono_tensor->release();
                 }
 
                 // 模型推理
                 engine->forward(false);
 
+                // 数据转到gpu为主，不需要复制
                 output_array_device.to_gpu(false);
                 for(int ibatch = 0; ibatch < infer_batch_size; ++ibatch){
                     
                     auto& job                 = fetch_jobs[ibatch];
                     float* image_based_output = output->gpu<float>(ibatch);
                     float* output_array_ptr   = output_array_device.gpu<float>(ibatch);
-                    auto affine_matrix        = affin_matrix_device.gpu<float>();
+                    auto affine_matrix        = affin_matrix_device.gpu<float>(ibatch);
                     checkCudaRuntime(cudaMemsetAsync(output_array_ptr, 0, sizeof(int), stream_));
                     decode_kernel_invoker(image_based_output, output->size(1), num_classes, confidence_threshold_, 0.5f, affine_matrix, output_array_ptr, MAX_IMAGE_BBOX, stream_);
                 }
 
+                // 数据转到cpu上，复制过来
                 output_array_device.to_cpu();
                 for(int ibatch = 0; ibatch < infer_batch_size; ++ibatch){
                     float* parray = output_array_device.cpu<float>(ibatch);
@@ -240,8 +255,12 @@ namespace Yolo{
             return true;
         }
 
-        virtual std::shared_future<box_array> commit(const Mat& input) override{
-            return ControllerImpl::commit(input);
+        virtual vector<shared_future<box_array>> commits(const vector<Mat>& images) override{
+            return ControllerImpl::commits(images);
+        }
+
+        virtual std::shared_future<box_array> commit(const Mat& image) override{
+            return ControllerImpl::commit(image);
         }
 
     private:

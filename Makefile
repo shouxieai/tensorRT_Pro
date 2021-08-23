@@ -1,11 +1,13 @@
 
 cpp_srcs := $(shell find src -name "*.cpp")
 cpp_objs := $(cpp_srcs:.cpp=.o)
-cpp_objs := $(subst src/,objs/,$(cpp_objs))
+cpp_objs := $(cpp_objs:src/%=objs/%)
+cpp_mk   := $(cpp_objs:.o=.mk)
 
 cu_srcs := $(shell find src -name "*.cu")
 cu_objs := $(cu_srcs:.cu=.cuo)
-cu_objs := $(subst src/,objs/,$(cu_objs))
+cu_objs := $(cu_objs:src/%=objs/%)
+cu_mk   := $(cu_objs:.cuo=.cumk)
 
 # 配置你的库路径
 # 1. onnx-tensorrt（项目集成了，不需要配置，下面地址是下载位置）
@@ -64,6 +66,10 @@ cpp_compile_flags += $(include_paths)
 cu_compile_flags  += $(include_paths)
 link_flags 		  += $(library_paths) $(link_librarys) $(run_paths)
 
+ifneq ($(MAKECMDGOALS), clean)
+-include $(cpp_mk) $(cu_mk)
+endif
+
 pro : workspace/pro
 
 workspace/pro : $(cpp_objs) $(cu_objs)
@@ -81,6 +87,16 @@ objs/%.cuo : src/%.cu
 	@mkdir -p $(dir $@)
 	@nvcc -c $< -o $@ $(cu_compile_flags)
 
+objs/%.mk : src/%.cpp
+	@echo Compile depends CXX $<
+	@mkdir -p $(dir $@)
+	@g++ -M $< -MF $@ -MT $(@:.mk=.o) $(cpp_compile_flags)
+	
+objs/%.cumk : src/%.cu
+	@echo Compile depends CUDA $<
+	@mkdir -p $(dir $@)
+	@nvcc -M $< -MF $@ -MT $(@:.cumk=.o) $(cu_compile_flags)
+
 run_yolo : workspace/pro
 	@cd workspace && ./pro yolo
 
@@ -96,4 +112,4 @@ debug :
 clean :
 	@rm -rf objs workspace/pro
 
-.PHONY : clean run debug pro
+.PHONY : clean run_yolo run_alphapose run_fall debug

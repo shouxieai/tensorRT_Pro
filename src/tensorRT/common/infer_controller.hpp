@@ -63,6 +63,31 @@ public:
         return job.pro->get_future();
     }
 
+    virtual std::vector<std::shared_future<Output>> commits(const std::vector<Input>& inputs){
+
+        std::vector<Job> jobs(inputs.size());
+        std::vector<std::shared_future<Output>> results(inputs.size());
+
+        for(int i = 0; i < inputs.size(); ++i){
+            Job& job = jobs[i];
+            job.pro = std::make_shared<std::promise<Output>>();
+            if(!preprocess(job, inputs[i])){
+                job.pro->set_value(Output());
+            }
+            results[i] = job.pro->get_future();
+        }
+        
+        ///////////////////////////////////////////////////////////
+        {
+            std::unique_lock<std::mutex> l(jobs_lock_);
+            for(auto& job : jobs)
+                jobs_.emplace(std::move(job));
+        };
+
+        cond_.notify_one();
+        return results;
+    }
+
 protected:
     virtual void worker(std::promise<bool>& result) = 0;
     virtual bool preprocess(Job& job, const Input& input) = 0;

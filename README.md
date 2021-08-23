@@ -57,12 +57,32 @@ auto box = engine->commit(image).get();
 ```bash
 git clone git@github.com:ultralytics/yolov5.git
 ```
-2. 导出onnx模型
+
+2. 修改代码，保证动态batchsize
+```python
+# yolov5/models/yolo.py第55行，forward函数 
+# bs, _, ny, nx = x[i].shape  # x(bs,255,20,20) to x(bs,3,20,20,85)
+# x[i] = x[i].view(bs, self.na, self.no, ny, nx).permute(0, 1, 3, 4, 2).contiguous()
+# 修改为:
+
+bs, _, ny, nx = x[i].shape  # x(bs,255,20,20) to x(bs,3,20,20,85)
+bs = -1
+ny = int(ny)
+nx = int(nx)
+x[i] = x[i].view(bs, self.na, self.no, ny, nx).permute(0, 1, 3, 4, 2).contiguous()
+
+# yolov5/models/yolo.py第70行
+#  z.append(y.view(bs, -1, self.no))
+# 修改为：
+z.append(y.view(bs, self.na * ny * nx, self.no))
+```
+
+3. 导出onnx模型
 ```bash
 cd yolov5
 python export.py
 ```
-3. 复制模型并执行
+4. 复制模型并执行
 ```bash
 cp yolov5/yolov5m.onnx tensorRT_cpp/workspace/
 cd tensorRT_cpp

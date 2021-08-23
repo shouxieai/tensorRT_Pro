@@ -157,9 +157,9 @@ namespace TRT{
 		}
 
 		if(head_ == DataHead_InGPU){
-			checkCudaRuntime(cudaMemcpyAsync(data_->gpu() + offset_location, src, copyed_bytes, cudaMemcpyDeviceToDevice, stream_));
+			checkCudaRuntime(cudaMemcpyAsync(gpu<unsigned char>() + offset_location, src, copyed_bytes, cudaMemcpyDeviceToDevice, stream_));
 		}else if(head_ == DataHead_InCPU){
-			checkCudaRuntime(cudaMemcpyAsync(data_->cpu() + offset_location, src, copyed_bytes, cudaMemcpyDeviceToHost, stream_));
+			checkCudaRuntime(cudaMemcpyAsync(cpu<unsigned char>() + offset_location, src, copyed_bytes, cudaMemcpyDeviceToHost, stream_));
 		}else{
 			INFOE("Unsupport head type %d", head_);
 		}
@@ -266,10 +266,9 @@ namespace TRT{
 		int needed_size = this->numel() * element_size();
 		if (needed_size > capacity_) {
 			data_->release_all();
-			capacity_ = 0;
 			bytes_ = 0;
 			head_ = DataHead_Init;
-			this->capacity_ = needed_size;
+			capacity_ = needed_size;
 		}
 		this->bytes_ = needed_size;
 		return *this;
@@ -286,7 +285,7 @@ namespace TRT{
 			return *this;
 
 		head_ = DataHead_InGPU;
-		data_->gpu(this->bytes_);
+		data_->gpu(capacity_);
 
 		if (copyedIfCPU && data_->cpu() != nullptr) {
 			checkCudaRuntime(cudaMemcpyAsync(data_->gpu(), data_->cpu(), bytes_, cudaMemcpyHostToDevice, stream_));
@@ -300,7 +299,7 @@ namespace TRT{
 			return *this;
 
 		head_ = DataHead_InCPU;
-		data_->cpu(bytes_);
+		data_->cpu(capacity_);
 
 		if (copyedIfGPU && data_->gpu() != nullptr) {
 			checkCudaRuntime(cudaMemcpyAsync(data_->cpu(), data_->gpu(), bytes_, cudaMemcpyDeviceToHost, stream_));
