@@ -1,31 +1,10 @@
-
-/**
- * @file _main.cpp
- * @author 手写AI (zifuture.com:8090)
- * @date 2021-07-26
- * 
- *   实现了基于TensorRT对yolox的推理工作 
- *   1. 基于FP32的模型编译、和推理执行
- *   2. 基于INT8的模型编译、和推理执行
- *   3. 自定义插件的实现，从pytorch导出到推理编译，并支持FP16
- * 
- *   预处理、后处理采用CPU实现（若想GPU可以自行实现）
- *   一次推理5张图获取结果
- * 
- *   我们是一群热血的个人组织者，力图发布免费高质量内容
- *   我们的博客地址：http://zifuture.com:8090
- *   我们的B站地址：https://space.bilibili.com/1413433465
- *   
- *   如果想要深入学习关于tensorRT的技术栈，请通过博客中的二维码联系我们（免费崔更即可）
- *   请关注B站，我们根据情况发布相关教程视频（免费）
- */
-
-// 模型编译时使用的头文件
 #include <builder/trt_builder.hpp>
 #include <infer/trt_infer.hpp>
 #include <common/ilogger.hpp>
 #include "app_retinaface/retinaface.hpp"
 #include "app_arcface/arcface.hpp"
+#include "tools/deepsort.hpp"
+#include "tools/zmq_remote_show.hpp"
 
 using namespace std;
 using namespace cv;
@@ -77,43 +56,53 @@ tuple<Mat, vector<string>> build_library(shared_ptr<RetinaFace::Infer> detector,
     INFO("Build library, %d images", libs.size());
 
     for(auto& file : libs){
-        auto name  = iLogger::file_name(file, false);
-        Mat image  = imread(file);
-        INFO("%d x %d", image.rows, image.cols);
+        auto file_name = iLogger::file_name(file, false);
+        Mat image      = imread(file);
+
         auto faces = detector->commit(image).get();
-
-        for(int i = 0; i < faces.size(); ++i){
-            auto& face = faces[i];
-            auto box   = Rect(face.left, face.top, face.right-face.left, face.bottom-face.top);
-            box        = box & Rect(0, 0, image.cols, image.rows);
-
-            if(box.width < 80 or box.height < 80)
-                continue;
-
-            if(box.area() == 0){
-                INFOE("Invalid box, %d, %d, %d, %d", box.x, box.y, box.width, box.height);
-                continue;
-            }
-
-            auto crop  = image(box).clone();
-            Arcface::landmarks landmarks;
-            for(int j = 0; j < 10; ++j)
-                landmarks.points[j] = face.landmark[j] - (j % 2 == 0 ? face.left : face.top);
-
-            auto feature     = arcface->commit(make_tuple(crop, landmarks)).get();
-            string face_name = iLogger::format("%s.%02d", name.c_str(), i);
-            features.push_back(feature);
-            names.push_back(face_name);
-
-            INFO("New face [%s], %d feature, %.5f", face_name.c_str(), feature.cols, face.confidence);
-
-            rectangle(image, cv::Point(face.left, face.top), cv::Point(face.right, face.bottom), Scalar(0, 255, 0), 2);
-            for(int j = 0; j < 5; ++j)
-                circle(image, Point(face.landmark[j*2+0], face.landmark[j*2+1]), 3, Scalar(0, 255, 0), -1, 16);
-            putText(image, face_name, cv::Point(face.left, face.top), 0, 1, Scalar(0, 255, 0), 1, 16);
+        if(faces.empty()){
+            INFOW("%s no detect face.", file.c_str());
+            continue;
         }
 
-        string save_file = iLogger::format("face/library_draw/%s.jpg", name.c_str());
+        RetinaFace::FaceBox max_face = faces[0];
+        if(faces.size() > 1){
+            int max_face_index = std::max_element(faces.begin(), faces.end(), [](RetinaFace::FaceBox& face1, RetinaFace::FaceBox& face2){
+                return face1.area() < face2.area();
+            }) - faces.begin();
+            max_face = faces[max_face_index];
+        }
+
+        auto& face = max_face;
+        auto box   = Rect(face.left, face.top, face.right-face.left, face.bottom-face.top);
+        box        = box & Rect(0, 0, image.cols, image.rows);
+
+        if(box.width < 80 or box.height < 80)
+            continue;
+
+        if(box.area() == 0){
+            INFOE("Invalid box, %d, %d, %d, %d", box.x, box.y, box.width, box.height);
+            continue;
+        }
+
+        auto crop  = image(box).clone();
+        Arcface::landmarks landmarks;
+        for(int j = 0; j < 10; ++j)
+            landmarks.points[j] = face.landmark[j] - (j % 2 == 0 ? face.left : face.top);
+
+        auto feature     = arcface->commit(make_tuple(crop, landmarks)).get();
+        string face_name = file_name;
+        features.push_back(feature);
+        names.push_back(face_name);
+
+        INFO("New face [%s], %d feature, %.5f", face_name.c_str(), feature.cols, face.confidence);
+
+        rectangle(image, cv::Point(face.left, face.top), cv::Point(face.right, face.bottom), Scalar(0, 255, 0), 2);
+        for(int j = 0; j < 5; ++j)
+            circle(image, Point(face.landmark[j*2+0], face.landmark[j*2+1]), 3, Scalar(0, 255, 0), -1, 16);
+        putText(image, face_name, cv::Point(face.left, face.top), 0, 1, Scalar(0, 255, 0), 1, 16);
+
+        string save_file = iLogger::format("face/library_draw/%s.jpg", file_name.c_str());
         imwrite(save_file, image);
     }
     return make_tuple(features, names);
@@ -179,6 +168,156 @@ int app_arcface(){
 
         auto save_file = iLogger::format("face/result/%s.jpg", iLogger::file_name(file, false).c_str());
         imwrite(save_file, image);
+    }
+    INFO("Done");
+    return 0;
+}
+
+int app_arcface_video(){
+
+    TRT::set_device(0);
+    INFO("===================== test arcface fp32 ==================================");
+
+    if(!compile_models())
+        return 0;
+
+    iLogger::rmtree("face/library_draw");
+    iLogger::rmtree("face/result");
+    iLogger::mkdirs("face/library_draw");
+    iLogger::mkdirs("face/result");
+
+    auto detector = RetinaFace::create_infer("mb_retinaface.640x480.fp32.trtmodel", 0, 0.5f);
+    auto arcface  = Arcface::create_infer("arcface_iresnet50.fp32.trtmodel", 0);
+    auto library  = build_library(detector, arcface);
+    auto remote_show = create_zmq_remote_show();
+
+    // 这是一段人脸晃来晃去的视频
+    VideoCapture cap("exp/WIN_20210425_14_23_24_Pro.mp4");
+    Mat image;
+    while(cap.read(image)){
+        auto faces  = detector->commit(image).get();
+        vector<string> names(faces.size());
+        for(int i = 0; i < faces.size(); ++i){
+            auto& face = faces[i];
+            auto box   = Rect(face.left, face.top, face.right-face.left, face.bottom-face.top);
+            box        = box & Rect(0, 0, image.cols, image.rows);
+            auto crop  = image(box).clone();
+            
+            Arcface::landmarks landmarks;
+            for(int j = 0; j < 10; ++j)
+                landmarks.points[j] = face.landmark[j] - (j % 2 == 0 ? face.left : face.top);
+
+            auto out          = arcface->commit(make_tuple(crop, landmarks)).get();
+            auto scores       = Mat(get<0>(library) * out.t());
+            float* pscore     = scores.ptr<float>(0);
+            int label         = std::max_element(pscore, pscore + scores.rows) - pscore;
+            float match_score = max(0.0f, pscore[label]);
+
+            if(match_score > 0.3f){
+                names[i] = iLogger::format("%s[%.3f]", get<1>(library)[label].c_str(), match_score);
+            }
+        }
+
+        for(int i = 0; i < faces.size(); ++i){
+            auto& face = faces[i];
+
+            auto color = Scalar(0, 255, 0);
+            if(names[i].empty()){
+                color = Scalar(0, 0, 255);
+                names[i] = "Unknow";
+            }
+            
+            rectangle(image, cv::Point(face.left, face.top), cv::Point(face.right, face.bottom), color, 3);
+            putText(image, names[i], cv::Point(face.left, face.top - 5), 0, 1, color, 1, 16);
+        }
+
+        remote_show->post(image);
+    }
+    INFO("Done");
+    return 0;
+}
+
+int app_arcface_tracker(){
+
+    TRT::set_device(0);
+    INFO("===================== test arcface fp32 ==================================");
+
+    if(!compile_models())
+        return 0;
+
+    auto detector = RetinaFace::create_infer("mb_retinaface.640x480.fp32.trtmodel", 0, 0.5f);
+    auto arcface  = Arcface::create_infer("arcface_iresnet50.fp32.trtmodel", 0);
+    auto library  = build_library(detector, arcface);
+
+    // 请在本地电脑执行tools/show.py，对接好ip地址连接上这个远程显示服务
+    auto remote_show = create_zmq_remote_show();
+
+    // 这是一段人脸晃来晃去的视频
+    auto tracker     = DeepSORT::create_tracker();
+    VideoCapture cap("exp/WIN_20210425_14_23_24_Pro.mp4");
+    Mat image;
+    while(cap.read(image)){
+        auto faces  = detector->commit(image).get();
+        vector<string> names(faces.size());
+        vector<DeepSORT::Box> boxes;
+        for(int i = 0; i < faces.size(); ++i){
+            auto& face     = faces[i];
+            auto track_box = DeepSORT::convert_to_box(face);
+            auto box   = Rect(face.left, face.top, face.right-face.left, face.bottom-face.top);
+            box        = box & Rect(0, 0, image.cols, image.rows);
+            auto crop  = image(box).clone();
+            
+            Arcface::landmarks landmarks;
+            for(int j = 0; j < 10; ++j)
+                landmarks.points[j] = face.landmark[j] - (j % 2 == 0 ? face.left : face.top);
+
+            track_box.feature = arcface->commit(make_tuple(crop, landmarks)).get();
+            Mat scores        = get<0>(library) * track_box.feature.t();
+            float* pscore     = scores.ptr<float>(0);
+            int label         = std::max_element(pscore, pscore + scores.rows) - pscore;
+            float match_score = max(0.0f, pscore[label]);
+            boxes.emplace_back(std::move(track_box));
+
+            if(match_score > 0.3f){
+                names[i] = iLogger::format("%s[%.3f]", get<1>(library)[label].c_str(), match_score);
+            }
+        }
+        tracker->update(boxes);
+
+        auto final_objects = tracker->get_objects();
+        for(int i = 0; i < final_objects.size(); ++i){
+            auto& person = final_objects[i];
+            if(person->time_since_update() == 0 && person->state() == DeepSORT::State::Confirmed){
+                Rect box = DeepSORT::convert_box_to_rect(person->last_position());
+
+                rectangle(image, DeepSORT::convert_box_to_rect(person->predict_box()), Scalar(0, 255, 0), 2);
+                rectangle(image, box, Scalar(0, 255, 255), 3);
+
+                auto line = person->trace_line();
+                for(int j = 0; j < (int)line.size() - 1; ++j){
+                    auto& p = line[j];
+                    auto& np = line[j + 1];
+                    cv::line(image, p, np, Scalar(255, 128, 60), 2, 16);
+                }
+
+                putText(image, iLogger::format("%d", person->id()), Point(box.x, box.y-10), 0, 1, Scalar(0, 0, 255), 2, 16);
+           }
+        }
+
+        for(int i = 0; i < faces.size(); ++i){
+            auto& face = faces[i];
+
+            auto color = Scalar(0, 255, 0);
+            if(names[i].empty()){
+                color = Scalar(0, 0, 255);
+                names[i] = "Unknow";
+            }
+            
+            rectangle(image, cv::Point(face.left, face.top), cv::Point(face.right, face.bottom), color, 3);
+            putText(image, names[i], cv::Point(face.left + 30, face.top - 10), 0, 1, color, 2, 16);
+        }
+
+        remote_show->post(image);
     }
     INFO("Done");
     return 0;

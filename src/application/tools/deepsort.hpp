@@ -1,6 +1,6 @@
 
-#ifndef DPB_TRACKER_HPP
-#define DPB_TRACKER_HPP
+#ifndef DEEPSORT_HPP
+#define DEEPSORT_HPP
 
 #include <memory>
 #include <vector>
@@ -10,6 +10,7 @@ namespace DeepSORT {
 
 struct Box{
     float left, top, right, bottom;
+    cv::Mat feature;
 
     Box() = default;
     Box(float left, float top, float right, float bottom):left(left), top(top), right(right), bottom(bottom){}
@@ -47,6 +48,7 @@ public:
     virtual std::vector<cv::Point> trace_line() const = 0;
     virtual int trace_size() const = 0;
     virtual Box& location(int time_since_update=0) = 0;
+    virtual const cv::Mat& feature_bucket() const = 0;
 };
 
 class Tracker{
@@ -55,8 +57,13 @@ public:
     virtual void update(const BBoxes& boxes) = 0;
 };
 
-std::shared_ptr<Tracker> create_tracker();
+std::shared_ptr<Tracker> create_tracker(
+    float feature_score_threshold = 0.1f,
+    int nbuckets = 150,
+    int max_age  = 150,
+    int nhit     = 3
+);
 
 }
 
-#endif // DPB_TRACKER_HPP
+#endif // DEEPSORT_HPP

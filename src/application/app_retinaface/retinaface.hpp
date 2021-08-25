@@ -14,6 +14,11 @@ namespace RetinaFace{
     struct FaceBox{
         float left, top, right, bottom, confidence;
         float landmark[10];
+
+        cv::Rect cvbox() const{return cv::Rect(left, top, right-left, bottom-top);}
+        float width()    const{return max(0.0f, right-left);}
+        float height()   const{return max(0.0f, bottom-top);}
+        float area()     const{return width() * height();}
     };
 
     typedef vector<FaceBox> box_array;

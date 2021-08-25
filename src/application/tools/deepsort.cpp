@@ -563,18 +563,18 @@ namespace DeepSORT {
         TrackObjectImpl(const Box &box, 
                     const Eigen::Matrix<float, 8, 1> &mean,
                     const Eigen::Matrix<float, 8, 8> &covariance,
-                    int id_next) {
-                
+                    int id_next, int nbuckets, int max_age, int nhit)
+            :nbuckets_(nbuckets), max_age_(max_age), nhit_(nhit)
+        {
             last_position_ = box;
             covariance_    = covariance;
             mean_          = mean;
             id_            = id_next;
             state_         = State::Tentative;
+            feature_bucket_.push_back(box.feature);
             trace_.emplace_back(box);
         }
-        ~TrackObjectImpl() {
 
-        }
         virtual int time_since_update() const {return time_since_update_;}
         virtual State state() const {return state_;}
         virtual Box last_position() const {return last_position_;}
@@ -620,15 +620,24 @@ namespace DeepSORT {
         }
 
         void mark_missed() {
-            if (state_ == State::Tentative || time_since_update_ > 30) {
+            if (state_ == State::Tentative || time_since_update_ > max_age_) {
                 state_ = State::Deleted;
             }
         }
 
         void update(KalmanFilter &km_filter, const Box &box) {
             
+            if(feature_bucket_.rows < nbuckets_){
+                feature_bucket_.push_back(box.feature);
+            }else{
+                box.feature.copyTo(feature_bucket_.row(feature_cursor_++));
+
+                if(feature_cursor_ >= nbuckets_)
+                    feature_cursor_ = 0;
+            }
+
             trace_.push_back(box);
-            if (trace_.size() > 80) {
+            if (trace_.size() > nbuckets_) {
                 trace_.pop_front();
             }
 
@@ -637,9 +646,13 @@ namespace DeepSORT {
             ++ hits_;
             time_since_update_ = 0;
 
-            if (state_ == State::Tentative && hits_ >= 3) {
+            if (state_ == State::Tentative && hits_ >= nhit_) {
                 state_ = State::Confirmed;
             }
+        }
+
+        virtual const cv::Mat& feature_bucket() const override{
+            return feature_bucket_;
         }
 
         virtual std::vector<cv::Point> trace_line() const {
@@ -666,7 +679,13 @@ namespace DeepSORT {
         int age_{1};
         int hits_{1};
         int id_;
+        int feature_cursor_ = 0;
         std::deque<Box> trace_;
+        cv::Mat feature_bucket_;
+
+        int nbuckets_ = 100;
+        int max_age_ = 100;
+        int nhit_ = 3;
 
         Box last_position_;
         Eigen::Matrix<float, 8, 1> mean_;
@@ -680,7 +699,8 @@ namespace DeepSORT {
     class TrackerImpl : public Tracker
     {
     public:
-        TrackerImpl() {
+        TrackerImpl(float cosine_distance_threshold, int nbuckets, int max_age, int nhit)
+        :cosine_distance_threshold_(cosine_distance_threshold), nbuckets_(nbuckets), max_age_(max_age), nhit_(nhit) {
         }
 
         virtual ~TrackerImpl() {
@@ -704,7 +724,7 @@ namespace DeepSORT {
 
             predict();
 
-            int level_max = 30;
+            int level_max = max_age_;
             State states[2] = {State::Confirmed, State::Tentative};
             std::vector<int> unmatched_boxes_index, unmatched_objects_index;
             for (int i = 0; i < boxes.size(); ++i) {
@@ -803,7 +823,11 @@ namespace DeepSORT {
                         cost_data = 1e5;
                     }
                     else {
-                        cost_data = distance(TrackObject.last_position(), box);
+                        //cost_data = distance(TrackObject.last_position(), box);
+                        cv::Mat scores   = TrackObject.feature_bucket() * box.feature.t();
+                        double max_score = 0;
+                        cv::minMaxLoc(scores, nullptr, &max_score);
+                        cost_data = 1 - max_score;
                     }
                     cost_matrix_item.push_back(cost_data);
                 }
@@ -817,12 +841,11 @@ namespace DeepSORT {
         
             for (int i = 0; i < assignment.size(); ++i) {
                 if (assignment[i] < 0) {
-                    //assignment[i] = 0;
                     continue;
                 }
                 int obj_index = objects_index[i];
                 int box_index = boxes_index[assignment[i]];
-                if (cost_matrix_data[i][assignment[i]] < 200) {
+                if (cost_matrix_data[i][assignment[i]] < cosine_distance_threshold_) {
                     match_boxes_index.push_back(box_index);
                     match_objects_index.push_back(obj_index);
                 }
@@ -834,7 +857,7 @@ namespace DeepSORT {
             Eigen::Matrix<float, 8, 8> covariance;
             km_filter_.initiate(BBoxXYAH(box), mean, covariance);
 
-            objects_.emplace_back(box, mean, covariance, id_next_);
+            objects_.emplace_back(box, mean, covariance, id_next_, nbuckets_, max_age_, nhit_);
             ++ id_next_;
         }
 
@@ -842,10 +865,20 @@ namespace DeepSORT {
         int id_next_{1};
         std::vector<TrackObjectImpl> objects_;
         KalmanFilter km_filter_;
+        float cosine_distance_threshold_ = 0;
+        int nbuckets_ = 100;
+        int max_age_ = 100;
+        int nhit_ = 3;
     };
 
-    std::shared_ptr<Tracker> create_tracker() {
-        std::shared_ptr<TrackerImpl> tracker_ptr(new TrackerImpl());
+    std::shared_ptr<Tracker> create_tracker(float feature_score_threshold, int nbuckets, int max_age, int nhit) {
+        
+        std::shared_ptr<TrackerImpl> tracker_ptr(new TrackerImpl(
+            1 - feature_score_threshold,
+            nbuckets,
+            max_age, 
+            nhit
+        ));
         return tracker_ptr;
     }
 };

@@ -112,6 +112,12 @@ run_retinaface : workspace/pro
 run_arcface    : workspace/pro
 	@cd workspace && ./pro arcface
 
+run_arcface_video    : workspace/pro
+	@cd workspace && ./pro arcface_video
+
+run_arcface_tracker    : workspace/pro
+	@cd workspace && ./pro arcface_tracker
+
 debug :
 	@echo $(includes)
 

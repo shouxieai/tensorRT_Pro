@@ -7,6 +7,8 @@ int app_alphapose();
 int app_fall_recognize();
 int app_retinaface();
 int app_arcface();
+int app_arcface_video();
+int app_arcface_tracker();
 
 int main(int argc, char** argv){
 
@@ -25,14 +27,18 @@ int main(int argc, char** argv){
         app_retinaface();
     }else if(strcmp(method, "arcface") == 0){
         app_arcface();
+    }else if(strcmp(method, "arcface_video") == 0){
+        app_arcface_video();
+    }else if(strcmp(method, "arcface_tracker") == 0){
+        app_arcface_tracker();
     }else{
         printf(
             "Help: \n"
-            "    ./pro method[yolo、alphapose、app_fall_recognize]\n"
+            "    ./pro method[yolo、alphapose、fall_recognize、retinaface、arcface、arcface_video、arcface_tracker]\n"
             "\n"
             "    ./pro yolo\n"
             "    ./pro alphapose\n"
-            "    ./pro app_fall_recognize\n"
+            "    ./pro fall_recognize\n"
         );
     }
     return 0;
