@@ -7,13 +7,6 @@ using namespace std;
 
 class ZMQRemoteShowImpl : public ZMQRemoteShow{
 public:
-
-    virtual ~ZMQRemoteShowImpl(){
-        if(context_){
-            post("x", 1);
-        }
-    }
-    
     bool listen(const char* url){
         try{
             context_.reset(new zmq::context_t());

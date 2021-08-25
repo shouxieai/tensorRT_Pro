@@ -256,6 +256,8 @@ int app_arcface_tracker(){
     auto tracker     = DeepSORT::create_tracker();
     VideoCapture cap("exp/WIN_20210425_14_23_24_Pro.mp4");
     Mat image;
+    int nframe = 0;
+    auto time = iLogger::timestamp_now_float();
     while(cap.read(image)){
         auto faces  = detector->commit(image).get();
         vector<string> names(faces.size());
@@ -316,7 +318,6 @@ int app_arcface_tracker(){
             rectangle(image, cv::Point(face.left, face.top), cv::Point(face.right, face.bottom), color, 3);
             putText(image, names[i], cv::Point(face.left + 30, face.top - 10), 0, 1, color, 2, 16);
         }
-
         remote_show->post(image);
     }
     INFO("Done");
