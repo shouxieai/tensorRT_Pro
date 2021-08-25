@@ -125,13 +125,9 @@ namespace Arcface{
                     job.mono_tensor->release();
                 }
 
-                input->save_to_file("arcface.input");
                 // 模型推理
                 engine->forward(false);
-
-                output->save_to_file("before.norm");
                 CUDAKernel::norm_feature(output->gpu<float>(), output->size(0), output->size(1), stream_);
-                output->save_to_file("after.norm");
 
                 output->to_cpu();
                 // 数据转到gpu为主，不需要复制

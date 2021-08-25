@@ -19,6 +19,7 @@
 #include <fstream>
 #include <sstream>
 #include <stack>
+#include <functional>
 #include <signal.h>
 #include <sys/syscall.h>
 

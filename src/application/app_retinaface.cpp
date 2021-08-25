@@ -49,7 +49,7 @@ bool compile_retinaface(int input_width, int input_height, string& out_model_fil
     input_height = iLogger::upbound(input_height);
     TRT::set_layer_hook_reshape([&](const string& name, const std::vector<int64_t>& shape){
         
-        INFO("%s, %s", name.c_str(), iLogger::join_dims(shape).c_str());
+        INFOV("%s, %s", name.c_str(), iLogger::join_dims(shape).c_str());
         vector<string> layerset{
             "Reshape_100", "Reshape_104", "Reshape_108", 
             "Reshape_113", "Reshape_117", "Reshape_121", 
@@ -107,10 +107,10 @@ int app_retinaface(){
     INFO("===================== test retinaface fp32 ==================================");
 
     string model_file;
-    if(!compile_retinaface(640, 640, model_file))
+    if(!compile_retinaface(640, 480, model_file))
         return 0;
 
-    auto engine = RetinaFace::create_infer(model_file, 0);
+    auto engine = RetinaFace::create_infer(model_file, 0, 0.7);
     retinaface_performance(engine);
 
     auto save_root = "retinaface_result";

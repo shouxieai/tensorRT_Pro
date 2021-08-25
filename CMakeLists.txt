@@ -74,3 +74,24 @@ add_custom_target(
     WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}/workspace
     COMMAND ./pro alphapose
 )
+
+add_custom_target(
+    run_retinaface
+    DEPENDS pro
+    WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}/workspace
+    COMMAND ./pro retinaface
+)
+
+add_custom_target(
+    run_arcface 
+    DEPENDS pro
+    WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}/workspace
+    COMMAND ./pro arcface
+)
+
+add_custom_target(
+    run_fall
+    DEPENDS pro
+    WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}/workspace
+    COMMAND ./pro fall_recognize
+)
