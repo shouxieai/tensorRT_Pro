@@ -252,6 +252,10 @@ namespace TRT {
 		}
 	}
 
+	void set_layer_hook_reshape(const LayerHookFuncReshape& func){
+		register_layerhook_reshape(func);
+	}
+
 	static nvinfer1::Dims convert_to_trt_dims(const std::vector<int>& dims){
 
 		nvinfer1::Dims output{0};

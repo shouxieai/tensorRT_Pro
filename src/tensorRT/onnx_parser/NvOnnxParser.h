@@ -8,6 +8,7 @@
 #include "NvInfer.h"
 #include <stddef.h>
 #include <vector>
+#include <functional>
 
 //!
 //! \file NvOnnxParser.h
@@ -201,6 +202,7 @@ public:
 
 extern "C" TENSORRTAPI void* createNvOnnxParser_INTERNAL(void* network, void* logger, int version, const std::vector<nvinfer1::Dims>& input_dims, int explicit_batch_size);
 extern "C" TENSORRTAPI int getNvOnnxParserVersion();
+extern "C" TENSORRTAPI void register_layerhook_reshape(const std::function<std::vector<int64_t>(const std::string& name, const std::vector<int64_t>& shape)>&);
 
 namespace nvonnxparser
 {

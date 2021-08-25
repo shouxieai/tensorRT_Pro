@@ -17,6 +17,7 @@
 #include <thread>
 #include <atomic>
 #include <fstream>
+#include <sstream>
 #include <stack>
 #include <signal.h>
 #include <sys/syscall.h>
@@ -1143,5 +1144,16 @@ namespace iLogger{
 		}
 		return success;
 	}
+
+    string join_dims(const vector<int64_t>& dims){
+        stringstream output;
+        char buf[64];
+        const char* fmts[] = {"%d", " x %d"};
+        for(int i = 0; i < dims.size(); ++i){
+            snprintf(buf, sizeof(buf), fmts[i != 0], dims[i]);
+            output << buf;
+        }
+        return output.str();
+    }
 
 }; // namespace Logger

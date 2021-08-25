@@ -104,7 +104,13 @@ run_alphapose : workspace/pro
 	@cd workspace && ./pro alphapose
 
 run_fall : workspace/pro
-	@cd workspace && ./pro app_fall_recognize
+	@cd workspace && ./pro fall_recognize
+
+run_retinaface : workspace/pro
+	@cd workspace && ./pro retinaface
+
+run_arcface    : workspace/pro
+	@cd workspace && ./pro arcface
 
 debug :
 	@echo $(includes)

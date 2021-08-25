@@ -14,7 +14,7 @@ namespace TRT {
 	class Infer {
 	public:
 		// 执行forward推理前，请把数据输入到input中，确保其shape有效
-		virtual void     forward(bool sync = true) = 0;
+		virtual void     forward(bool sync = true, bool resize_output_batch_same_input = true) = 0;
 		virtual int      get_max_batch_size() = 0;
 		virtual void     set_stream(CUStream stream) = 0;
 		virtual CUStream get_stream() = 0;

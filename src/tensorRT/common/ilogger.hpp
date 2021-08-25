@@ -38,7 +38,7 @@ namespace iLogger{
     bool exists(const string& path);
     string format(const char* fmt, ...);
     FILE* fopen_mkdirs(const string& path, const string& mode);
-    string file_name(const string& path, bool include_suffix);
+    string file_name(const string& path, bool include_suffix=true);
     string directory(const string& path);
     long long timestamp_now();
     double timestamp_now_float();
@@ -87,6 +87,9 @@ namespace iLogger{
     string base64_decode(const string& base64);
     string base64_encode(const void* data, size_t size);
     string get_random_temp_file_name();
+
+    inline int upbound(int n, int align = 32){return (n + align - 1) / align * align;}
+    string join_dims(const vector<int64_t>& dims);
 };
 
 

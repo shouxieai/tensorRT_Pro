@@ -104,6 +104,9 @@ public:
     //! Get TensorRT tensor representation.
     nvinfer1::ITensor& tensor(IImporterContext* ctx) const;
 
+    const std::vector<int64_t>& values() const{return mValues;}
+    void set_values(const std::vector<int64_t>& values){mValues = values;}
+
 private:
     //! Number of IShapeLayer to apply to mTensor to get ITensor representing value of *this.
     //! -1 for undefined *this, a value in [0,2] otherwise.

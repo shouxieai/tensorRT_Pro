@@ -3,10 +3,11 @@
 
 namespace CUDAKernel{
 
-	Norm Norm::mean_std(float mean[3], float std[3]){
+	Norm Norm::mean_std(float mean[3], float std[3], float alpha){
 
 		Norm out;
-		out.type = NormType::MeanStd;
+		out.type  = NormType::MeanStd;
+		out.alpha = alpha;
 		memcpy(out.mean, mean, sizeof(out.mean));
 		memcpy(out.std,  std,  sizeof(out.std));
 		return out;
@@ -40,7 +41,7 @@ namespace CUDAKernel{
 		float src_y = (m_x2 * dx + m_y2 * dy + m_z2) + 0.5f;
 		float c0, c1, c2;
 
-		if(src_x < 0 || src_x >= src_width || src_y < 0 || src_y >= src_height){
+		if(src_x <= -1 || src_x >= src_width || src_y <= -1 || src_y >= src_height){
 			// out of range
 			c0 = const_value_st;
 			c1 = const_value_st;
@@ -91,9 +92,9 @@ namespace CUDAKernel{
 		}
 
 		if(type == int(NormType::MeanStd)){
-			c0 = (c0 / 255.0f - norm.mean[0]) / norm.std[0];
-			c1 = (c1 / 255.0f - norm.mean[1]) / norm.std[1];
-			c2 = (c2 / 255.0f - norm.mean[2]) / norm.std[2];
+			c0 = (c0 * norm.alpha - norm.mean[0]) / norm.std[0];
+			c1 = (c1 * norm.alpha - norm.mean[1]) / norm.std[1];
+			c2 = (c2 * norm.alpha - norm.mean[2]) / norm.std[2];
 		}else if(type == int(NormType::AlphaBeta)){
 			c0 = c0 * norm.alpha + norm.beta;
 			c1 = c1 * norm.alpha + norm.beta;
@@ -107,6 +108,41 @@ namespace CUDAKernel{
 		*pdst_c0 = c0;
 		*pdst_c1 = c1;
 		*pdst_c2 = c2;
+	}
+
+	__global__ void normalize_feature_kernel(float* feature_array, int num_feature, int feature_length, int edge){
+
+		/*
+		&   1 gz         bi.z   0
+		*   1 gy         bi.y   0
+        *   N NF         bi.x   ~
+		*   1 1          ti.z   0
+		*   F FL / 32    ti.y   ~
+		*   Q 32         ti.x   ~
+		*/
+
+		int position = (blockIdx.x * blockDim.y + threadIdx.y) * blockDim.x + threadIdx.x;
+        if (position >= edge) return;
+
+		extern __shared__ float l2_norm[];
+
+		int irow    = position / feature_length;
+		int icol    = position % feature_length;
+
+		if(icol == 0)
+			l2_norm[irow] = 0;
+		
+		__syncthreads();
+
+		float value = feature_array[position];
+		atomicAdd(l2_norm + irow, value * value);
+
+		__syncthreads();
+		if(icol == 0)
+			l2_norm[irow] = sqrt(l2_norm[irow]);
+
+		__syncthreads();
+		feature_array[position] = value / l2_norm[irow];
 	}
 
     static __device__ uint8_t cast(float value){
@@ -158,6 +194,20 @@ namespace CUDAKernel{
 			src_width, src_height, dst,
 			dst_width, dst_height, const_value, matrix_2_3, norm, jobs
 		));
+	}
+
+	void norm_feature(
+        float* feature_array, int num_feature, int feature_length,
+        cudaStream_t stream
+    ){
+		Assert(feature_length % 32 == 0);
+
+		int jobs   = num_feature * feature_length;
+		auto grid  = dim3(num_feature);
+		auto block = dim3(feature_length / 32, 32);
+		checkCudaKernel(normalize_feature_kernel << <grid, block, num_feature * sizeof(float), stream >> > (
+			feature_array, num_feature, feature_length, jobs
+		));	
 	}
 
 	// void resize_bilinear(

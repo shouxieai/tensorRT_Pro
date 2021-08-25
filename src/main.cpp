@@ -2,9 +2,11 @@
 #include <stdio.h>
 #include <string.h>
 
-int yolo_main();
-int alphapose_main();
+int app_yolo();
+int app_alphapose();
 int app_fall_recognize();
+int app_retinaface();
+int app_arcface();
 
 int main(int argc, char** argv){
 
@@ -14,11 +16,15 @@ int main(int argc, char** argv){
     }
 
     if(strcmp(method, "yolo") == 0){
-        yolo_main();
+        app_yolo();
     }else if(strcmp(method, "alphapose") == 0){
-        alphapose_main();
-    }else if(strcmp(method, "app_fall_recognize") == 0){
+        app_alphapose();
+    }else if(strcmp(method, "fall_recognize") == 0){
         app_fall_recognize();
+    }else if(strcmp(method, "retinaface") == 0){
+        app_retinaface();
+    }else if(strcmp(method, "arcface") == 0){
+        app_arcface();
     }else{
         printf(
             "Help: \n"

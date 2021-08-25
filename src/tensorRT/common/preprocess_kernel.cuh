@@ -5,8 +5,6 @@
 
 namespace CUDAKernel{
 
-    inline int upbound(int n, int align = 32){return (n + align - 1) / align * align;}
-
     //            CHANNEL_ORDER   TYPE
     // 0x00  00       FF           FF
     enum class NormType : unsigned int{
@@ -23,7 +21,10 @@ namespace CUDAKernel{
         float alpha, beta;
         NormType type = NormType::None;
 
-        static Norm mean_std(float mean[3], float std[3]);
+        // out = (x * alpha - mean) / std
+        static Norm mean_std(float mean[3], float std[3], float alpha = 1/255.0f);
+
+        // out = x * alpha + beta
         static Norm alpha_beta(float alpha, float beta = 0);
 
         Norm operator + (NormType t){
@@ -38,6 +39,11 @@ namespace CUDAKernel{
         float* dst  , int dst_width, int dst_height,
         float* matrix_2_3, uint8_t const_value, const Norm& norm,
         cudaStream_t stream);
+
+    void norm_feature(
+        float* feature_array, int num_feature, int feature_length,
+        cudaStream_t stream
+    );
 
     void convert_nv12_to_bgr_invoke(
         const uint8_t* y, const uint8_t* uv, int width, int height, 

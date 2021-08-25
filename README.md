@@ -138,6 +138,78 @@ cd tensorRT_cpp
 make run -j32
 ```
 
+## RetinaFace人脸检测支持
+- https://github.com/biubug6/Pytorch_Retinaface
+1. 下载Pytorch_Retinaface
+```bash
+git clone git@github.com:biubug6/Pytorch_Retinaface.git
+cd Pytorch_Retinaface
+```
+
+2. 下载模型，请访问：https://github.com/biubug6/Pytorch_Retinaface#training 的training节点找到下载地址，解压到weights目录下，主要用到mobilenet0.25_Final.pth文件
+3. 修改代码
+```python
+# models/retinaface.py第24行，
+# return out.view(out.shape[0], -1, 2) 修改为
+return out.view(-1, int(out.size(1) * out.size(2) * 2), 2)
+
+# models/retinaface.py第35行，
+# return out.view(out.shape[0], -1, 4) 修改为
+return out.view(-1, int(out.size(1) * out.size(2) * 2), 4)
+
+# models/retinaface.py第46行，
+# return out.view(out.shape[0], -1, 10) 修改为
+return out.view(-1, int(out.size(1) * out.size(2) * 2), 10)
+
+# 以下是保证resize节点输出是按照scale而非shape，从而让动态大小和动态batch变为可能
+# models/net.py第89行，
+# up3 = F.interpolate(output3, size=[output2.size(2), output2.size(3)], mode="nearest") 修改为
+up3 = F.interpolate(output3, scale_factor=2, mode="nearest")
+
+# models/net.py第93行，
+# up2 = F.interpolate(output2, size=[output1.size(2), output1.size(3)], mode="nearest") 修改为
+up2 = F.interpolate(output2, scale_factor=2, mode="nearest")
+
+# 以下代码是去掉softmax（某些时候有bug），同时合并输出为一个，简化解码部分代码
+# models/retinaface.py第123行
+# if self.phase == 'train':
+#     output = (bbox_regressions, classifications, ldm_regressions)
+# else:
+#     output = (bbox_regressions, F.softmax(classifications, dim=-1), ldm_regressions)
+# return output
+# 修改为
+output = (bbox_regressions, classifications, ldm_regressions)
+return torch.cat(output, dim=-1)
+
+# 添加opset_version=11，使得算子按照预期导出
+# torch_out = torch.onnx._export(net, inputs, output_onnx, export_params=True, verbose=False,
+#     input_names=input_names, output_names=output_names)
+torch_out = torch.onnx._export(net, inputs, output_onnx, export_params=True, verbose=False, opset_version=11,
+    input_names=input_names, output_names=output_names)
+```
+4. 执行导出onnx
+```bash
+python convert_to_onnx.py
+```
+
+5. 执行
+```bash
+cp FaceDetector.onnx ../tensorRT_cpp/workspace/mb_retinaface.onnx
+cd ../tensorRT_cpp
+make run_retinaface -j64
+```
+
+## ArcFace人脸识别支持
+- https://github.com/deepinsight/insightface/tree/master/recognition/arcface_torch
+```C++
+auto arcface = Arcface::create_infer("arcface_iresnet50.fp32.trtmodel", 0);
+auto feature = arcface->commit(make_tuple(face, landmarks)).get();
+cout << feature << endl;  // 1x512
+```
+- 人脸识别案例中，`workspace/face/library`目录为注册入库人脸
+- 人脸识别案例中，`workspace/face/recognize`目录为待识别的照片
+- 结果储存在`workspace/face/result`和`workspace/face/library_draw`中
+
 ## 推理
 ```C++
 

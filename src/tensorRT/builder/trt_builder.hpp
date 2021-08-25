@@ -11,6 +11,7 @@
 namespace TRT {
 
 	typedef std::function<void(int current, int count, std::vector<std::string>& images, std::shared_ptr<Tensor>& tensor)> Int8Process;
+	typedef std::function<std::vector<int64_t>(const std::string& name, const std::vector<int64_t>& shape)> LayerHookFuncReshape;
 
 	enum ModelSourceType {
 		ModelSourceType_FromCaffe,
@@ -53,6 +54,8 @@ namespace TRT {
 	};
 
 	const char* mode_string(TRTMode type);
+
+	void set_layer_hook_reshape(const LayerHookFuncReshape& func);
 
 	//当处于INT8模式时，int8process必须制定
 	//     int8ImageDirectory和int8EntropyCalibratorFile指定一个即可

@@ -103,7 +103,7 @@ namespace TRT {
 		virtual bool load(const std::string& file);
 		virtual bool load_from_memory(const void* pdata, size_t size);
 		virtual void destroy();
-		virtual void forward(bool sync = true) override;
+		virtual void forward(bool sync, bool resize_output_batch_same_input) override;
 		virtual int get_max_batch_size() override;
 		virtual CUStream get_stream() override;
 		virtual void set_stream(CUStream stream) override;
@@ -288,7 +288,7 @@ namespace TRT {
 		return std::find(inputs_name_.begin(), inputs_name_.end(), name) != inputs_name_.end();
 	}
 
-	void InferImpl::forward(bool sync) {
+	void InferImpl::forward(bool sync, bool resize_output_batch_same_input) {
 
 		EngineContext* context = (EngineContext*)context_.get();
 		int inputBatchSize = inputs_[0]->size(0);
@@ -297,9 +297,11 @@ namespace TRT {
 		else
 			Assert(inputBatchSize == context->engine_->getMaxBatchSize());
 
-		for (int i = 0; i < outputs_.size(); ++i) {
-			outputs_[i]->resize_single_dim(0, inputBatchSize);
-			outputs_[i]->to_gpu(false);
+		if(resize_output_batch_same_input){
+			for (int i = 0; i < outputs_.size(); ++i) {
+				outputs_[i]->resize_single_dim(0, inputBatchSize);
+				outputs_[i]->to_gpu(false);
+			}
 		}
 
 		for (int i = 0; i < orderdBlobs_.size(); ++i)

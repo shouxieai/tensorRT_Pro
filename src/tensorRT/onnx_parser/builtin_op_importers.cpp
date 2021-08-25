@@ -23,6 +23,14 @@
 #include <unordered_set>
 #include <iostream>
 #include <tuple>
+#include <functional>
+
+typedef std::function<std::vector<int64_t>(const std::string& name, const std::vector<int64_t>& shape)> layerhook_func_reshape;
+
+static layerhook_func_reshape g_layerhook_func_reshape;
+extern "C" TENSORRTAPI void register_layerhook_reshape(const layerhook_func_reshape& func){
+    g_layerhook_func_reshape = func;
+}
 
 namespace onnx2trt
 {
@@ -3532,6 +3540,10 @@ DEFINE_BUILTIN_OP_IMPORTER(Reshape)
 
     // "A dimension could also be 0, in which case the actual dimension
     // value is unchanged (i.e. taken from the input tensor)."
+    if(g_layerhook_func_reshape){
+        shape.set_values(g_layerhook_func_reshape(node.name(), shape.values()));
+    }
+    
     nvinfer1::IShuffleLayer* layer = addShuffle(ctx, data, shape, /*zeroIsPlaceholder=*/!allowZero);
     ctx->registerLayer(layer, getNodeName(node));
     RETURN_FIRST_OUTPUT(layer);
