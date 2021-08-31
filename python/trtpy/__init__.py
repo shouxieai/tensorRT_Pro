@@ -273,7 +273,7 @@ class Yolo(object):
 
 def random_color(idd : int)->Tuple[int, int, int]: ...
 
-from .trtpyc import *
+from .libtrtpyc import *
 
 def onnx_hub(name):
     # arcface_iresnet50 ：人脸识别Arcface

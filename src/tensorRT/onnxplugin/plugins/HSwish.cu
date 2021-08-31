@@ -50,7 +50,7 @@ std::shared_ptr<LayerConfig> HSwish::config(const std::string& layerName) {
 		// 定义我们这个插件支持half和float格式
 		// 如果支持多个，则tensorRT会实际执行不同格式，进行推理测试，以获取速度最快的那个类型
 		// cfg->supportDataType_ = {nvinfer1::DataType::kHALF, nvinfer1::DataType::kFLOAT};
-		cfg->supportDataType_ = {nvinfer1::DataType::kHALF};
+		cfg->supportDataType_ = {nvinfer1::DataType::kHALF, nvinfer1::DataType::kFLOAT};
 	#else
 		cfg->supportDataType_ = {nvinfer1::DataType::kFLOAT};
 	#endif // HAS_CUDA_HALF

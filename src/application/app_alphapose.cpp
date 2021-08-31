@@ -57,7 +57,7 @@ int app_alphapose(){
             false                       // 是否采用动态batch维度，true采用，false不采用，使用静态固定的batch size
         );
     }
-
+   
     Mat image = imread("inference/gril.jpg");
     auto engine = AlphaPose::create_infer(model_file, 0);
     auto box = Rect(158, 104, 176, 693);

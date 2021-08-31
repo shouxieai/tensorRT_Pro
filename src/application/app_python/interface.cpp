@@ -415,7 +415,7 @@ template <class T, ptr_base base=ptr_base::host> class ptr_wrapper{
         T* ptr;
 };
 
-PYBIND11_MODULE(trtpyc, m) {
+PYBIND11_MODULE(libtrtpyc, m) {
 	py::class_<Yolo::ObjectBox>(m, "ObjectBox")
 		.def_property("left",        &Yolo::ObjectBox::get_left,        &Yolo::ObjectBox::set_left)
 		.def_property("top",         &Yolo::ObjectBox::get_top,         &Yolo::ObjectBox::set_top)

@@ -5,7 +5,7 @@
 #include <cublas_v2.h>
 #include <NvInfer.h>
 #include <NvInferPlugin.h>
-#include <NvCaffeParser.h>
+//#include <NvCaffeParser.h>
 #include <onnx_parser/NvOnnxParser.h>
 #include <string>
 #include <vector>
@@ -16,8 +16,8 @@
 #include <common/cuda_tools.hpp>
 
 using namespace nvinfer1;
-using namespace nvcaffeparser1;
 using namespace std;
+//using namespace nvcaffeparser1;
 
 class Logger : public ILogger {
 public:
@@ -167,7 +167,7 @@ namespace TRT {
 					"window: %s, padding: %s",
 					dims_str(pool->getWindowSizeNd()).c_str(),
 					dims_str(pool->getPaddingNd()).c_str()
-				);
+				);   
 			}
 			case nvinfer1::LayerType::kDECONVOLUTION:{
 				nvinfer1::IDeconvolutionLayer* conv = (nvinfer1::IDeconvolutionLayer*)layer;
@@ -492,38 +492,39 @@ namespace TRT {
 		}
 
 		shared_ptr<INetworkDefinition> network;
-		shared_ptr<ICaffeParser> caffeParser;
+		//shared_ptr<ICaffeParser> caffeParser;
 		shared_ptr<nvonnxparser::IParser> onnxParser;
 		if (source.type() == ModelSourceType::Caffe) {
 			
-			const auto explicitBatch = 0; //1U << static_cast<uint32_t>(nvinfer1::NetworkDefinitionCreationFlag::kEXPLICIT_BATCH);
-			network = shared_ptr<INetworkDefinition>(builder->createNetworkV2(explicitBatch), destroy_nvidia_pointer<INetworkDefinition>);
-			caffeParser.reset(createCaffeParser(), destroy_nvidia_pointer<ICaffeParser>);
-			if (!caffeParser) {
-				INFOW("Can not create caffe parser.");
-				return false;
-			}
+			// const auto explicitBatch = 0; //1U << static_cast<uint32_t>(nvinfer1::NetworkDefinitionCreationFlag::kEXPLICIT_BATCH);
+			// network = shared_ptr<INetworkDefinition>(builder->createNetworkV2(explicitBatch), destroy_nvidia_pointer<INetworkDefinition>);
+			// caffeParser.reset(createCaffeParser(), destroy_nvidia_pointer<ICaffeParser>);
+			// if (!caffeParser) {
+			// 	INFOW("Can not create caffe parser.");
+			// 	return false;
+			// }
 
-			auto blobNameToTensor = caffeParser->parse(source.prototxt().c_str(), source.caffemodel().c_str(), *network, nvinfer1::DataType::kFLOAT);
-			if (blobNameToTensor == nullptr) {
-				INFO("parse network fail, prototxt: %s, caffemodel: %s", source.prototxt().c_str(), source.caffemodel().c_str());
-				return false;
-			}
+			// auto blobNameToTensor = caffeParser->parse(source.prototxt().c_str(), source.caffemodel().c_str(), *network, nvinfer1::DataType::kFLOAT);
+			// if (blobNameToTensor == nullptr) {
+			// 	INFO("parse network fail, prototxt: %s, caffemodel: %s", source.prototxt().c_str(), source.caffemodel().c_str());
+			// 	return false;
+			// }
 
-			for (auto& output : outputs) {
-				auto blobMarked = blobNameToTensor->find(output.c_str());
-				if (blobMarked == nullptr) {
-					INFO("Can not found marked output '%s' in network.", output.c_str());
-					return false;
-				}
+			// for (auto& output : outputs) {
+			// 	auto blobMarked = blobNameToTensor->find(output.c_str());
+			// 	if (blobMarked == nullptr) {
+			// 		INFO("Can not found marked output '%s' in network.", output.c_str());
+			// 		return false;
+			// 	}
 
-				INFO("Marked output blob '%s'.", output.c_str());
-				network->markOutput(*blobMarked);
-			}
+			// 	INFO("Marked output blob '%s'.", output.c_str());
+			// 	network->markOutput(*blobMarked);
+			// }
 
-			if (network->getNbInputs() > 1) {
-				INFO("Warning: network has %d input, maybe have errors", network->getNbInputs());
-			}
+			// if (network->getNbInputs() > 1) {
+			// 	INFO("Warning: network has %d input, maybe have errors", network->getNbInputs());
+			// }
+			INFOE("Unsupport type caffe");
 		}
 		else if(source.type() == ModelSourceType::OnnX || source.type() == ModelSourceType::OnnXData){
 			
@@ -662,7 +663,6 @@ namespace TRT {
 		
 		builder->setMaxBatchSize(maxBatchSize);
 		config->setMaxWorkspaceSize(_1_GB);
-		
 		// config->setFlag(BuilderFlag::kGPU_FALLBACK);
 		// config->setDefaultDeviceType(DeviceType::kDLA);
 		// config->setDLACore(0);

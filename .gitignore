@@ -47,3 +47,9 @@
 /workspace/face/library/laq.jpg
 /workspace/exp
 __pycache__
+/tools/process_so.sh
+/tools/proc2.sh
+/python/setup.py
+/python/trtpy.egg-info
+/python/dist
+/python/build

@@ -23,6 +23,11 @@ trt_model = tp.convert_torch_to_trt(model, input)
 trt_out   = trt_model(input)
 ```
 
+- 编译并安装:
+    - 在CMakeLists.txt中修改`set(HAS_PYTHON ON)`
+    - 执行编译`make pyinstall -j8`
+    - 在使用时导入trtpy：`import trtpy as tp`
+
 
 ## 建议
 - PyTorch >= 1.8，其他版本也可以用，遇到问题可以群里讨论
@@ -57,9 +62,9 @@ auto box = engine->commit(image).get();
     mkdir build
     cd build
     cmake ..
-    make run_yolo -j32
+    make yolo -j32
 
-    # 或者make run_alphapose -j32
+    # 或者make alphapose -j32
     ```
 
 - Makefile
@@ -67,7 +72,7 @@ auto box = engine->commit(image).get();
     ```bash
     git clone git@github.com:shouxieai/tensorRT_cpp.git
     cd tensorRT_cpp
-    make run_yolo -j32
+    make yolo -j32
     ```
 
 ## YoloV5-ONNX推理支持-第二种，自行从官方导出onnx
@@ -217,7 +222,7 @@ python convert_to_onnx.py
 ```bash
 cp FaceDetector.onnx ../tensorRT_cpp/workspace/mb_retinaface.onnx
 cd ../tensorRT_cpp
-make run_retinaface -j64
+make retinaface -j64
 ```
 
 ## Scrfd支持

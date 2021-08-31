@@ -27,7 +27,7 @@ lean_cudnn     := /data/sxai/lean/cudnn8.2.2.26
 lean_opencv    := /data/sxai/lean/opencv4.2.0
 lean_cuda      := /data/sxai/lean/cuda10.2
 lean_python    := /data/datav/newbb/lean/anaconda3/envs/torch1.8
-use_python     := false
+use_python     := true
 
 include_paths := src        \
 			src/application \
@@ -43,11 +43,11 @@ library_paths := $(lean_protobuf)/lib \
 			$(lean_opencv)/lib    \
 			$(lean_tensor_rt)/lib \
 			$(lean_cuda)/lib  \
-			$(lean_cudnn)/lib 
+			$(lean_cudnn)/lib
 
 link_librarys := opencv_core opencv_imgproc opencv_videoio opencv_imgcodecs \
-			nvinfer nvinfer_plugin nvparsers \
-			cuda curand cublas cudart cudnn \
+			nvinfer nvinfer_plugin \
+			cuda cublas cudart cudnn \
 			stdc++ protobuf dl
 
 
@@ -65,32 +65,33 @@ link_librarys  += python3.9
 support_define += -DHAS_PYTHON
 endif
 
-run_paths     := $(foreach item,$(library_paths),-Wl,-rpath=$(item))
+paths     := $(foreach item,$(library_paths),-Wl,-rpath=$(item))
 include_paths := $(foreach item,$(include_paths),-I$(item))
 library_paths := $(foreach item,$(library_paths),-L$(item))
 link_librarys := $(foreach item,$(link_librarys),-l$(item))
 
+# 如果是其他显卡，请修改-gencode=arch=compute_75,code=sm_75为对应显卡的能力
 cpp_compile_flags := -std=c++11 -fPIC -m64 -g -fopenmp -w -O0 $(support_define)
 cu_compile_flags  := -std=c++11 -m64 -Xcompiler -fPIC -g -w -gencode=arch=compute_75,code=sm_75 -O0 $(support_define)
-link_flags        := -pthread -fopenmp
+link_flags        := -pthread -fopenmp -Wl,-rpath='$$ORIGIN'
 
 cpp_compile_flags += $(include_paths)
 cu_compile_flags  += $(include_paths)
-link_flags 		  += $(library_paths) $(link_librarys) $(run_paths)
+link_flags 		  += $(library_paths) $(link_librarys) $(paths)
 
 ifneq ($(MAKECMDGOALS), clean)
 -include $(cpp_mk) $(cu_mk)
 endif
 
 pro    : workspace/pro
-trtpyc : python/trtpy/trtpyc.so
+trtpyc : python/trtpy/libtrtpyc.so
 
 workspace/pro : $(cpp_objs) $(cu_objs)
 	@echo Link $@
 	@mkdir -p $(dir $@)
 	@g++ $^ -o $@ $(link_flags)
 
-python/trtpy/trtpyc.so : $(cpp_objs) $(cu_objs)
+python/trtpy/libtrtpyc.so : $(cpp_objs) $(cu_objs)
 	@echo Link $@
 	@mkdir -p $(dir $@)
 	@g++ -shared $^ -o $@ $(link_flags)
@@ -115,52 +116,55 @@ objs/%.cumk : src/%.cu
 	@mkdir -p $(dir $@)
 	@nvcc -M $< -MF $@ -MT $(@:.cumk=.o) $(cu_compile_flags)
 
-run_yolo : workspace/pro
+yolo : workspace/pro
 	@cd workspace && ./pro yolo
 
-run_alphapose : workspace/pro
+alphapose : workspace/pro
 	@cd workspace && ./pro alphapose
 
-run_fall : workspace/pro
+fall : workspace/pro
 	@cd workspace && ./pro fall_recognize
 
-run_retinaface : workspace/pro
+retinaface : workspace/pro
 	@cd workspace && ./pro retinaface
 
-run_arcface    : workspace/pro
+arcface    : workspace/pro
 	@cd workspace && ./pro arcface
 
-run_arcface_video    : workspace/pro
+arcface_video    : workspace/pro
 	@cd workspace && ./pro arcface_video
 
-run_arcface_tracker    : workspace/pro
+arcface_tracker    : workspace/pro
 	@cd workspace && ./pro arcface_tracker
 
-run_test_all : workspace/pro
+test_all : workspace/pro
 	@cd workspace && ./pro test_all
 
-run_scrfd : workspace/pro
+scrfd : workspace/pro
 	@cd workspace && ./pro scrfd
 
-run_pytorch : trtpyc
+pytorch : trtpyc
 	@cd python && python test_torch.py
 
-run_pyscrfd : trtpyc
+pyscrfd : trtpyc
 	@cd python && python test_scrfd.py
 
-run_pyretinaface : trtpyc
+pyretinaface : trtpyc
 	@cd python && python test_retinaface.py
 
-run_pyyolov5 : trtpyc
+pyyolov5 : trtpyc
 	@cd python && python test_yolov5.py
 
-run_pyyolox : trtpyc
+pyyolox : trtpyc
 	@cd python && python test_yolox.py
+
+pyinstall : trtpyc
+	@cd python && python setup.py install
 
 debug :
 	@echo $(includes)
 
 clean :
-	@rm -rf objs workspace/pro python/trtpy/trtpyc.so
+	@rm -rf objs workspace/pro python/trtpy/libtrtpyc.so python/build python/dist python/trtpy.egg-info python/trtpy/__pycache__
 
-.PHONY : clean run_yolo run_alphapose run_fall debug
+.PHONY : clean yolo alphapose fall debug
