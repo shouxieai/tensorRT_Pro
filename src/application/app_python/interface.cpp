@@ -1,4 +1,6 @@
 
+#ifdef HAS_PYTHON
+
 #include <stdio.h>
 #include <iostream>
 #include <tools/pybind11.hpp>
@@ -762,3 +764,4 @@ PYBIND11_MODULE(trtpyc, m) {
 	m.def("get_devie", [](){return TRT::get_device();});
 	m.def("random_color", [](int idd){return iLogger::random_color(idd);});
 }
+#endif // HAS_PYTHON

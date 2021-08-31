@@ -8,6 +8,7 @@
 7. c++类库，对编译和推理做了封装，对tensor做了封装，支持n维的tensor管理
 
 ## Python支持
+- 请在Makefile中设置`use_python := true`启用python支持，并编译生成trtpyc.so，使用`make trtpyc -j64`
 - YoloV5的tensorRT推理
 ```python
 yolo   = tp.Yolo(engine_file, type=tp.YoloType.X)

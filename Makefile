@@ -27,6 +27,7 @@ lean_cudnn     := /data/sxai/lean/cudnn8.2.2.26
 lean_opencv    := /data/sxai/lean/opencv4.2.0
 lean_cuda      := /data/sxai/lean/cuda10.2
 lean_python    := /data/datav/newbb/lean/anaconda3/envs/torch1.8
+use_python     := false
 
 include_paths := src        \
 			src/application \
@@ -36,31 +37,39 @@ include_paths := src        \
 			$(lean_opencv)/include/opencv4 \
 			$(lean_tensor_rt)/include \
 			$(lean_cuda)/include  \
-			$(lean_cudnn)/include \
-			$(lean_python)/include/python3.9/
+			$(lean_cudnn)/include 
 
 library_paths := $(lean_protobuf)/lib \
 			$(lean_opencv)/lib    \
 			$(lean_tensor_rt)/lib \
 			$(lean_cuda)/lib  \
-			$(lean_cudnn)/lib \
-			$(lean_python)/lib
+			$(lean_cudnn)/lib 
 
 link_librarys := opencv_core opencv_imgproc opencv_videoio opencv_imgcodecs \
 			nvinfer nvinfer_plugin nvparsers \
 			cuda curand cublas cudart cudnn \
-			stdc++ protobuf dl python3.9
+			stdc++ protobuf dl
+
+
+# 如果要支持FP16的插件推理（非插件不需要），请在编译选项上加-DHAS_CUDA_HALF，CPP和CU都加
+# 这种特殊的宏可以在.vscode/c_cpp_properties.json文件中configurations下的defines中也加进去，使得看代码的时候
+# 效果与编译一致
+# HAS_PYTHON表示是否编译python支持
+# support_define    := -DHAS_CUDA_HALF
+support_define    := -DHAS_CUDA_HALF
+
+ifeq ($(use_python), true) 
+include_paths  += $(lean_python)/include/python3.9
+library_paths  += $(lean_python)/lib
+link_librarys  += python3.9
+support_define += -DHAS_PYTHON
+endif
 
 run_paths     := $(foreach item,$(library_paths),-Wl,-rpath=$(item))
 include_paths := $(foreach item,$(include_paths),-I$(item))
 library_paths := $(foreach item,$(library_paths),-L$(item))
 link_librarys := $(foreach item,$(link_librarys),-l$(item))
 
-# 如果要支持FP16的插件推理（非插件不需要），请在编译选项上加-DHAS_CUDA_HALF，CPP和CU都加
-# 这种特殊的宏可以在.vscode/c_cpp_properties.json文件中configurations下的defines中也加进去，使得看代码的时候
-# 效果与编译一致
-# support_define    := -DHAS_CUDA_HALF
-support_define    := 
 cpp_compile_flags := -std=c++11 -fPIC -m64 -g -fopenmp -w -O0 $(support_define)
 cu_compile_flags  := -std=c++11 -m64 -Xcompiler -fPIC -g -w -gencode=arch=compute_75,code=sm_75 -O0 $(support_define)
 link_flags        := -pthread -fopenmp
@@ -152,6 +161,6 @@ debug :
 	@echo $(includes)
 
 clean :
-	@rm -rf objs workspace/pro
+	@rm -rf objs workspace/pro python/trtpy/trtpyc.so
 
 .PHONY : clean run_yolo run_alphapose run_fall debug

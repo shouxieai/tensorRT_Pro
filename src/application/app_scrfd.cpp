@@ -13,7 +13,7 @@ bool requires(const char* name);
 
 bool compile_scrfd(int input_width, int input_height, string& out_model_file){
 
-    const char* name = "scrfd";
+    const char* name = "scrfd_2.5g_bnkps";
     if(not requires(name))
         return false;
 
