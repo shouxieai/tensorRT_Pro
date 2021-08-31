@@ -37,6 +37,12 @@ namespace CUDATools{
         return numJobs < GPU_BLOCK_THREADS ? numJobs : GPU_BLOCK_THREADS;
     }
 
+    std::string device_capability(int device_id){
+        cudaDeviceProp prop;
+        checkCudaRuntime(cudaGetDeviceProperties(&prop, device_id));
+        return iLogger::format("%d.%d", prop.major, prop.minor);
+    }
+
     AutoDevice::AutoDevice(int device_id){
         cudaGetDevice(&old_);
         checkCudaRuntime(cudaSetDevice(device_id));

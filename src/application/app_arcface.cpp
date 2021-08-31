@@ -146,7 +146,6 @@ int app_arcface(){
             float* pscore     = scores.ptr<float>(0);
             int label         = std::max_element(pscore, pscore + scores.rows) - pscore;
             float match_score = max(0.0f, pscore[label]);
-            INFO("%f, %s", match_score, get<1>(library)[label].c_str());
 
             if(match_score > 0.3f){
                 names[i] = iLogger::format("%s[%.3f]", get<1>(library)[label].c_str(), match_score);
@@ -167,6 +166,7 @@ int app_arcface(){
         }
 
         auto save_file = iLogger::format("face/result/%s.jpg", iLogger::file_name(file, false).c_str());
+        INFO("Save to %s", save_file.c_str());
         imwrite(save_file, image);
     }
     INFO("Done");
@@ -189,7 +189,7 @@ int app_arcface_video(){
     auto detector = RetinaFace::create_infer("mb_retinaface.640x480.fp32.trtmodel", 0, 0.5f);
     auto arcface  = Arcface::create_infer("arcface_iresnet50.fp32.trtmodel", 0);
     auto library  = build_library(detector, arcface);
-    auto remote_show = create_zmq_remote_show();
+    //auto remote_show = create_zmq_remote_show();
 
     // 这是一段人脸晃来晃去的视频
     VideoCapture cap("exp/WIN_20210425_14_23_24_Pro.mp4");
@@ -230,8 +230,7 @@ int app_arcface_video(){
             rectangle(image, cv::Point(face.left, face.top), cv::Point(face.right, face.bottom), color, 3);
             putText(image, names[i], cv::Point(face.left, face.top - 5), 0, 1, color, 1, 16);
         }
-
-        remote_show->post(image);
+        //remote_show->post(image);
     }
     INFO("Done");
     return 0;
@@ -245,35 +244,42 @@ int app_arcface_tracker(){
     if(!compile_models())
         return 0;
 
-    auto detector = RetinaFace::create_infer("mb_retinaface.640x480.fp32.trtmodel", 0, 0.5f);
+    auto detector = RetinaFace::create_infer("mb_retinaface.640x480.fp32.trtmodel", 0, 0.7f);
     auto arcface  = Arcface::create_infer("arcface_iresnet50.fp32.trtmodel", 0);
     auto library  = build_library(detector, arcface);
 
     // 请在本地电脑执行tools/show.py，对接好ip地址连接上这个远程显示服务
-    auto remote_show = create_zmq_remote_show();
+    //auto remote_show = create_zmq_remote_show();
+    INFO("这个程序需要展示，请使用tools/show.py做客户端，然后启用这里的remote_show进行实时展示");
 
     // 这是一段人脸晃来晃去的视频
-    auto tracker     = DeepSORT::create_tracker();
+    auto config = DeepSORT::TrackerConfig();
+    config.has_feature = true;
+    config.max_age     = 150;
+    config.nbuckets    = 150;
+    config.distance_threshold = 0.9f;
+
+    config.set_per_frame_motion({
+        0.1, 0.1, 0.2, 0.1,
+        0.1, 0.1, 0.2, 0.1
+    });
+    
+    auto tracker     = DeepSORT::create_tracker(config);
     VideoCapture cap("exp/WIN_20210425_14_23_24_Pro.mp4");
     Mat image;
-    int nframe = 0;
-    auto time = iLogger::timestamp_now_float();
     while(cap.read(image)){
         auto faces  = detector->commit(image).get();
         vector<string> names(faces.size());
         vector<DeepSORT::Box> boxes;
         for(int i = 0; i < faces.size(); ++i){
-            auto& face     = faces[i];
+            auto& face = faces[i];
+            auto crop  = detector->crop_face_and_landmark(image, face);
             auto track_box = DeepSORT::convert_to_box(face);
-            auto box   = Rect(face.left, face.top, face.right-face.left, face.bottom-face.top);
-            box        = box & Rect(0, 0, image.cols, image.rows);
-            auto crop  = image(box).clone();
             
             Arcface::landmarks landmarks;
-            for(int j = 0; j < 10; ++j)
-                landmarks.points[j] = face.landmark[j] - (j % 2 == 0 ? face.left : face.top);
+            memcpy(landmarks.points, get<1>(crop).landmark, sizeof(landmarks.points));
 
-            track_box.feature = arcface->commit(make_tuple(crop, landmarks)).get();
+            track_box.feature = arcface->commit(make_tuple(get<0>(crop), landmarks)).get();
             Mat scores        = get<0>(library) * track_box.feature.t();
             float* pscore     = scores.ptr<float>(0);
             int label         = std::max_element(pscore, pscore + scores.rows) - pscore;
@@ -308,7 +314,6 @@ int app_arcface_tracker(){
 
         for(int i = 0; i < faces.size(); ++i){
             auto& face = faces[i];
-
             auto color = Scalar(0, 255, 0);
             if(names[i].empty()){
                 color = Scalar(0, 0, 255);
@@ -318,7 +323,7 @@ int app_arcface_tracker(){
             rectangle(image, cv::Point(face.left, face.top), cv::Point(face.right, face.bottom), color, 3);
             putText(image, names[i], cv::Point(face.left + 30, face.top - 10), 0, 1, color, 2, 16);
         }
-        remote_show->post(image);
+        //remote_show->post(image);
     }
     INFO("Done");
     return 0;

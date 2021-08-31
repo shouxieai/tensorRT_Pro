@@ -61,7 +61,7 @@ int app_alphapose(){
     Mat image = imread("inference/gril.jpg");
     auto engine = AlphaPose::create_infer(model_file, 0);
     auto box = Rect(158, 104, 176, 693);
-    auto keys = engine->commit(image, box).get();
+    auto keys = engine->commit(make_tuple(image, box)).get();
     for(int i = 0; i < keys.size(); ++i){
         float x = keys[i].x;
         float y = keys[i].y;

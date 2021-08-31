@@ -95,25 +95,26 @@ namespace Yolo{
     using ControllerImpl = InferController
     <
         Mat,                    // input
-        box_array,              // output
+        ObjectBoxArray,         // output
         tuple<string, int>,     // start param
         AffineMatrix            // additional
     >;
     class InferImpl : public Infer, public ControllerImpl{
     public:
-        virtual bool startup(const string& file, Type type, int gpuid, float confidence_threshold){
+        virtual bool startup(const string& file, Type type, int gpuid, float confidence_threshold, float nms_threshold){
 
             if(type == Type::V5){
-                normalize_ = CUDAKernel::Norm::alpha_beta(1 / 255.0f) + CUDAKernel::NormType::ToRGB;
+                normalize_ = CUDAKernel::Norm::alpha_beta(1 / 255.0f, 0.0f, CUDAKernel::ChannelType::Invert);
             }else if(type == Type::X){
                 float mean[] = {0.485, 0.456, 0.406};
                 float std[]  = {0.229, 0.224, 0.225};
-                normalize_ = CUDAKernel::Norm::mean_std(mean, std) + CUDAKernel::NormType::ToRGB;
+                normalize_ = CUDAKernel::Norm::mean_std(mean, std, 1/255.0f, CUDAKernel::ChannelType::Invert);
             }else{
                 INFOE("Unsupport type %d", type);
             }
             
             confidence_threshold_ = confidence_threshold;
+            nms_threshold_        = nms_threshold;
             return ControllerImpl::startup(make_tuple(file, gpuid));
         }
 
@@ -133,9 +134,9 @@ namespace Yolo{
             engine->print();
 
             const int MAX_IMAGE_BBOX  = 1024;
-            const int NUM_BOX_ELEMENT = 6;      // left, top, right, bottom, confidence, class
-            TRT::Tensor affin_matrix_device(TRT::DataType::dtFloat);
-            TRT::Tensor output_array_device(TRT::DataType::dtFloat);
+            const int NUM_BOX_ELEMENT = 7;      // left, top, right, bottom, confidence, class, keepflag
+            TRT::Tensor affin_matrix_device(TRT::DataType::Float);
+            TRT::Tensor output_array_device(TRT::DataType::Float);
             int max_batch_size = engine->get_max_batch_size();
             auto input         = engine->tensor("images");
             auto output        = engine->tensor("output");
@@ -188,7 +189,7 @@ namespace Yolo{
                     float* output_array_ptr   = output_array_device.gpu<float>(ibatch);
                     auto affine_matrix        = affin_matrix_device.gpu<float>(ibatch);
                     checkCudaRuntime(cudaMemsetAsync(output_array_ptr, 0, sizeof(int), stream_));
-                    decode_kernel_invoker(image_based_output, output->size(1), num_classes, confidence_threshold_, 0.5f, affine_matrix, output_array_ptr, MAX_IMAGE_BBOX, stream_);
+                    decode_kernel_invoker(image_based_output, output->size(1), num_classes, confidence_threshold_, nms_threshold_, affine_matrix, output_array_ptr, MAX_IMAGE_BBOX, stream_);
                 }
 
                 // 数据转到cpu上，复制过来
@@ -199,9 +200,10 @@ namespace Yolo{
                     auto& job     = fetch_jobs[ibatch];
                     auto& image_based_boxes   = job.output;
                     for(int i = 0; i < count; ++i){
-                        float* pbox = parray + 1 + i * NUM_BOX_ELEMENT;
-                        int label = pbox[5];
-                        if(label != -1){
+                        float* pbox  = parray + 1 + i * NUM_BOX_ELEMENT;
+                        int label    = pbox[5];
+                        int keepflag = pbox[6];
+                        if(keepflag == 1){
                             image_based_boxes.emplace_back(pbox[0], pbox[1], pbox[2], pbox[3], pbox[4], label);
                         }
                     }
@@ -209,7 +211,7 @@ namespace Yolo{
                 }
                 fetch_jobs.clear();
             }
-            INFOV("Engine destroy.");
+            INFO("Engine destroy.");
         }
 
         virtual bool preprocess(Job& job, const Mat& image) override{
@@ -258,11 +260,11 @@ namespace Yolo{
             return true;
         }
 
-        virtual vector<shared_future<box_array>> commits(const vector<Mat>& images) override{
+        virtual vector<shared_future<ObjectBoxArray>> commits(const vector<Mat>& images) override{
             return ControllerImpl::commits(images);
         }
 
-        virtual std::shared_future<box_array> commit(const Mat& image) override{
+        virtual std::shared_future<ObjectBoxArray> commit(const Mat& image) override{
             return ControllerImpl::commit(image);
         }
 
@@ -271,13 +273,14 @@ namespace Yolo{
         int input_height_           = 0;
         int gpu_                    = 0;
         float confidence_threshold_ = 0;
+        float nms_threshold_        = 0;
         TRT::CUStream stream_       = nullptr;
         CUDAKernel::Norm normalize_;
     };
 
-    shared_ptr<Infer> create_infer(const string& engine_file, Type type, int gpuid, float confidence_threshold){
+    shared_ptr<Infer> create_infer(const string& engine_file, Type type, int gpuid, float confidence_threshold, float nms_threshold){
         shared_ptr<InferImpl> instance(new InferImpl());
-        if(!instance->startup(engine_file, type, gpuid, confidence_threshold)){
+        if(!instance->startup(engine_file, type, gpuid, confidence_threshold, nms_threshold)){
             instance.reset();
         }
         return instance;

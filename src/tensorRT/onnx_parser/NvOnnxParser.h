@@ -135,6 +135,7 @@ public:
      *
      */
     virtual bool parseFromFile(const char* onnxModelFile, int verbosity) = 0;
+    virtual bool parseFromData(const void* onnx_data, size_t size, int verbosity) = 0;
 
     /** \brief Check whether TensorRT supports a particular ONNX model
      *

@@ -4,9 +4,24 @@
 3. 支持自定义插件，简化插件的实现过程
 4. 支持fp32、fp16、int8的编译
 5. 优化代码结构，打印编译网络信息
-6. 优化内存分配
-7. yolov5/yolox的推理作为案例
-8. c++类库，对编译和推理做了封装，对tensor做了封装，支持n维的tensor管理
+6. 支持RetinaFace、Scrfd、YoloV5、YoloX、Arcface、AlphaPose、DeepSORT
+7. c++类库，对编译和推理做了封装，对tensor做了封装，支持n维的tensor管理
+
+## Python支持
+- YoloV5的tensorRT推理
+```python
+yolo   = tp.Yolo(engine_file, type=tp.YoloType.X)
+image  = cv2.imread("inference/car.jpg")
+bboxes = yolo.commit(image).get()
+```
+
+- Pytorch无缝对接
+```python
+model     = models.resnet18(True).eval().to(device)
+trt_model = tp.convert_torch_to_trt(model, input)
+trt_out   = trt_model(input)
+```
+
 
 ## 建议
 - PyTorch >= 1.8，其他版本也可以用，遇到问题可以群里讨论
@@ -203,6 +218,10 @@ cp FaceDetector.onnx ../tensorRT_cpp/workspace/mb_retinaface.onnx
 cd ../tensorRT_cpp
 make run_retinaface -j64
 ```
+
+## Scrfd支持
+- https://github.com/deepinsight/insightface/tree/master/detection/scrfd
+- 具体导出Onnx的注意事项和方法，请加群沟通。等待后面更新
 
 ## ArcFace人脸识别支持
 - https://github.com/deepinsight/insightface/tree/master/recognition/arcface_torch

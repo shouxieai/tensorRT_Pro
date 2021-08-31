@@ -10,7 +10,7 @@ namespace ONNXPlugin {
 	GTensor::GTensor(float* ptr, int ndims, int* dims) {
 		this->ptr_ = ptr;
 		this->shape_.insert(shape_.end(), dims, dims + ndims);
-		this->dtType_ = TRT::DataType::dtFloat;
+		this->dtType_ = TRT::DataType::Float;
 	}
 
 	int GTensor::offset(const std::vector<int>& index){
@@ -34,14 +34,14 @@ namespace ONNXPlugin {
 	GTensor::GTensor(TRT::halfloat* ptr, int ndims, int* dims) {
 		this->ptr_ = ptr;
 		this->shape_.insert(shape_.end(), dims, dims + ndims);
-		this->dtType_ = TRT::DataType::dtHalfloat;
+		this->dtType_ = TRT::DataType::Float16;
 	}
 	#endif
 
 	GTensor::GTensor(const TRT::Tensor& tensor) {
 		this->ptr_ = (float*)tensor.gpu();
 		this->shape_ = tensor.dims();
-		this->dtType_ = TRT::DataType::dtFloat;
+		this->dtType_ = TRT::DataType::Float;
 	}
 
 	int GTensor::count(int start_axis) const {
@@ -59,7 +59,7 @@ namespace ONNXPlugin {
 	LayerConfig::LayerConfig() {
 		supportDataType_ = {nvinfer1::DataType::kFLOAT};
 		supportPluginFormat_ = {nvinfer1::PluginFormat::kLINEAR};
-		configDataType_ = TRT::DataType::dtFloat;
+		configDataType_ = TRT::DataType::Float;
 		configPluginFormat_ = nvinfer1::PluginFormat::kLINEAR;
 	}
 
@@ -82,12 +82,12 @@ namespace ONNXPlugin {
 		out << (int)weights_.size();
 		for (int i = 0; i < weights_.size(); ++i) {
 
-			if (configDataType_ == TRT::DataType::dtFloat) {
+			if (configDataType_ == TRT::DataType::Float) {
 				weights_[i]->to_float();
 			}
 			
 			#ifdef HAS_CUDA_HALF
-			else if (configDataType_ == TRT::DataType::dtHalfloat) {
+			else if (configDataType_ == TRT::DataType::Float16) {
 				weights_[i]->to_half();
 			}
 			#endif
@@ -185,12 +185,12 @@ namespace ONNXPlugin {
 
 		//INFO("configureWithFormat: type: %d, format: %d", type, format);
 		if (type == nvinfer1::DataType::kFLOAT) {
-			this->config_->configDataType_ = TRT::DataType::dtFloat;
+			this->config_->configDataType_ = TRT::DataType::Float;
 		}
 
 		#ifdef HAS_CUDA_HALF
 		else if (type == nvinfer1::DataType::kHALF) {
-			this->config_->configDataType_ = TRT::DataType::dtHalfloat;
+			this->config_->configDataType_ = TRT::DataType::Float16;
 		}
 		#endif
 		

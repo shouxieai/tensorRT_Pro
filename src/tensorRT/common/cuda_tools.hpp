@@ -53,6 +53,9 @@ namespace CUDATools{
     dim3 grid_dims(int numJobs);
     dim3 block_dims(int numJobs);
 
+    // return 8.6  etc.
+    std::string device_capability(int device_id);
+
     class AutoDevice{
     public:
         AutoDevice(int device_id = 0);

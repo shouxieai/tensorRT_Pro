@@ -29,18 +29,31 @@ namespace Yolo{
         // 这个值构造函数，是为了给emplace_back函数使用的
         ObjectBox(float left, float top, float right, float bottom, float confidence, int class_label)
         :left(left), top(top), right(right), bottom(bottom), confidence(confidence), class_label(class_label){}
+
+        float get_left()                {return left;}
+        void set_left(float value)      {left = value;}
+        float get_top()                 {return top;}
+        void set_top(float value)       {top = value;}
+        float get_right()               {return right;}
+        void set_right(float value)     {right = value;}
+        float get_bottom()              {return bottom;}
+        void set_bottom(float value)    {bottom = value;}
+        float get_confidence()          {return confidence;}
+        void set_confidence(float value){confidence = value;}
+        int get_class_label()           {return class_label;}
+        void set_class_label(int value) {class_label = value;}
     };
 
-    typedef vector<ObjectBox> box_array;
+    typedef vector<ObjectBox> ObjectBoxArray;
 
     class Infer{
     public:
-        virtual shared_future<box_array> commit(const cv::Mat& image) = 0;
-        virtual vector<shared_future<box_array>> commits(const vector<cv::Mat>& images) = 0;
+        virtual shared_future<ObjectBoxArray> commit(const cv::Mat& image) = 0;
+        virtual vector<shared_future<ObjectBoxArray>> commits(const vector<cv::Mat>& images) = 0;
     };
 
     // RAII，如果创建失败，返回空指针
-    shared_ptr<Infer> create_infer(const string& engine_file, Type type, int gpuid, float confidence_threshold=0.25f);
+    shared_ptr<Infer> create_infer(const string& engine_file, Type type, int gpuid, float confidence_threshold=0.25f, float nms_threshold=0.5f);
     const char* type_name(Type type);
 
 }; // namespace Yolo

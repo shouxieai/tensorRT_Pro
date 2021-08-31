@@ -19,6 +19,7 @@ struct __half;
 #endif // HAS_CUDA_HALF
 
 struct CUstream_st;
+typedef CUstream_st CUStreamRaw;
 
 namespace TRT {
 
@@ -26,38 +27,47 @@ namespace TRT {
     typedef __half halfloat;
     #endif
 
-    typedef CUstream_st* CUStream;
+    typedef CUStreamRaw* CUStream;
 
-    enum DataHead{
-        DataHead_Init = 0,
-        DataHead_InGPU = 1,
-        DataHead_InCPU = 2
+    enum class DataHead : int{
+        Init   = 0,
+        Device = 1,
+        Host   = 2
     };
 
     #ifdef HAS_CUDA_HALF
     enum class DataType : int {
-        dtFloat = 0,
-        dtHalfloat = 1
+        Float = 0,
+        Float16 = 1
     };
     #else
     enum class DataType : int {
-        dtFloat = 0
+        Float = 0
     };
     #endif
 
     int data_type_size(DataType dt);
+    const char* data_head_string(DataHead dh);
 
     /**
      * @brief 对GPU/CPU内存进行管理、分配/释放
      */
     class MixMemory {
     public:
+        MixMemory() = default;
+        MixMemory(void* cpu, size_t cpu_size, void* gpu, size_t gpu_size);
         virtual ~MixMemory();
         void* gpu(size_t size);
         void* cpu(size_t size);
         void release_gpu();
         void release_cpu();
         void release_all();
+
+        inline bool owner_gpu() const{return owner_gpu_;}
+        inline bool owner_cpu() const{return owner_cpu_;}
+
+        inline size_t cpu_size() const{return cpu_size_;}
+        inline size_t gpu_size() const{return gpu_size_;}
 
         // 这里的GPU、CPU内存都可以用Host、Device直接访问
         // 这里的GPU内存，使用统一内存管理
@@ -67,12 +77,16 @@ namespace TRT {
         // 所以可以Host、Device访问
         inline void* cpu() const { return cpu_; }
 
+        void reference_data(void* cpu, size_t cpu_size, void* gpu, size_t gpu_size);
+
     private:
         void* cpu_ = nullptr;
         size_t cpu_size_ = 0;
+        bool owner_cpu_ = true;
 
         void* gpu_ = nullptr;
         size_t gpu_size_ = 0;
+        bool owner_gpu_ = true;
     };
 
     class Tensor {
@@ -80,10 +94,10 @@ namespace TRT {
         Tensor(const Tensor& other) = delete;
         Tensor& operator = (const Tensor& other) = delete;
 
-        explicit Tensor(DataType dtType = DataType::dtFloat);
-        explicit Tensor(int n, int c, int h, int w, DataType dtType = DataType::dtFloat);
-        explicit Tensor(int ndims, const int* dims, DataType dtType = DataType::dtFloat);
-        explicit Tensor(const std::vector<int>& dims, DataType dtType = DataType::dtFloat);
+        explicit Tensor(DataType dtype = DataType::Float, std::shared_ptr<MixMemory> data = nullptr);
+        explicit Tensor(int n, int c, int h, int w, DataType dtype = DataType::Float, std::shared_ptr<MixMemory> data = nullptr);
+        explicit Tensor(int ndims, const int* dims, DataType dtype = DataType::Float, std::shared_ptr<MixMemory> data = nullptr);
+        explicit Tensor(const std::vector<int>& dims, DataType dtype = DataType::Float, std::shared_ptr<MixMemory> data = nullptr);
         virtual ~Tensor();
 
         int numel();
@@ -99,9 +113,11 @@ namespace TRT {
 
         inline DataType type()                const { return dtype_; }
         inline const std::vector<int>& dims() const { return shape_; }
+        inline const std::vector<size_t>& strides() const {return strides_;}
         inline int bytes()                    const { return bytes_; }
         inline int bytes(int start_axis)      const { return count(start_axis) * element_size(); }
         inline int element_size()             const { return data_type_size(dtype_); }
+        inline DataHead head()                const { return head_; }
 
         std::shared_ptr<Tensor> clone();
         Tensor& release();
@@ -174,6 +190,8 @@ namespace TRT {
         Tensor& copy_from_gpu(size_t offset, const void* src, size_t num_element);
         Tensor& copy_from_cpu(size_t offset, const void* src, size_t num_element);
 
+        void reference_data(const std::vector<int>& shape, void* cpu_data, size_t cpu_size, void* gpu_data, size_t gpu_size, DataType dtype);
+
         /**
         
         # 以下代码是python中加载Tensor
@@ -226,14 +244,15 @@ namespace TRT {
 
         Tensor& compute_shape_string();
         Tensor& adajust_memory_by_update_dims_or_type();
+        void setup_data(std::shared_ptr<MixMemory> data);
 
     private:
         std::vector<int> resized_dim_, offset_index_;
         std::vector<int> shape_;
-        size_t capacity_ = 0;
+        std::vector<size_t> strides_;
         size_t bytes_    = 0;
-        DataHead head_   = DataHead_Init;
-        DataType dtype_  = DataType::dtFloat;
+        DataHead head_   = DataHead::Init;
+        DataType dtype_  = DataType::Float;
         CUStream stream_ = nullptr;
         char shape_string_[100];
         std::shared_ptr<MixMemory> data_;

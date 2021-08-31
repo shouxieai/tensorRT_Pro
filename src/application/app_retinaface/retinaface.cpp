@@ -47,18 +47,19 @@ namespace RetinaFace{
     using ControllerImpl = InferController
     <
         Mat,                    // input
-        box_array,              // output
+        FaceBoxArray,              // output
         tuple<string, int>,     // start param
         AffineMatrix            // additional
     >;
     class InferImpl : public Infer, public ControllerImpl{
     public:
-        virtual bool startup(const string& file, int gpuid, float confidence_threshold){
+        virtual bool startup(const string& file, int gpuid, float confidence_threshold, float nms_threshold){
 
             float mean[] = {104, 117, 123};
             float std[]  = {1, 1, 1};
             normalize_   = CUDAKernel::Norm::mean_std(mean, std, 1.0f);
             confidence_threshold_ = confidence_threshold;
+            nms_threshold_        = nms_threshold;
             return ControllerImpl::startup(make_tuple(file, gpuid));
         }
 
@@ -126,9 +127,9 @@ namespace RetinaFace{
 
             const int MAX_IMAGE_BBOX = 1024;
             const int NUM_BOX_ELEMENT = 16;    // left, top, right, bottom, confidence, label(0 or -1), landmark(x, y) * 5
-            TRT::Tensor affin_matrix_device(TRT::DataType::dtFloat);
-            TRT::Tensor output_array_device(TRT::DataType::dtFloat);
-            TRT::Tensor prior(TRT::DataType::dtFloat);
+            TRT::Tensor affin_matrix_device(TRT::DataType::Float);
+            TRT::Tensor output_array_device(TRT::DataType::Float);
+            TRT::Tensor prior(TRT::DataType::Float);
             int max_batch_size = engine->get_max_batch_size();
             auto input         = engine->input();
             auto output        = engine->output();
@@ -184,7 +185,7 @@ namespace RetinaFace{
                     checkCudaRuntime(cudaMemsetAsync(output_array_ptr, 0, sizeof(int), stream_));
                     decode_kernel_invoker(
                         image_based_output, 
-                        output->size(1), confidence_threshold_, 0.5f, affine_matrix, 
+                        output->size(1), confidence_threshold_, nms_threshold_, affine_matrix, 
                         output_array_ptr, MAX_IMAGE_BBOX, prior.gpu<float>(),
                         stream_
                     );
@@ -198,9 +199,9 @@ namespace RetinaFace{
                     auto& job     = fetch_jobs[ibatch];
                     auto& image_based_boxes   = job.output;
                     for(int i = 0; i < count; ++i){
-                        float* pbox = parray + 1 + i * NUM_BOX_ELEMENT;
-                        int label = pbox[5];
-                        if(label != -1){
+                        float* pbox  = parray + 1 + i * NUM_BOX_ELEMENT;
+                        int keepflag = pbox[5];
+                        if(keepflag == 1){
                             FaceBox box;
                             box.left       = pbox[0];
                             box.top        = pbox[1];
@@ -264,12 +265,45 @@ namespace RetinaFace{
             return true;
         }
 
-        virtual vector<shared_future<box_array>> commits(const vector<Mat>& images) override{
+        virtual vector<shared_future<FaceBoxArray>> commits(const vector<Mat>& images) override{
             return ControllerImpl::commits(images);
         }
 
-        virtual std::shared_future<box_array> commit(const Mat& image) override{
+        virtual std::shared_future<FaceBoxArray> commit(const Mat& image) override{
             return ControllerImpl::commit(image);
+        }
+
+        virtual tuple<cv::Mat, FaceBox> crop_face_and_landmark(const cv::Mat& image, const FaceBox& box, float scale_box) override{
+            
+            float padding_x = (scale_box - 1) * box.width() * 0.5f;
+            float padding_y = (scale_box - 1) * box.height() * 0.5f;
+            int left   = std::round(box.left   - padding_x);
+            int top    = std::round(box.top    - padding_y);
+            int right  = std::round(box.right  + padding_x);
+            int bottom = std::round(box.bottom + padding_y);
+
+            Rect rbox(left, top, right-left, bottom-top);
+            rbox = rbox & Rect(0, 0, image.cols, image.rows);
+
+            auto box_copy = box;
+            for(int i = 0; i < 10; ++i){
+                if(i % 2 == 0){
+                    // x
+                    box_copy.landmark[i] -= left;
+                }else{
+                    box_copy.landmark[i] -= top;
+                }
+            }
+
+            box_copy.left   -= left;
+            box_copy.top    -= top;
+            box_copy.right  -= left;
+            box_copy.bottom -= top;
+
+            if(rbox.width < 1 || rbox.height < 1)
+                return make_tuple(Mat(), box_copy);
+
+            return make_tuple(image(rbox).clone(), box_copy);
         }
 
     private:
@@ -277,13 +311,14 @@ namespace RetinaFace{
         int input_height_           = 0;
         int gpu_                    = 0;
         float confidence_threshold_ = 0;
+        float nms_threshold_        = 0;
         TRT::CUStream stream_       = nullptr;
         CUDAKernel::Norm normalize_;
     };
 
-    shared_ptr<Infer> create_infer(const string& engine_file, int gpuid, float confidence_threshold){
+    shared_ptr<Infer> create_infer(const string& engine_file, int gpuid, float confidence_threshold, float nms_threshold){
         shared_ptr<InferImpl> instance(new InferImpl());
-        if(!instance->startup(engine_file, gpuid, confidence_threshold)){
+        if(!instance->startup(engine_file, gpuid, confidence_threshold, nms_threshold)){
             instance.reset();
         }
         return instance;

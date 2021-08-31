@@ -63,13 +63,13 @@ int HSwish::enqueue(const std::vector<GTensor>& inputs, std::vector<GTensor>& ou
 	auto grid = CUDATools::grid_dims(count);
 	auto block = CUDATools::block_dims(count);
 
-	if (config_->configDataType_ == TRT::DataType::dtFloat) {
+	if (config_->configDataType_ == TRT::DataType::Float) {
 		INFO("enqueue for float");
 		hswish_kernel_fp32 <<<grid, block, 0, stream >>> (inputs[0].ptr<float>(), outputs[0].ptr<float>(), count);
 	}
 
 	#ifdef HAS_CUDA_HALF
-		else if (config_->configDataType_ == TRT::DataType::dtHalfloat) {
+		else if (config_->configDataType_ == TRT::DataType::Float16) {
 			INFO("enqueue for half");
 			hswish_kernel_fp16 <<<grid, block, 0, stream >>> (inputs[0].ptr<halfloat>(), outputs[0].ptr<halfloat>(), count);
 		}

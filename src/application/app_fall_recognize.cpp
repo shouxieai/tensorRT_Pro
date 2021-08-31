@@ -20,7 +20,7 @@ bool requires(const char* name);
 static bool compile_models(){
 
     TRT::set_device(0);
-    const char* onnx_files[]{"yolox_m", "sppe", "gcn-new-bp"};
+    const char* onnx_files[]{"yolox_m", "sppe", "fall_bp"};
     for(auto& name : onnx_files){
         if(not requires(name))
             return false;
@@ -57,7 +57,7 @@ int app_fall_recognize(){
     
     auto pose_model_file     = "sppe.fp32.trtmodel";
     auto detector_model_file = "yolox_m.fp32.trtmodel";
-    auto gcn_model_file      = "gcn-new-bp.fp32.trtmodel";
+    auto gcn_model_file      = "fall_bp.fp32.trtmodel";
     
     auto pose_model     = AlphaPose::create_infer(pose_model_file, 0);
     auto detector_model = Yolo::create_infer(detector_model_file, Yolo::Type::X, 0, 0.4f);
@@ -65,14 +65,27 @@ int app_fall_recognize(){
 
     Mat image;
     VideoCapture cap("fall_video.mp4");
-    INFO("%d, %d, %d", 
+    INFO("Video fps=%d, Width=%d, Height=%d", 
         (int)cap.get(cv::CAP_PROP_FPS), 
         (int)cap.get(cv::CAP_PROP_FRAME_WIDTH), 
         (int)cap.get(cv::CAP_PROP_FRAME_HEIGHT)
     );
 
-    auto remote_show = create_zmq_remote_show();
-    auto tracker     = DeepSORT::create_tracker();
+    //auto remote_show = create_zmq_remote_show();
+    INFO("这个程序需要展示，请使用tools/show.py做客户端，然后启用这里的remote_show进行实时展示");
+
+    auto config  = DeepSORT::TrackerConfig();
+    config.set_initiate_state({
+        0.1,  0.1,  0.1,  0.1,
+        0.2,  0.2,  1,    0.2
+    });
+
+    config.set_per_frame_motion({
+        0.1,  0.1,  0.1,  0.1,
+        0.2,  0.2,  1,    0.2
+    });
+
+    auto tracker = DeepSORT::create_tracker(config);
     // VideoWriter writer("fall_video.result.avi", cv::VideoWriter::fourcc('X', 'V', 'I', 'D'), 
     //     30,
     //     Size(cap.get(cv::CAP_PROP_FRAME_WIDTH), cap.get(cv::CAP_PROP_FRAME_HEIGHT))
@@ -97,8 +110,8 @@ int app_fall_recognize(){
             auto& person = final_objects[i];
             if(person->time_since_update() == 0 && person->state() == DeepSORT::State::Confirmed){
                 Rect box = DeepSORT::convert_box_to_rect(person->last_position());
-                auto keys   = pose_model->commit(image, box).get();
-                auto statev = gcn_model->commit(keys, box).get();
+                auto keys   = pose_model->commit(make_tuple(image, box)).get();
+                auto statev = gcn_model->commit(make_tuple(keys, box)).get();
 
                 FallGCN::FallState state = get<0>(statev);
                 float confidence         = get<1>(statev);
@@ -114,10 +127,10 @@ int app_fall_recognize(){
                 }
 
                 putText(image, iLogger::format("%d. [%s] %.2f %%", person->id(), label_name, confidence * 100), box.tl(), 0, 1, Scalar(0, 255, 0), 2, 16);
-                INFO("Predict is [%s], %.2f %%", label_name, confidence * 100);
+                //INFO("Predict is [%s], %.2f %%", label_name, confidence * 100);
            }
         }
-        remote_show->post(image);
+        //remote_show->post(image);
         //writer.write(image);
     }
     INFO("Done");

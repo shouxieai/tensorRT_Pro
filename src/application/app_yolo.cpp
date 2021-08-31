@@ -186,13 +186,13 @@ static void test_plugin(){
 static void test_int8(Yolo::Type type){
 
     INFO("===================== test %s int8 ==================================", Yolo::type_name(type));
-    auto int8process = [](int current, int count, vector<string>& images, shared_ptr<TRT::Tensor>& tensor){
+    auto int8process = [](int current, int count, const vector<string>& files, shared_ptr<TRT::Tensor>& tensor){
 
         INFO("Int8 %d / %d", current, count);
 
         // 按道理，这里的输入，应该按照推理的方式进行。这里我简单模拟了resize的方式输入
-        for(int i = 0; i < images.size(); ++i){
-            auto image = cv::imread(images[i]);
+        for(int i = 0; i < files.size(); ++i){
+            auto image = cv::imread(files[i]);
             cv::cvtColor(image, image, cv::COLOR_BGR2RGB);
             cv::resize(image, image, cv::Size(tensor->size(3), tensor->size(2)));
             float mean[] = {0.485, 0.456, 0.406};

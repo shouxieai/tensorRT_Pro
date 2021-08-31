@@ -118,6 +118,9 @@ namespace TRT {
 		virtual std::shared_ptr<Tensor> tensor(const std::string& name) override;
 		virtual bool is_output_name(const std::string& name) override;
 		virtual bool is_input_name(const std::string& name) override;
+		virtual void set_input (int index, std::shared_ptr<Tensor> tensor) override;
+		virtual void set_output(int index, std::shared_ptr<Tensor> tensor) override;
+		virtual std::shared_ptr<std::vector<uint8_t>> serial_engine() override;
 
 		virtual void print() override;
 
@@ -131,6 +134,8 @@ namespace TRT {
 	private:
 		std::vector<std::shared_ptr<Tensor>> inputs_;
 		std::vector<std::shared_ptr<Tensor>> outputs_;
+		std::vector<int> inputs_map_to_ordered_index_;
+		std::vector<int> outputs_map_to_ordered_index_;
 		std::vector<std::string> inputs_name_;
 		std::vector<std::string> outputs_name_;
 		std::vector<std::shared_ptr<Tensor>> orderdBlobs_;
@@ -177,6 +182,13 @@ namespace TRT {
 			auto& name = outputs_name_[i];
 			INFO("\t\t%d.%s : shape {%s}", i, name.c_str(), tensor->shape_string());
 		}
+	}
+
+	std::shared_ptr<std::vector<uint8_t>> InferImpl::serial_engine() {
+		auto memory = this->context_->engine_->serialize();
+		auto output = make_shared<std::vector<uint8_t>>((uint8_t*)memory->data(), (uint8_t*)memory->data()+memory->size());
+		memory->destroy();
+		return output;
 	}
 
 	bool InferImpl::load_from_memory(const void* pdata, size_t size) {
@@ -244,7 +256,7 @@ namespace TRT {
 
 			auto dims = context->engine_->getBindingDimensions(i);
 			const char* bindingName = context->engine_->getBindingName(i);
-			auto mapperTensor = new Tensor(dims.nbDims, dims.d, TRT::DataType::dtFloat);
+			auto mapperTensor = new Tensor(dims.nbDims, dims.d, TRT::DataType::Float);
 			auto newTensor = shared_ptr<Tensor>(mapperTensor);
 			newTensor->set_stream(this->context_->stream_);
 			newTensor->set_workspace(this->workspace_);
@@ -252,11 +264,13 @@ namespace TRT {
 				//if is input
 				inputs_.push_back(newTensor);
 				inputs_name_.push_back(bindingName);
+				inputs_map_to_ordered_index_.push_back(orderdBlobs_.size());
 			}
 			else {
 				//if is output
 				outputs_.push_back(newTensor);
 				outputs_name_.push_back(bindingName);
+				outputs_map_to_ordered_index_.push_back(orderdBlobs_.size());
 			}
 			blobsNameMapper_[bindingName] = i;
 			orderdBlobs_.push_back(newTensor);
@@ -266,6 +280,9 @@ namespace TRT {
 
 	void InferImpl::set_stream(CUStream stream){
 		this->context_->set_stream(stream);
+
+		for(auto& t : orderdBlobs_)
+			t->set_stream(stream);
 	}
 
 	CUStream InferImpl::get_stream() {
@@ -332,7 +349,24 @@ namespace TRT {
 		return this->outputs_.size();
 	}
 
+	void InferImpl::set_input (int index, std::shared_ptr<Tensor> tensor){
+		Assert(index >= 0 && index < inputs_.size());
+		this->inputs_[index] = tensor;
+
+		int order_index = inputs_map_to_ordered_index_[index];
+		this->orderdBlobs_[order_index] = tensor;
+	}
+
+	void InferImpl::set_output(int index, std::shared_ptr<Tensor> tensor){
+		Assert(index >= 0 && index < outputs_.size());
+		this->outputs_[index] = tensor;
+
+		int order_index = outputs_map_to_ordered_index_[index];
+		this->orderdBlobs_[order_index] = tensor;
+	}
+
 	std::shared_ptr<Tensor> InferImpl::input(int index) {
+		Assert(index >= 0 && index < inputs_name_.size());
 		return this->inputs_[index];
 	}
 

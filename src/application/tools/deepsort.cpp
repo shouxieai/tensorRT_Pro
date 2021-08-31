@@ -418,14 +418,72 @@ namespace DeepSORT {
     };
 
 
-    /**
-     * @brief kalman滤波
-     * 
-     */
+    TrackerConfig::TrackerConfig(){
+        
+        float std_weight_position_ = 1 / 20.f;
+        float std_weight_velocity_ = 1 / 160.f;
+        float initiate_state[] = {
+            2.0f * std_weight_position_,
+            2.0f * std_weight_position_,
+            1e-2,
+            2.0f * std_weight_position_,
+            10.0f * std_weight_velocity_,
+            10.0f * std_weight_velocity_,
+            1e-5,
+            10.0f * std_weight_velocity_,
+        };
+
+        float noise[] = {
+            std_weight_position_,
+            std_weight_position_,
+            1e-1,
+            std_weight_position_
+        };
+
+        float per_frame_motion[] = {
+            std_weight_position_,
+            std_weight_position_,
+            1e-2,
+            std_weight_position_,
+            std_weight_velocity_,
+            std_weight_velocity_,
+            1e-5,
+            std_weight_velocity_,
+        };
+        memcpy(this->initiate_state, initiate_state, sizeof(initiate_state));
+        memcpy(this->noise, noise, sizeof(noise));
+        memcpy(this->per_frame_motion, per_frame_motion, sizeof(per_frame_motion));
+    }
+
+    void TrackerConfig::set_initiate_state(const std::vector<float>& values){
+        if(values.size() != 8){
+            printf("set_initiate_state failed, Values.size(%d0) != 8\n", values.size());
+            return;
+        }
+        memcpy(this->initiate_state, values.data(), sizeof(this->initiate_state));
+    }
+
+    void TrackerConfig::set_per_frame_motion(const std::vector<float>& values){
+        if(values.size() != 8){
+            printf("set_per_frame_motion failed, Values.size(%d0) != 8\n", values.size());
+            return;
+        }
+        memcpy(this->per_frame_motion, values.data(), sizeof(this->per_frame_motion));
+    }
+
+    void TrackerConfig::set_noise(const std::vector<float>& values){
+        if(values.size() != 4){
+            printf("set_noise failed, Values.size(%d0) != 4\n", values.size());
+            return;
+        }
+        memcpy(this->noise, values.data(), sizeof(this->noise));
+    }
+
     class KalmanFilter
     {
     public:
-        KalmanFilter() {
+        KalmanFilter(const TrackerConfig& config):config_(config) {
+            // 匀速直线运动
             motion_mat_ = Eigen::Matrix<float, 8, 8>::Identity(8, 8);
             for (int i = 0; i < 4; ++i) {
                 motion_mat_(i, 4 + i) = 1;
@@ -441,10 +499,16 @@ namespace DeepSORT {
                     Eigen::Matrix<float, 4, 1> &mean_ret,
                     Eigen::Matrix<float, 4, 4> &covariance_ret) {
             Eigen::Matrix<float, 4, 1> std_vel;
-            std_vel << std_weight_position_ * mean(3, 0),
-                    std_weight_position_ * mean(3, 0),
-                    5e-1,
-                    std_weight_position_ * mean(3, 0);
+            
+            // 测量噪声标准差
+            // std_vel << std_weight_position_ * mean(3, 0),
+            //         std_weight_position_ * mean(3, 0),
+            //         1e-1,
+            //         std_weight_position_ * mean(3, 0);
+            std_vel <<  config_.noise[0] * mean(3, 0),
+                        config_.noise[1] * mean(3, 0),
+                        config_.noise[2],
+                        config_.noise[3] * mean(3, 0);
             std_vel = std_vel.array().pow(2).matrix();
             Eigen::Matrix<float, 4, 4> innovation_cov(std_vel.asDiagonal());
 
@@ -470,7 +534,7 @@ namespace DeepSORT {
             Eigen::Matrix<float, 4, 4> covariance_ret;
             this->project(mean, covariance, mean_ret, covariance_ret);
 
-            float squared_maha;
+            float squared_maha = 0;
             if (only_position) {
 
             }
@@ -496,15 +560,25 @@ namespace DeepSORT {
         void predict(Eigen::Matrix<float, 8, 1> &mean, 
                     Eigen::Matrix<float, 8, 8> &covariance) {
             Eigen::Matrix<float, 8, 1> std_pos_vel;
-            std_pos_vel << std_weight_position_ * mean(3, 0),
-                        std_weight_position_ * mean(3, 0),
-                        1e-1,
-                        std_weight_position_ * mean(3, 0),
 
-                        std_weight_velocity_ * mean(3, 0),
-                        std_weight_velocity_ * mean(3, 0),
-                        5e-1,
-                        std_weight_velocity_ * mean(3, 0);
+            // 预测下一步所在位置，那么std_pos则是模型对下一步预测的标准差。可以认为是一帧运动了多少
+            // std_pos_vel << std_weight_position_ * mean(3, 0),
+            //             std_weight_position_ * mean(3, 0),
+            //             1e-2,
+            //             std_weight_position_ * mean(3, 0),
+
+            //             std_weight_velocity_ * mean(3, 0),
+            //             std_weight_velocity_ * mean(3, 0),
+            //             1e-5,
+            //             std_weight_velocity_ * mean(3, 0);
+            std_pos_vel <<  config_.per_frame_motion[0] * mean(3, 0),
+                            config_.per_frame_motion[1] * mean(3, 0),
+                            config_.per_frame_motion[2],
+                            config_.per_frame_motion[3] * mean(3, 0),
+                            config_.per_frame_motion[4] * mean(3, 0),
+                            config_.per_frame_motion[5] * mean(3, 0),
+                            config_.per_frame_motion[6],
+                            config_.per_frame_motion[7] * mean(3, 0);
             std_pos_vel = std_pos_vel.array().pow(2).matrix();
             Eigen::Matrix<float, 8, 8> motion_cov(std_pos_vel.asDiagonal());
 
@@ -536,25 +610,35 @@ namespace DeepSORT {
             mean << boxah.center_x, boxah.center_y, boxah.aspect_ratio,
                 boxah.height, 0.0f, 0.0f, 0.0f, 0.0f;
 
+            // 初始状态
             Eigen::Matrix<float, 8, 1> std_val;
-            std_val << 2.0f * std_weight_position_ * boxah.height,
-                    2.0f * std_weight_position_ * boxah.height,
-                    1e-1,
-                    2 * std_weight_position_ * boxah.height,
+            // std_val << 2.0f * std_weight_position_ * boxah.height,
+            //            2.0f * std_weight_position_ * boxah.height,
+            //            1e-2,
+            //            2.0f * std_weight_position_ * boxah.height,
 
-                    2.0f * std_weight_velocity_ * boxah.height,
-                    2.0f * std_weight_velocity_ * boxah.height,
-                    5e-1,
-                    10.0f * std_weight_velocity_ * boxah.height;
+            //            10.0f * std_weight_velocity_ * boxah.height,
+            //            10.0f * std_weight_velocity_ * boxah.height,
+            //            1e-5,
+            //            10.0f * std_weight_velocity_ * boxah.height;
+            std_val << config_.initiate_state[0] * boxah.height,
+                       config_.initiate_state[1] * boxah.height,
+                       config_.initiate_state[2],
+                       config_.initiate_state[3] * boxah.height,
+                       config_.initiate_state[4] * boxah.height,
+                       config_.initiate_state[5] * boxah.height,
+                       config_.initiate_state[6],
+                       config_.initiate_state[7] * boxah.height;
             covariance = Eigen::Matrix<float, 8, 8>(std_val.array().pow(2).matrix().asDiagonal());
         }
 
     private:
-        float std_weight_position_{1.0f / 20};
-        float std_weight_velocity_{1.0f / 10};
+        //float std_weight_position_{1.0f / 20};
+        //float std_weight_velocity_{1.0f / 160};
 
         Eigen::Matrix<float, 8, 8> motion_mat_;
         Eigen::Matrix<float, 4, 8> update_mat_;
+        TrackerConfig config_;
     };
 
     class TrackObjectImpl : public TrackObject
@@ -563,16 +647,18 @@ namespace DeepSORT {
         TrackObjectImpl(const Box &box, 
                     const Eigen::Matrix<float, 8, 1> &mean,
                     const Eigen::Matrix<float, 8, 8> &covariance,
-                    int id_next, int nbuckets, int max_age, int nhit)
-            :nbuckets_(nbuckets), max_age_(max_age), nhit_(nhit)
+                    int id_next, int nbuckets, int max_age, int nhit, bool has_feature)
+            :nbuckets_(nbuckets), max_age_(max_age), nhit_(nhit), has_feature_(has_feature)
         {
             last_position_ = box;
             covariance_    = covariance;
             mean_          = mean;
             id_            = id_next;
             state_         = State::Tentative;
-            feature_bucket_.push_back(box.feature);
             trace_.emplace_back(box);
+
+            if(has_feature_)
+                feature_bucket_.push_back(box.feature);
         }
 
         virtual int time_since_update() const {return time_since_update_;}
@@ -627,13 +713,15 @@ namespace DeepSORT {
 
         void update(KalmanFilter &km_filter, const Box &box) {
             
-            if(feature_bucket_.rows < nbuckets_){
-                feature_bucket_.push_back(box.feature);
-            }else{
-                box.feature.copyTo(feature_bucket_.row(feature_cursor_++));
+            if(has_feature_){
+                if(feature_bucket_.rows < nbuckets_){
+                    feature_bucket_.push_back(box.feature);
+                }else{
+                    box.feature.copyTo(feature_bucket_.row(feature_cursor_++));
 
-                if(feature_cursor_ >= nbuckets_)
-                    feature_cursor_ = 0;
+                    if(feature_cursor_ >= nbuckets_)
+                        feature_cursor_ = 0;
+                }
             }
 
             trace_.push_back(box);
@@ -682,6 +770,7 @@ namespace DeepSORT {
         int feature_cursor_ = 0;
         std::deque<Box> trace_;
         cv::Mat feature_bucket_;
+        bool has_feature_ = false;
 
         int nbuckets_ = 100;
         int max_age_ = 100;
@@ -692,15 +781,16 @@ namespace DeepSORT {
         Eigen::Matrix<float, 8, 8> covariance_;
     };
 
-    /**
-     * @brief 
-     * 
-     */
     class TrackerImpl : public Tracker
     {
     public:
-        TrackerImpl(float cosine_distance_threshold, int nbuckets, int max_age, int nhit)
-        :cosine_distance_threshold_(cosine_distance_threshold), nbuckets_(nbuckets), max_age_(max_age), nhit_(nhit) {
+        TrackerImpl(const TrackerConfig& config)
+        :kalman_(config), 
+        distance_threshold_(config.distance_threshold), 
+        nbuckets_(config.nbuckets), 
+        max_age_(config.max_age), 
+        nhit_(config.nhit), 
+        has_feature_(config.has_feature) {
         }
 
         virtual ~TrackerImpl() {
@@ -716,7 +806,7 @@ namespace DeepSORT {
 
         void predict() {
             for (auto &obj : objects_) {
-                obj.predict(km_filter_);
+                obj.predict(kalman_);
             }
         }
 
@@ -781,7 +871,7 @@ namespace DeepSORT {
                     // update
                     int count = std::min<int>(match_objects_index.size(), match_boxes_index.size());
                     for (int i = 0; i < count; ++i) {
-                        objects_[match_objects_index[i]].update(km_filter_, boxes[match_boxes_index[i]]);
+                        objects_[match_objects_index[i]].update(kalman_, boxes[match_boxes_index[i]]);
                     }
                 }
             }
@@ -812,7 +902,7 @@ namespace DeepSORT {
                     auto &box = boxes[box_idx];
                     BBoxXYAH boxah(box);
 
-                    auto maha_distance = km_filter_.ma_distance(
+                    auto maha_distance = kalman_.ma_distance(
                         TrackObject.get_mean(), TrackObject.get_covariance(),
                         boxah, false
                     );
@@ -823,11 +913,14 @@ namespace DeepSORT {
                         cost_data = 1e5;
                     }
                     else {
-                        //cost_data = distance(TrackObject.last_position(), box);
-                        cv::Mat scores   = TrackObject.feature_bucket() * box.feature.t();
-                        double max_score = 0;
-                        cv::minMaxLoc(scores, nullptr, &max_score);
-                        cost_data = 1 - max_score;
+                        if(has_feature_){
+                            cv::Mat scores   = TrackObject.feature_bucket() * box.feature.t();
+                            double max_score = 0;
+                            cv::minMaxLoc(scores, nullptr, &max_score);
+                            cost_data = 1 - max_score;
+                        }else{
+                            cost_data = distance(TrackObject.last_position(), box);
+                        }
                     }
                     cost_matrix_item.push_back(cost_data);
                 }
@@ -845,7 +938,7 @@ namespace DeepSORT {
                 }
                 int obj_index = objects_index[i];
                 int box_index = boxes_index[assignment[i]];
-                if (cost_matrix_data[i][assignment[i]] < cosine_distance_threshold_) {
+                if (cost_matrix_data[i][assignment[i]] < distance_threshold_) {
                     match_boxes_index.push_back(box_index);
                     match_objects_index.push_back(obj_index);
                 }
@@ -855,29 +948,32 @@ namespace DeepSORT {
         void new_object(const Box &box) {
             Eigen::Matrix<float, 8, 1> mean;
             Eigen::Matrix<float, 8, 8> covariance;
-            km_filter_.initiate(BBoxXYAH(box), mean, covariance);
+            kalman_.initiate(BBoxXYAH(box), mean, covariance);
 
-            objects_.emplace_back(box, mean, covariance, id_next_, nbuckets_, max_age_, nhit_);
+            objects_.emplace_back(box, mean, covariance, id_next_, nbuckets_, max_age_, nhit_, has_feature_);
             ++ id_next_;
         }
 
     private:
         int id_next_{1};
         std::vector<TrackObjectImpl> objects_;
-        KalmanFilter km_filter_;
-        float cosine_distance_threshold_ = 0;
+        KalmanFilter kalman_;
+        float distance_threshold_ = 0;
         int nbuckets_ = 100;
         int max_age_ = 100;
         int nhit_ = 3;
+        bool has_feature_ = false;
     };
 
-    std::shared_ptr<Tracker> create_tracker(float feature_score_threshold, int nbuckets, int max_age, int nhit) {
-        
+    std::shared_ptr<Tracker> create_tracker(const TrackerConfig& config) {
+
+        if(config.has_feature && config.nbuckets < 1 || config.max_age < 1 || config.nhit < 1){
+            printf("Invalid argument has_feature = %s, nbuckets = %d, max_age = %d, nhit = %d\n", config.has_feature ? "True":"False", config.nbuckets, config.max_age, config.nhit);
+            return nullptr;
+        }
+
         std::shared_ptr<TrackerImpl> tracker_ptr(new TrackerImpl(
-            1 - feature_score_threshold,
-            nbuckets,
-            max_age, 
-            nhit
+            config
         ));
         return tracker_ptr;
     }

@@ -10,16 +10,18 @@
 
 namespace TRT {
 
-	typedef std::function<void(int current, int count, std::vector<std::string>& images, std::shared_ptr<Tensor>& tensor)> Int8Process;
+	typedef std::function<void(int current, int count, const std::vector<std::string>& files, std::shared_ptr<Tensor>& tensor)> Int8Process;
 	typedef std::function<std::vector<int64_t>(const std::string& name, const std::vector<int64_t>& shape)> LayerHookFuncReshape;
 
-	enum ModelSourceType {
-		ModelSourceType_FromCaffe,
-		ModelSourceType_FromONNX
+	enum class ModelSourceType : int{
+		Caffe,
+		OnnX,
+		OnnXData
 	};
 
 	class ModelSource {
 	public:
+		ModelSource() = default;
 		ModelSource(const std::string& prototxt, const std::string& caffemodel);
 		ModelSource(const std::string& onnxmodel);
 		ModelSource(const char* onnxmodel);
@@ -28,15 +30,67 @@ namespace TRT {
 		std::string caffemodel() const;
 		std::string onnxmodel() const;
 		std::string descript() const;
+		const void* onnx_data() const;
+		size_t onnx_data_size() const;
+
+		static ModelSource caffe(const std::string& prototxt, const std::string& caffemodel){
+			ModelSource output;
+			output.prototxt_   = prototxt;
+			output.caffemodel_ = caffemodel;
+			output.type_       = ModelSourceType::Caffe;
+			return output;
+		}
+
+		static ModelSource onnx(const std::string& file){
+			ModelSource output;
+			output.onnxmodel_  = file;
+			output.type_       = ModelSourceType::OnnX;
+			return output;
+		}
+
+		static ModelSource onnx_data(const void* ptr, size_t size){
+			ModelSource output;
+			output.onnx_data_      = ptr;
+			output.onnx_data_size_ = size;
+			output.type_           = ModelSourceType::OnnXData;
+			return output;
+		}
 
 	private:
 		std::string prototxt_, caffemodel_;
 		std::string onnxmodel_;
+		const void* onnx_data_ = nullptr;
+		size_t onnx_data_size_ = 0;
 		ModelSourceType type_;
+	};
+
+	enum class CompileOutputType : int{
+		File,
+		Memory
+	};
+
+	class CompileOutput{
+	public:
+		CompileOutput(CompileOutputType type = CompileOutputType::Memory);
+		CompileOutput(const std::string& file);
+		CompileOutput(const char* file);
+		void set_data(const std::vector<uint8_t>& data);
+		void set_data(std::vector<uint8_t>&& data);
+
+		const std::vector<uint8_t>& data() const{return data_;};
+		CompileOutputType type() const{return type_;}
+		std::string file() const{return file_;}
+
+	private:
+		CompileOutputType type_ = CompileOutputType::Memory;
+		std::vector<uint8_t> data_;
+		std::string file_;
 	};
 
 	class InputDims {
 	public:
+		InputDims() = default;
+		
 		// 当为-1时，保留导入时的网络结构尺寸
 		InputDims(const std::initializer_list<int>& dims);
 		InputDims(const std::vector<int>& dims);
@@ -76,7 +130,7 @@ namespace TRT {
 		const std::vector<std::string>& outputs,
 		unsigned int maxBatchSize,
 		const ModelSource& source,
-		const std::string& savepath,
+		const CompileOutput& saveto,
 		const std::vector<InputDims> inputsDimsSetup = {}, bool dynamicBatch = true,
 		Int8Process int8process = nullptr,
 		const std::string& int8ImageDirectory = "",

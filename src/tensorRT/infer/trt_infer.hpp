@@ -33,6 +33,9 @@ namespace TRT {
 		virtual int  num_input() = 0;
 		virtual void print() = 0;
 		virtual int  device() = 0;
+		virtual void set_input (int index, std::shared_ptr<Tensor> tensor) = 0;
+		virtual void set_output(int index, std::shared_ptr<Tensor> tensor) = 0;
+		virtual std::shared_ptr<std::vector<uint8_t>> serial_engine() = 0;
 	};
 
 	struct DeviceMemorySummary {

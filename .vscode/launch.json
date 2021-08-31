@@ -9,7 +9,7 @@
             "type": "cppdbg",
             "request": "launch",
             "program": "${workspaceFolder}/workspace/pro",
-            "args": ["arcface_tracker"],
+            "args": ["fall_recognize"],
             "stopAtEntry": false,
             "cwd": "${workspaceFolder}/workspace",
             "environment": [],

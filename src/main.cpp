@@ -1,6 +1,8 @@
 
 #include <stdio.h>
 #include <string.h>
+#include <common/ilogger.hpp>
+#include <functional>
 
 int app_yolo();
 int app_alphapose();
@@ -9,6 +11,19 @@ int app_retinaface();
 int app_arcface();
 int app_arcface_video();
 int app_arcface_tracker();
+int app_scrfd();
+
+void test_all(){
+    app_yolo();
+    app_alphapose();
+    app_fall_recognize();
+    app_retinaface();
+    app_arcface();
+    app_arcface_video();
+    app_arcface_tracker();
+    app_scrfd();
+    INFO("test done.");
+}
 
 int main(int argc, char** argv){
 
@@ -31,6 +46,10 @@ int main(int argc, char** argv){
         app_arcface_video();
     }else if(strcmp(method, "arcface_tracker") == 0){
         app_arcface_tracker();
+    }else if(strcmp(method, "scrfd") == 0){
+        app_scrfd();
+    }else if(strcmp(method, "test_all") == 0){
+        test_all();
     }else{
         printf(
             "Help: \n"

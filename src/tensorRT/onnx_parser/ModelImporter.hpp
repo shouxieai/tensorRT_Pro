@@ -71,6 +71,7 @@ public:
 
     //...LG: Move the implementation to .cpp
     bool parseFromFile(const char* onnxModelFile, int verbosity) override;
+    bool parseFromData(const void* onnx_data, size_t size, int verbosity) override;
 };
 
 } // namespace onnx2trt

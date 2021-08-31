@@ -15,10 +15,10 @@ namespace TRT{
 
 	int data_type_size(DataType dt){
 		switch (dt) {
-		case DataType::dtFloat: return sizeof(float);
+		case DataType::Float: return sizeof(float);
 
 		#ifdef HAS_CUDA_HALF
-		case DataType::dtHalfloat: return sizeof(halfloat);
+		case DataType::Float16: return sizeof(halfloat);
 		#endif
 
 		default: {
@@ -26,6 +26,32 @@ namespace TRT{
 			return -1;
 		}
 		}
+	}
+
+	MixMemory::MixMemory(void* cpu, size_t cpu_size, void* gpu, size_t gpu_size){
+		reference_data(cpu, cpu_size, gpu, gpu_size);		
+	}
+
+	void MixMemory::reference_data(void* cpu, size_t cpu_size, void* gpu, size_t gpu_size){
+		release_all();
+		
+		if(cpu == nullptr || cpu_size == 0){
+			cpu = nullptr;
+			cpu_size = 0;
+		}
+
+		if(gpu == nullptr || gpu_size == 0){
+			gpu = nullptr;
+			gpu_size = 0;
+		}
+
+		this->cpu_ = cpu;
+		this->cpu_size_ = cpu_size;
+		this->gpu_ = gpu;
+		this->gpu_size_ = gpu_size;
+
+		this->owner_cpu_ = !(cpu && cpu_size > 0);
+		this->owner_gpu_ = !(gpu && gpu_size > 0);
 	}
 
 	MixMemory::~MixMemory() {
@@ -59,7 +85,9 @@ namespace TRT{
 
 	void MixMemory::release_cpu() {
 		if (cpu_) {
-			checkCudaRuntime(cudaFreeHost(cpu_));
+			if(owner_cpu_){
+				checkCudaRuntime(cudaFreeHost(cpu_));
+			}
 			cpu_ = nullptr;
 		}
 		cpu_size_ = 0;
@@ -67,7 +95,9 @@ namespace TRT{
 
 	void MixMemory::release_gpu() {
 		if (gpu_) {
-			checkCudaRuntime(cudaFree(gpu_));
+			if(owner_gpu_){
+				checkCudaRuntime(cudaFree(gpu_));
+			}
 			gpu_ = nullptr;
 		}
 		gpu_size_ = 0;
@@ -76,6 +106,43 @@ namespace TRT{
 	void MixMemory::release_all() {
 		release_cpu();
 		release_gpu();
+	}
+
+	const char* data_head_string(DataHead dh){
+		switch(dh){
+			case DataHead::Init: return "Init";
+			case DataHead::Device: return "Device";
+			case DataHead::Host: return "Host";
+			default: return "Unknow";
+		}
+	}
+
+	Tensor::Tensor(int n, int c, int h, int w, DataType dtype, shared_ptr<MixMemory> data) {
+		this->dtype_ = dtype;
+		setup_data(data);
+		resize(n, c, h, w);
+	}
+
+	Tensor::Tensor(const std::vector<int>& dims, DataType dtype, shared_ptr<MixMemory> data){
+		this->dtype_ = dtype;
+		setup_data(data);
+		resize(dims);
+	}
+
+	Tensor::Tensor(int ndims, const int* dims, DataType dtype, shared_ptr<MixMemory> data) {
+		this->dtype_ = dtype;
+		setup_data(data);
+		resize(ndims, dims);
+	}
+
+	Tensor::Tensor(DataType dtype, shared_ptr<MixMemory> data){
+		shape_string_[0] = 0;
+		dtype_ = dtype;
+		setup_data(data);
+	}
+
+	Tensor::~Tensor() {
+		release();
 	}
 
 	Tensor& Tensor::compute_shape_string(){
@@ -99,40 +166,39 @@ namespace TRT{
 		return *this;
 	}
 
-	Tensor::Tensor(int n, int c, int h, int w, DataType dtType) {
-		this->dtype_ = dtType;
-		resize(n, c, h, w);
+	void Tensor::reference_data(const vector<int>& shape, void* cpu_data, size_t cpu_size, void* gpu_data, size_t gpu_size, DataType dtype){
+
+		dtype_ = dtype;
+		data_->reference_data(cpu_data, cpu_size, gpu_data, gpu_size);
+		setup_data(data_);
+		resize(shape);
 	}
 
-	Tensor::~Tensor() {
-		release();
-	}
+	void Tensor::setup_data(shared_ptr<MixMemory> data){
+		
+		data_ = data;
+		if(data_ == nullptr){
+			data_ = make_shared<MixMemory>();
+		}
 
-	Tensor::Tensor(const std::vector<int>& dims, DataType dtType){
-		this->dtype_ = dtType;
-		resize(dims);
-	}
+		head_ = DataHead::Init;
+		if(data_->cpu()){
+			head_ = DataHead::Host;
+		}
 
-	Tensor::Tensor(int ndims, const int* dims, DataType dtType) {
-
-		this->dtype_ = dtType;
-		resize(ndims, dims);
-	}
-
-	Tensor::Tensor(DataType dtType){
-		shape_string_[0] = 0;
-		dtype_ = dtType;
-		data_  = make_shared<MixMemory>();
+		if(data_->gpu()){
+			head_ = DataHead::Device;
+		}
 	}
 
 	shared_ptr<Tensor> Tensor::clone(){
 		auto new_tensor = make_shared<Tensor>(shape_, dtype_);
-		if(head_ == DataHead_Init)
+		if(head_ == DataHead::Init)
 			return new_tensor;
 		
-		if(head_ == DataHead_InCPU){
+		if(head_ == DataHead::Host){
 			memcpy(new_tensor->cpu(), this->cpu(), this->bytes_);
-		}else if(head_ == DataHead_InGPU){
+		}else if(head_ == DataHead::Device){
 			checkCudaRuntime(cudaMemcpyAsync(new_tensor->gpu(), this->gpu(), bytes_, cudaMemcpyDeviceToDevice, stream_));
 		}
 		return new_tensor;
@@ -140,7 +206,7 @@ namespace TRT{
 
 	Tensor& Tensor::copy_from_gpu(size_t offset, const void* src, size_t num_element){
 
-		if(head_ == DataHead_Init)
+		if(head_ == DataHead::Init)
 			to_gpu(false);
 
 		size_t offset_location = offset * element_size();
@@ -156,9 +222,9 @@ namespace TRT{
 			return *this;
 		}
 
-		if(head_ == DataHead_InGPU){
+		if(head_ == DataHead::Device){
 			checkCudaRuntime(cudaMemcpyAsync(gpu<unsigned char>() + offset_location, src, copyed_bytes, cudaMemcpyDeviceToDevice, stream_));
-		}else if(head_ == DataHead_InCPU){
+		}else if(head_ == DataHead::Host){
 			checkCudaRuntime(cudaMemcpyAsync(cpu<unsigned char>() + offset_location, src, copyed_bytes, cudaMemcpyDeviceToHost, stream_));
 		}else{
 			INFOE("Unsupport head type %d", head_);
@@ -168,7 +234,7 @@ namespace TRT{
 
 	Tensor& Tensor::copy_from_cpu(size_t offset, const void* src, size_t num_element){
 
-		if(head_ == DataHead_Init)
+		if(head_ == DataHead::Init)
 			to_cpu(false);
 
 		size_t offset_location = offset * element_size();
@@ -184,9 +250,9 @@ namespace TRT{
 			return *this;
 		}
 
-		if(head_ == DataHead_InGPU){
+		if(head_ == DataHead::Device){
 			checkCudaRuntime(cudaMemcpyAsync(data_->gpu() + offset_location, src, copyed_bytes, cudaMemcpyHostToDevice, stream_));
-		}else if(head_ == DataHead_InCPU){
+		}else if(head_ == DataHead::Host){
 			checkCudaRuntime(cudaMemcpyAsync(data_->cpu() + offset_location, src, copyed_bytes, cudaMemcpyHostToHost, stream_));
 		}else{
 			INFOE("Unsupport head type %d", head_);
@@ -197,9 +263,8 @@ namespace TRT{
 	Tensor& Tensor::release() {
 		data_->release_all();
 		shape_.clear();
-		capacity_ = 0;
 		bytes_ = 0;
-		head_ = DataHead_Init;
+		head_ = DataHead::Init;
 		return *this;
 	}
 
@@ -253,6 +318,20 @@ namespace TRT{
 			setup_dims[i] = dim;
 		}
 		this->shape_ = setup_dims;
+
+		// strides = element_size
+		this->strides_.resize(setup_dims.size());
+		
+		size_t prev_size  = element_size();
+		size_t prev_shape = 1;
+		for(int i = (int)strides_.size() - 1; i >= 0; --i){
+			if(i + 1 < strides_.size()){
+				prev_size  = strides_[i+1];
+				prev_shape = shape_[i+1];
+			}
+			strides_[i] = prev_size * prev_shape;
+		}
+
 		this->adajust_memory_by_update_dims_or_type();
 		this->compute_shape_string();
 		return *this;
@@ -260,15 +339,9 @@ namespace TRT{
 
 	Tensor& Tensor::adajust_memory_by_update_dims_or_type(){
 		
-		if(data_ == nullptr)
-			data_ = make_shared<MixMemory>();
-
 		int needed_size = this->numel() * element_size();
-		if (needed_size > capacity_) {
-			data_->release_all();
-			bytes_ = 0;
-			head_ = DataHead_Init;
-			capacity_ = needed_size;
+		if(needed_size > this->bytes_){
+			head_ = DataHead::Init;
 		}
 		this->bytes_ = needed_size;
 		return *this;
@@ -281,11 +354,11 @@ namespace TRT{
 
 	Tensor& Tensor::to_gpu(bool copyedIfCPU) {
 
-		if (head_ == DataHead_InGPU)
+		if (head_ == DataHead::Device)
 			return *this;
 
-		head_ = DataHead_InGPU;
-		data_->gpu(capacity_);
+		head_ = DataHead::Device;
+		data_->gpu(bytes_);
 
 		if (copyedIfCPU && data_->cpu() != nullptr) {
 			checkCudaRuntime(cudaMemcpyAsync(data_->gpu(), data_->cpu(), bytes_, cudaMemcpyHostToDevice, stream_));
@@ -295,11 +368,11 @@ namespace TRT{
 	
 	Tensor& Tensor::to_cpu(bool copyedIfGPU) {
 
-		if (head_ == DataHead_InCPU)
+		if (head_ == DataHead::Host)
 			return *this;
 
-		head_ = DataHead_InCPU;
-		data_->cpu(capacity_);
+		head_ = DataHead::Host;
+		data_->cpu(bytes_);
 
 		if (copyedIfGPU && data_->gpu() != nullptr) {
 			checkCudaRuntime(cudaMemcpyAsync(data_->cpu(), data_->gpu(), bytes_, cudaMemcpyDeviceToHost, stream_));
@@ -310,24 +383,24 @@ namespace TRT{
 
 	Tensor& Tensor::to_float() {
 
-		if (type() == DataType::dtFloat)
+		if (type() == DataType::Float)
 			return *this;
 
 		#ifdef HAS_CUDA_HALF
 
-			if (type() != DataType::dtHalfloat) {
+			if (type() != DataType::Float16) {
 				INFOF("not implement function");
 			}
 
 			auto c = count();
-			float* convert_memory = (float*)malloc(c * data_type_size(DataType::dtFloat));
+			float* convert_memory = (float*)malloc(c * data_type_size(DataType::Float));
 			float* dst = convert_memory;
 			halfloat* src = cpu<halfloat>();
 
 			for (int i = 0; i < c; ++i)
 				*dst++ = *src++;
 
-			this->dtype_ = DataType::dtFloat;
+			this->dtype_ = DataType::Float;
 			adajust_memory_by_update_dims_or_type();
 			memcpy(cpu(), convert_memory, bytes_);
 			free(convert_memory);
@@ -341,22 +414,22 @@ namespace TRT{
 	#ifdef HAS_CUDA_HALF
 	Tensor& Tensor::to_half() {
 
-		if (type() == DataType::dtHalfloat)
+		if (type() == DataType::Float16)
 			return *this;
 
-		if (type() != DataType::dtFloat) {
+		if (type() != DataType::Float) {
 			INFOF("not implement function");
 		}
 
 		auto c = count();
-		halfloat* convert_memory = (halfloat*)malloc(c * data_type_size(DataType::dtHalfloat));
+		halfloat* convert_memory = (halfloat*)malloc(c * data_type_size(DataType::Float16));
 		halfloat* dst = convert_memory;
 		float* src = cpu<float>();
 
 		for (int i = 0; i < c; ++i) 
 			*dst++ = *src++;
 
-		this->dtype_ = DataType::dtHalfloat;
+		this->dtype_ = DataType::Float16;
 		adajust_memory_by_update_dims_or_type();
 		memcpy(cpu(), convert_memory, bytes_);
 		free(convert_memory);
@@ -366,7 +439,7 @@ namespace TRT{
 
 	Tensor& Tensor::set_to(float value) {
 		int c = count();
-		if (dtype_ == DataType::dtFloat) {
+		if (dtype_ == DataType::Float) {
 			float* ptr = cpu<float>();
 			for (int i = 0; i < c; ++i)
 				*ptr++ = value;
@@ -403,7 +476,7 @@ namespace TRT{
 	#ifdef USE_OPENCV
 	Tensor& Tensor::set_norm_mat(int n, const cv::Mat& image, float mean[3], float std[3]) {
 
-		Assert(image.channels() == 3 && !image.empty() && type() == DataType::dtFloat);
+		Assert(image.channels() == 3 && !image.empty() && type() == DataType::Float);
 		Assert(ndims() == 4 && n < shape_[0]);
 		to_cpu(false);
 
@@ -433,7 +506,7 @@ namespace TRT{
 	Tensor& Tensor::set_mat(int n, const cv::Mat& _image) {
 
 		cv::Mat image = _image;
-		Assert(!image.empty() && CV_MAT_DEPTH(image.type()) == CV_32F && type() == DataType::dtFloat);
+		Assert(!image.empty() && CV_MAT_DEPTH(image.type()) == CV_32F && type() == DataType::Float);
 		Assert(shape_.size() == 4 && n < shape_[0] && image.channels() == shape_[1]);
 		to_cpu(false);
 

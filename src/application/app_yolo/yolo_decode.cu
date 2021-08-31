@@ -4,13 +4,13 @@
 
 namespace Yolo{
 
-    const int NUM_BOX_ELEMENT = 6;      // left, top, right, bottom, confidence, class
+    const int NUM_BOX_ELEMENT = 7;      // left, top, right, bottom, confidence, class, keepflag
     static __device__ void affine_project(float* matrix, float x, float y, float* ox, float* oy){
         *ox = matrix[0] * x + matrix[1] * y + matrix[2];
         *oy = matrix[3] * x + matrix[4] * y + matrix[5];
     }
 
-    static __global__ void decode_kernel(float* predict, int num_bboxes, int num_classes, float confidence_threshold, float nms_threshold, float* invert_affine_matrix, float* parray, int max_objects){  
+    static __global__ void decode_kernel(float* predict, int num_bboxes, int num_classes, float confidence_threshold, float* invert_affine_matrix, float* parray, int max_objects){  
 
         int position = blockDim.x * blockIdx.x + threadIdx.x;
 		if (position >= num_bboxes) return;
@@ -56,6 +56,7 @@ namespace Yolo{
         *pout_item++ = bottom;
         *pout_item++ = confidence;
         *pout_item++ = label;
+        *pout_item++ = 1; // 1 = keep, 0 = ignore
     }
 
     static __device__ float box_iou(
@@ -84,6 +85,7 @@ namespace Yolo{
         if (position >= count) 
             return;
         
+        // left, top, right, bottom, confidence, class, keepflag
         float* pcurrent = bboxes + 1 + position * NUM_BOX_ELEMENT;
         for(int i = 0; i < count; ++i){
             float* pitem = bboxes + 1 + i * NUM_BOX_ELEMENT;
@@ -98,7 +100,7 @@ namespace Yolo{
                 if(pitem[4] > pcurrent[4]){
                     // 如果发现iou大，并且b > a，置信度。b是第i个框，a是当前框
                     // 表示当前框要过滤掉，不需要保留了
-                    pcurrent[5] = -1;
+                    pcurrent[6] = 0;  // 1=keep, 0=ignore
                     return;
                 }
             }
@@ -109,7 +111,7 @@ namespace Yolo{
         
         auto grid = CUDATools::grid_dims(num_bboxes);
         auto block = CUDATools::block_dims(num_bboxes);
-        checkCudaKernel(decode_kernel<<<grid, block, 0, stream>>>(predict, num_bboxes, num_classes, confidence_threshold, nms_threshold, invert_affine_matrix, parray, max_objects));
+        checkCudaKernel(decode_kernel<<<grid, block, 0, stream>>>(predict, num_bboxes, num_classes, confidence_threshold, invert_affine_matrix, parray, max_objects));
 
         grid = CUDATools::grid_dims(max_objects);
         block = CUDATools::block_dims(max_objects);

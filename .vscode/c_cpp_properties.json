@@ -4,10 +4,12 @@
             "name": "Linux",
             "includePath": [
                 "${workspaceFolder}/src/**",
-                "/data/datav/expstation/lean/protobuf3.11.4/include/**",
-                "/data/datav/expstation/lean/opencv4.2.0/include/opencv4/**",
+                "/data/sxai/lean/protobuf3.11.4/include/**",
+                "/data/sxai/lean/opencv4.2.0/include/opencv4/**",
                 "/data/sxai/lean/cuda10.2/include/**",
-                "/data/sxai/lean/TensorRT-8.0.1.6/include/**"
+                "/data/sxai/lean/TensorRT-8.0.1.6/include/**",
+                "/data/sxai/lean/cudnn7.6.5.32-cuda10.2/include/**",
+                "/data/datav/newbb/lean/anaconda3/envs/torch1.8/include/python3.9/**"
             ],
             "defines": ["__CUDACC__", "HAS_CUDA_HALF"],
             "compilerPath": "/usr/bin/gcc", 
@@ -18,10 +20,12 @@
             "browse": {
                 "path": [
                     "${workspaceFolder}/src/**",
-                    "/data/datav/expstation/lean/protobuf3.11.4/include/**",
-                    "/data/datav/expstation/lean/opencv4.2.0/include/opencv4/**",
+                    "/data/sxai/lean/protobuf3.11.4/include/**",
+                    "/data/sxai/lean/opencv4.2.0/include/opencv4/**",
                     "/data/sxai/lean/cuda10.2/include/**",
-                    "/data/sxai/lean/TensorRT-8.0.1.6/include/**"
+                    "/data/sxai/lean/TensorRT-8.0.1.6/include/**",
+                    "/data/sxai/lean/cudnn7.6.5.32-cuda10.2/include/**",
+                    "/data/datav/newbb/lean/anaconda3/envs/torch1.8/include/python3.9/**"
                 ],
                 "limitSymbolsToIncludedHeaders": false,
                 "databaseFilename": ""

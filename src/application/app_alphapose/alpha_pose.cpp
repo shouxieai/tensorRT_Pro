@@ -42,11 +42,6 @@ namespace AlphaPose{
         }
     };
 
-    struct PoseInput{
-        Mat image;
-        Rect box;
-    };
-
     // 给定x、y坐标，经过仿射变换矩阵，进行映射
     static tuple<float, float> affine_project(float x, float y, float* pmatrix){
 
@@ -57,7 +52,7 @@ namespace AlphaPose{
 
     using ControllerImpl = InferController
     <
-        PoseInput,                 // input
+        Input,                     // input
         vector<Point3f>,           // output
         tuple<string, int>,        // start param
         AffineMatrix               // additional
@@ -86,7 +81,6 @@ namespace AlphaPose{
             int max_batch_size = engine->get_max_batch_size();
             auto input         = engine->input();
             auto output        = engine->output();
-            float threshold    = 0.25;
             int stride         = input->width() / output->width();
             input_width_       = input->width();
             input_height_      = input->height();
@@ -96,6 +90,7 @@ namespace AlphaPose{
             result.set_value(true);
             input->resize_single_dim(0, max_batch_size);
 
+            int n = 0;
             vector<Job> fetch_jobs;
             while(get_jobs_and_wait(fetch_jobs, max_batch_size)){
 
@@ -107,6 +102,7 @@ namespace AlphaPose{
                     input->copy_from_gpu(input->offset(ibatch), job.mono_tensor->data()->gpu(), input->count(1));
                     job.mono_tensor->release();
                 }
+                
                 // 模型推理
                 engine->forward(false);
 
@@ -136,14 +132,18 @@ namespace AlphaPose{
                 }
                 fetch_jobs.clear();
             }
-            INFOV("Engine destroy.");
+            INFO("Engine destroy.");
         }
 
-        virtual shared_future<vector<Point3f>> commit(const Mat& image, const Rect& box) override{
-            return ControllerImpl::commit(PoseInput{.image=image, .box=box});
+        virtual shared_future<vector<Point3f>> commit(const Input& input) override{
+            return ControllerImpl::commit(input);
         }
 
-        virtual bool preprocess(Job& job, const PoseInput& input) override{
+        virtual vector<shared_future<vector<Point3f>>> commits(const vector<Input>& inputs) override{
+            return ControllerImpl::commits(inputs);
+        }
+
+        virtual bool preprocess(Job& job, const Input& input) override{
 
             job.mono_tensor = tensor_allocator_->query();
             if(job.mono_tensor == nullptr){
@@ -159,26 +159,28 @@ namespace AlphaPose{
                 tensor->set_workspace(make_shared<TRT::MixMemory>());
             }
 
+            auto& image = get<0>(input);
+            auto& box   = get<1>(input);
             Size input_size(input_width_, input_height_);
-            job.additional.compute(input.image.size(), input.box, input_size);
+            job.additional.compute(image.size(), box, input_size);
             
             tensor->set_stream(stream_);
             tensor->resize(1, 3, input_height_, input_width_);
             float mean[]           = {0.406, 0.457, 0.480};
             float std[]            = {1, 1, 1};
 
-            size_t size_image      = input.image.cols * input.image.rows * 3;
+            size_t size_image      = image.cols * image.rows * 3;
             size_t size_matrix     = iLogger::upbound(sizeof(job.additional.d2i), 32);
             auto workspace         = tensor->get_workspace();
             uint8_t* gpu_workspace = (uint8_t*)workspace->gpu(size_image + size_matrix);
             float*   affine_matrix_device = (float*)gpu_workspace;
             uint8_t* image_device         = gpu_workspace + size_matrix;
-            checkCudaRuntime(cudaMemcpyAsync(image_device,         input.image.data,   size_image,                 cudaMemcpyHostToDevice, stream_));
+            checkCudaRuntime(cudaMemcpyAsync(image_device,         image.data,         size_image,                 cudaMemcpyHostToDevice, stream_));
             checkCudaRuntime(cudaMemcpyAsync(affine_matrix_device, job.additional.d2i, sizeof(job.additional.d2i), cudaMemcpyHostToDevice, stream_));
 
-            auto normalize         = CUDAKernel::Norm::mean_std(mean, std) + CUDAKernel::NormType::ToRGB;
+            auto normalize         = CUDAKernel::Norm::mean_std(mean, std, 1/255.0f, CUDAKernel::ChannelType::Invert);
             CUDAKernel::warp_affine_bilinear_and_normalize(
-                image_device,         input.image.cols * 3, input.image.cols, input.image.rows, 
+                image_device,         image.cols * 3, image.cols, image.rows, 
                 tensor->gpu<float>(), input_width_,     input_height_, 
                 affine_matrix_device, 127, 
                 normalize, stream_

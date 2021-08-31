@@ -1,6 +1,7 @@
 {
     "editor.snippetSuggestions": "bottom",
     "editor.suggest.snippetsPreventQuickSuggestions": false,
+    "python.languageServer": "Jedi",
     "files.associations": {
         "*.cpp": "cpp",
         "*.cu": "cpp",
@@ -87,6 +88,8 @@
         "__mutex_base": "cpp",
         "__functional_base": "cpp",
         "__memory": "cpp",
-        "__atomic_generated": "cpp"
+        "__atomic_generated": "cpp",
+        "__functional_base_03": "cpp",
+        "__tuple": "cpp"
     }
 }

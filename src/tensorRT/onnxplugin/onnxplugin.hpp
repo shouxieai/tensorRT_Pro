@@ -59,7 +59,7 @@ namespace ONNXPlugin {
 		#endif
 
 		void* ptr_ = nullptr;
-		TRT::DataType dtType_ = TRT::DataType::dtFloat;
+		TRT::DataType dtType_ = TRT::DataType::Float;
 		std::vector<int> shape_;
 
 	private:

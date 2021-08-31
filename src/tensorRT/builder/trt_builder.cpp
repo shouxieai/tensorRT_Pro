@@ -284,19 +284,27 @@ namespace TRT {
 	}
 
 	ModelSource::ModelSource(const std::string& prototxt, const std::string& caffemodel) {
-		this->type_ = ModelSourceType_FromCaffe;
+		this->type_ = ModelSourceType::Caffe;
 		this->prototxt_ = prototxt;
 		this->caffemodel_ = caffemodel;
 	}
 
 	ModelSource::ModelSource(const char* onnxmodel){
-		this->type_ = ModelSourceType_FromONNX;
+		this->type_ = ModelSourceType::OnnX;
 		this->onnxmodel_ = onnxmodel;
 	}
 
 	ModelSource::ModelSource(const std::string& onnxmodel) {
-		this->type_ = ModelSourceType_FromONNX;
+		this->type_ = ModelSourceType::OnnX;
 		this->onnxmodel_ = onnxmodel;
+	}
+
+	const void* ModelSource::onnx_data() const{
+		return this->onnx_data_;
+	}
+
+	size_t ModelSource::onnx_data_size() const{
+		return this->onnx_data_size_;
 	}
 
 	std::string ModelSource::prototxt() const { return this->prototxt_; }
@@ -304,12 +312,20 @@ namespace TRT {
 	std::string ModelSource::onnxmodel() const { return this->onnxmodel_; }
 	ModelSourceType ModelSource::type() const { return this->type_; }
 	std::string ModelSource::descript() const{
-		if(this->type_ == ModelSourceType_FromONNX)
+		if(this->type_ == ModelSourceType::OnnX)
 			return format("Onnx Model '%s'", onnxmodel_.c_str());
+		else if(this->type_ == ModelSourceType::OnnXData)
+			return format("OnnXData Data: '%p', Size: '%lld'", onnx_data_, onnx_data_size_);
 		else
-			return format("Caffe Model \nPrototxt: '%s'\nCaffemodel: '%s'", prototxt_.c_str(), caffemodel_.c_str());
+			return format("Caffe Model Prototxt: '%s', Caffemodel: '%s'", prototxt_.c_str(), caffemodel_.c_str());
 	}
 
+	CompileOutput::CompileOutput(CompileOutputType type):type_(type){}
+	CompileOutput::CompileOutput(const std::string& file):type_(CompileOutputType::File), file_(file){}
+	CompileOutput::CompileOutput(const char* file):type_(CompileOutputType::File), file_(file){}
+	void CompileOutput::set_data(const std::vector<uint8_t>& data){data_ = data;}
+
+	void CompileOutput::set_data(std::vector<uint8_t>&& data){data_ = std::move(data);}
 	/////////////////////////////////////////////////////////////////////////////////////////
 	class Int8EntropyCalibrator : public IInt8EntropyCalibrator2
 	{
@@ -321,7 +337,8 @@ namespace TRT {
 			this->allimgs_ = imagefiles;
 			this->preprocess_ = preprocess;
 			this->fromCalibratorData_ = false;
-			images_.resize(dims.d[0]);
+			files_.resize(dims.d[0]);
+			checkCudaRuntime(cudaStreamCreate(&stream_));
 		}
 
 		Int8EntropyCalibrator(const vector<uint8_t>& entropyCalibratorData, nvinfer1::Dims dims, const Int8Process& preprocess) {
@@ -331,7 +348,12 @@ namespace TRT {
 			this->entropyCalibratorData_ = entropyCalibratorData;
 			this->preprocess_ = preprocess;
 			this->fromCalibratorData_ = true;
-			images_.resize(dims.d[0]);
+			files_.resize(dims.d[0]);
+			checkCudaRuntime(cudaStreamCreate(&stream_));
+		}
+
+		virtual ~Int8EntropyCalibrator(){
+			checkCudaRuntime(cudaStreamDestroy(stream_));
 		}
 
 		int getBatchSize() const noexcept {
@@ -344,12 +366,15 @@ namespace TRT {
 				return false;
 
 			for(int i = 0; i < batch_size; ++i)
-				images_[i] = allimgs_[cursor_++];
+				files_[i] = allimgs_[cursor_++];
 
-			if (!tensor_) 
+			if (!tensor_){
 				tensor_.reset(new Tensor(dims_.nbDims, dims_.d));
+				tensor_->set_stream(stream_);
+				tensor_->set_workspace(make_shared<TRT::MixMemory>());
+			}
 
-			preprocess_(cursor_, allimgs_.size(), images_, tensor_);
+			preprocess_(cursor_, allimgs_.size(), files_, tensor_);
 			return true;
 		}
 
@@ -383,10 +408,11 @@ namespace TRT {
 		size_t batchCudaSize_ = 0;
 		int cursor_ = 0;
 		nvinfer1::Dims dims_;
-		vector<string> images_;
+		vector<string> files_;
 		shared_ptr<Tensor> tensor_;
 		vector<uint8_t> entropyCalibratorData_;
 		bool fromCalibratorData_ = false;
+		CUStream stream_ = nullptr;
 	};
 
 	bool compile(
@@ -394,7 +420,7 @@ namespace TRT {
 		const std::vector<std::string>& outputs,
 		unsigned int maxBatchSize,
 		const ModelSource& source,
-		const std::string& savepath,
+		const CompileOutput& saveto,
 		std::vector<InputDims> inputsDimsSetup, bool dynamicBatch,
 		Int8Process int8process,
 		const std::string& int8ImageDirectory,
@@ -468,7 +494,7 @@ namespace TRT {
 		shared_ptr<INetworkDefinition> network;
 		shared_ptr<ICaffeParser> caffeParser;
 		shared_ptr<nvonnxparser::IParser> onnxParser;
-		if (source.type() == ModelSourceType_FromCaffe) {
+		if (source.type() == ModelSourceType::Caffe) {
 			
 			const auto explicitBatch = 0; //1U << static_cast<uint32_t>(nvinfer1::NetworkDefinitionCreationFlag::kEXPLICIT_BATCH);
 			network = shared_ptr<INetworkDefinition>(builder->createNetworkV2(explicitBatch), destroy_nvidia_pointer<INetworkDefinition>);
@@ -499,7 +525,7 @@ namespace TRT {
 				INFO("Warning: network has %d input, maybe have errors", network->getNbInputs());
 			}
 		}
-		else if(source.type() == ModelSourceType_FromONNX){
+		else if(source.type() == ModelSourceType::OnnX || source.type() == ModelSourceType::OnnXData){
 			
 			int explicit_batch_size = maxBatchSize;
 			const auto explicitBatch = dynamicBatch ? 0U : 1U;   //1U << static_cast<uint32_t>(nvinfer1::NetworkDefinitionCreationFlag::kEXPLICIT_BATCH);
@@ -531,9 +557,16 @@ namespace TRT {
 				return false;
 			}
 
-			if (!onnxParser->parseFromFile(source.onnxmodel().c_str(), 1)) {
-				INFO("Can not parse OnnX file: %s", source.onnxmodel().c_str());
-				return false;
+			if(source.type() == ModelSourceType::OnnX){
+				if (!onnxParser->parseFromFile(source.onnxmodel().c_str(), 1)) {
+					INFO("Can not parse OnnX file: %s", source.onnxmodel().c_str());
+					return false;
+				}
+			}else{
+				if (!onnxParser->parseFromData(source.onnx_data(), source.onnx_data_size(), 1)) {
+					INFO("Can not parse OnnX file: %s", source.onnxmodel().c_str());
+					return false;
+				}
 			}
 		}
 		else {
@@ -541,21 +574,25 @@ namespace TRT {
 			Assert(false);
 		}
 
+		set_layer_hook_reshape(nullptr);
 		auto inputTensor = network->getInput(0);
 		auto inputDims = inputTensor->getDimensions();
 
 		shared_ptr<Int8EntropyCalibrator> int8Calibrator;
 		if (mode == TRTMode_INT8) {
+			auto calibratorDims = inputDims;
+			calibratorDims.d[0] = maxBatchSize;
+
 			if (hasEntropyCalibrator) {
 				INFO("Using exist entropy calibrator data[%d bytes]: %s", entropyCalibratorData.size(), int8EntropyCalibratorFile.c_str());
 				int8Calibrator.reset(new Int8EntropyCalibrator(
-					entropyCalibratorData, inputDims, int8process
+					entropyCalibratorData, calibratorDims, int8process
 				));
 			}
 			else {
 				INFO("Using image list[%d files]: %s", entropyCalibratorFiles.size(), int8ImageDirectory.c_str());
 				int8Calibrator.reset(new Int8EntropyCalibrator(
-					entropyCalibratorFiles, inputDims, int8process
+					entropyCalibratorFiles, calibratorDims, int8process
 				));
 			}
 			config->setInt8Calibrator(int8Calibrator.get());
@@ -653,6 +690,11 @@ namespace TRT {
 		
 		// serialize the engine, then close everything down
 		shared_ptr<IHostMemory> seridata(engine->serialize(), destroy_nvidia_pointer<IHostMemory>);
-		return iLogger::save_file(savepath, seridata->data(), seridata->size());
+		if(saveto.type() == CompileOutputType::File){
+			return iLogger::save_file(saveto.file(), seridata->data(), seridata->size());
+		}else{
+			((CompileOutput&)saveto).set_data(vector<uint8_t>((uint8_t*)seridata->data(), (uint8_t*)seridata->data()+seridata->size()));
+			return true;
+		}
 	}
 }; //namespace TRTBuilder

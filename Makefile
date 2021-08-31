@@ -26,27 +26,30 @@ lean_tensor_rt := /data/sxai/lean/TensorRT-8.0.1.6
 lean_cudnn     := /data/sxai/lean/cudnn8.2.2.26
 lean_opencv    := /data/sxai/lean/opencv4.2.0
 lean_cuda      := /data/sxai/lean/cuda10.2
+lean_python    := /data/datav/newbb/lean/anaconda3/envs/torch1.8
 
-include_paths := src \
-			src/core \
+include_paths := src        \
+			src/application \
 			src/tensorRT	\
 			src/tensorRT/common  \
 			$(lean_protobuf)/include \
 			$(lean_opencv)/include/opencv4 \
 			$(lean_tensor_rt)/include \
-			$(lean_cuda)/include \
-			$(lean_cudnn)/include 
+			$(lean_cuda)/include  \
+			$(lean_cudnn)/include \
+			$(lean_python)/include/python3.9/
 
 library_paths := $(lean_protobuf)/lib \
-			$(lean_opencv)/lib \
+			$(lean_opencv)/lib    \
 			$(lean_tensor_rt)/lib \
-			$(lean_cuda)/lib \
-			$(lean_cudnn)/lib
+			$(lean_cuda)/lib  \
+			$(lean_cudnn)/lib \
+			$(lean_python)/lib
 
 link_librarys := opencv_core opencv_imgproc opencv_videoio opencv_imgcodecs \
 			nvinfer nvinfer_plugin nvparsers \
 			cuda curand cublas cudart cudnn \
-			stdc++ protobuf dl
+			stdc++ protobuf dl python3.9
 
 run_paths     := $(foreach item,$(library_paths),-Wl,-rpath=$(item))
 include_paths := $(foreach item,$(include_paths),-I$(item))
@@ -70,12 +73,18 @@ ifneq ($(MAKECMDGOALS), clean)
 -include $(cpp_mk) $(cu_mk)
 endif
 
-pro : workspace/pro
+pro    : workspace/pro
+trtpyc : python/trtpy/trtpyc.so
 
 workspace/pro : $(cpp_objs) $(cu_objs)
 	@echo Link $@
 	@mkdir -p $(dir $@)
 	@g++ $^ -o $@ $(link_flags)
+
+python/trtpy/trtpyc.so : $(cpp_objs) $(cu_objs)
+	@echo Link $@
+	@mkdir -p $(dir $@)
+	@g++ -shared $^ -o $@ $(link_flags)
 
 objs/%.o : src/%.cpp
 	@echo Compile CXX $<
@@ -117,6 +126,27 @@ run_arcface_video    : workspace/pro
 
 run_arcface_tracker    : workspace/pro
 	@cd workspace && ./pro arcface_tracker
+
+run_test_all : workspace/pro
+	@cd workspace && ./pro test_all
+
+run_scrfd : workspace/pro
+	@cd workspace && ./pro scrfd
+
+run_pytorch : trtpyc
+	@cd python && python test_torch.py
+
+run_pyscrfd : trtpyc
+	@cd python && python test_scrfd.py
+
+run_pyretinaface : trtpyc
+	@cd python && python test_retinaface.py
+
+run_pyyolov5 : trtpyc
+	@cd python && python test_yolov5.py
+
+run_pyyolox : trtpyc
+	@cd python && python test_yolox.py
 
 debug :
 	@echo $(includes)

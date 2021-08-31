@@ -54,7 +54,7 @@ namespace RetinaFace{
         *pout_item++ = right;
         *pout_item++ = bottom;
         *pout_item++ = sigmoid(object_deconfidence);
-        *pout_item++ = 0;
+        *pout_item++ = 1;   // 1=keep, 0=ignore
 
         float* landmark_predict = pitem + 6;
         for(int i = 0; i < 5; ++i){
@@ -70,7 +70,6 @@ namespace RetinaFace{
         float aleft, float atop, float aright, float abottom, 
         float bleft, float btop, float bright, float bbottom
     ){
-
         float cleft 	= max(aleft, bleft);
         float ctop 		= max(atop, btop);
         float cright 	= min(aright, bright);
@@ -95,7 +94,7 @@ namespace RetinaFace{
         float* pcurrent = bboxes + 1 + position * NUM_BOX_ELEMENT;
         for(int i = 0; i < count; ++i){
             float* pitem = bboxes + 1 + i * NUM_BOX_ELEMENT;
-            if(i == position || pcurrent[5] != pitem[5]) continue;
+            if(i == position) continue;
 
             float iou = box_iou(
                 pcurrent[0], pcurrent[1], pcurrent[2], pcurrent[3],
@@ -106,7 +105,7 @@ namespace RetinaFace{
                 if(pitem[4] > pcurrent[4]){
                     // 如果发现iou大，并且b > a，置信度。b是第i个框，a是当前框
                     // 表示当前框要过滤掉，不需要保留了
-                    pcurrent[5] = -1;
+                    pcurrent[5] = 0;
                     return;
                 }
             }

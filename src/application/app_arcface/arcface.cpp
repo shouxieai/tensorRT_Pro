@@ -140,7 +140,7 @@ namespace Arcface{
                 }
                 fetch_jobs.clear();
             }
-            INFOV("Engine destroy.");
+            INFO("Engine destroy.");
         }
 
         virtual bool preprocess(Job& job, const commit_input& input) override{
@@ -197,6 +197,18 @@ namespace Arcface{
 
         virtual std::shared_future<feature> commit(const commit_input& input) override{
             return ControllerImpl::commit(input);
+        }
+
+        virtual Mat face_alignment(const commit_input& input) override{
+
+            auto& image = get<0>(input);
+            Size input_size(input_width_, input_height_);
+            AffineMatrix am;
+            am.compute(get<1>(input));
+
+            Mat output;
+            warpAffine(image, output, Mat_<float>(2, 3, am.i2d), input_size, cv::INTER_LINEAR);
+            return output;
         }
 
     private:

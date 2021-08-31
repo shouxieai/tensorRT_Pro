@@ -12,9 +12,12 @@ namespace AlphaPose{
     using namespace std;
     using namespace cv;
 
+    typedef tuple<Mat, Rect> Input;
+
     class Infer{
     public:
-        virtual shared_future<vector<Point3f>> commit(const Mat& image, const Rect& box) = 0;
+        virtual shared_future<vector<Point3f>> commit(const Input& input) = 0;
+        virtual vector<shared_future<vector<Point3f>>> commits(const vector<Input>& inputs) = 0;
     };
 
     // RAII，如果创建失败，返回空指针

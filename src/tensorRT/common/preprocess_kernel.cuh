@@ -5,14 +5,15 @@
 
 namespace CUDAKernel{
 
-    //            CHANNEL_ORDER   TYPE
-    // 0x00  00       FF           FF
-    enum class NormType : unsigned int{
+    enum class NormType : int{
         None      = 0,
         MeanStd   = 1,
-        AlphaBeta = 2,
-        InvertChannel = 1 << 8,
-        ToRGB     = InvertChannel
+        AlphaBeta = 2
+    };
+
+    enum class ChannelType : int{
+        None          = 0,
+        Invert        = 1
     };
 
     struct Norm{
@@ -20,18 +21,16 @@ namespace CUDAKernel{
         float std[3];
         float alpha, beta;
         NormType type = NormType::None;
+        ChannelType channel_type = ChannelType::None;
 
         // out = (x * alpha - mean) / std
-        static Norm mean_std(float mean[3], float std[3], float alpha = 1/255.0f);
+        static Norm mean_std(const float mean[3], const float std[3], float alpha = 1/255.0f, ChannelType channel_type=ChannelType::None);
 
         // out = x * alpha + beta
-        static Norm alpha_beta(float alpha, float beta = 0);
+        static Norm alpha_beta(float alpha, float beta = 0, ChannelType channel_type=ChannelType::None);
 
-        Norm operator + (NormType t){
-            Norm out = *this;
-            out.type = NormType((unsigned int)out.type | (unsigned int)t);
-            return out;
-        }
+        // None
+        static Norm None();
     };
 
     void warp_affine_bilinear_and_normalize(
@@ -39,6 +38,11 @@ namespace CUDAKernel{
         float* dst  , int dst_width, int dst_height,
         float* matrix_2_3, uint8_t const_value, const Norm& norm,
         cudaStream_t stream);
+
+    void resize_bilinear_and_normalize(
+		uint8_t* src, int src_line_size, int src_width, int src_height, float* dst, int dst_width, int dst_height,
+		uint8_t const_value, const Norm& norm,
+		cudaStream_t stream);
 
     void norm_feature(
         float* feature_array, int num_feature, int feature_length,

@@ -11,11 +11,6 @@
 
 namespace FallGCN{
 
-    struct FallGCNInput{
-        vector<Point3f> keys;
-        Rect box;
-    };
-
     const char* state_name(FallState state){
         switch(state){
             case FallState::Fall:      return "Fall";
@@ -39,7 +34,7 @@ namespace FallGCN{
 
     using ControllerImpl = InferController
     <
-        FallGCNInput,              // input
+        Input,                     // input
         tuple<FallState, float>,   // output
         tuple<string, int>         // start param
     >;
@@ -103,17 +98,18 @@ namespace FallGCN{
                 }
                 fetch_jobs.clear();
             }
-            INFOV("Engine destroy.");
+            INFO("Engine destroy.");
         }
 
-        virtual shared_future<tuple<FallState, float>> commit(const vector<Point3f>& keys, const Rect& box) override{
-            FallGCNInput input;
-            input.keys  = keys;
-            input.box   = box;
+        virtual shared_future<tuple<FallState, float>> commit(const Input& input) override{
             return ControllerImpl::commit(input);
         }
 
-        virtual bool preprocess(Job& job, const FallGCNInput& input) override{
+        virtual vector<shared_future<tuple<FallState, float>>> commits(const vector<Input>& inputs) override{
+            return ControllerImpl::commits(inputs);
+        }
+
+        virtual bool preprocess(Job& job, const Input& input) override{
 
             job.mono_tensor = tensor_allocator_->query();
             if(job.mono_tensor == nullptr){
@@ -121,8 +117,10 @@ namespace FallGCN{
                 return false;
             }
 
-            if(input.keys.size() != 16){
-                INFOE("input.keys.size()[%d] != 16", input.keys.size());
+            auto& keys = get<0>(input);
+            auto& box  = get<1>(input);
+            if(keys.size() != 16){
+                INFOE("keys.size()[%d] != 16", keys.size());
                 return false;
             }
 
@@ -133,17 +131,17 @@ namespace FallGCN{
                 tensor->set_workspace(make_shared<TRT::MixMemory>());
             }
 
-            int num_points = input.keys.size();
+            int num_points = keys.size();
             tensor->set_stream(stream_);
             tensor->resize(1, num_points, 3);
 
             tensor->to_cpu(false);
             float* inptr = tensor->cpu<float>();
-            int box_max_line = max(input.box.width, input.box.height);
+            int box_max_line = max(box.width, box.height);
             for(int i = 0; i < num_points; ++i, inptr += 3){
-                auto& point = input.keys[i];
-                inptr[0] = (point.x - input.box.x) / box_max_line - 0.5f;
-                inptr[1] = (point.y - input.box.y) / box_max_line - 0.5f;
+                auto& point = keys[i];
+                inptr[0] = (point.x - box.x) / box_max_line - 0.5f;
+                inptr[1] = (point.y - box.y) / box_max_line - 0.5f;
                 inptr[2] = point.z;
             }
             tensor->to_gpu();

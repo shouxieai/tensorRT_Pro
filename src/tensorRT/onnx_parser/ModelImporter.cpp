@@ -762,4 +762,53 @@ bool ModelImporter::parseFromFile(const char* onnxModelFile, int32_t verbosity)
     return true;
 }
 
+bool ModelImporter::parseFromData(const void* onnx_data, size_t size, int verbosity)
+{
+    GOOGLE_PROTOBUF_VERIFY_VERSION;
+    ::ONNX_NAMESPACE::ModelProto onnx_model;
+    auto* ctx = &_importer_ctx;
+
+    if (onnx_data == nullptr || size < 1)
+    {
+        LOG_ERROR("Failed to parse ONNX model from data, ptr = " << onnx_data << ", size = " << size);
+        return false;
+    }
+
+    // Keep track of the absolute path to the ONNX file.
+    const int64_t opset_version = (onnx_model.opset_import().size() ? onnx_model.opset_import(0).version() : 0);
+    LOG_INFO("----------------------------------------------------------------");
+    LOG_INFO("Input data size:   " << size);
+    LOG_INFO("ONNX IR version:  " << onnx_ir_version_string(onnx_model.ir_version()));
+    LOG_INFO("Opset version:    " << opset_version);
+    LOG_INFO("Producer name:    " << onnx_model.producer_name());
+    LOG_INFO("Producer version: " << onnx_model.producer_version());
+    LOG_INFO("Domain:           " << onnx_model.domain());
+    LOG_INFO("Model version:    " << onnx_model.model_version());
+    LOG_INFO("Doc string:       " << onnx_model.doc_string());
+    LOG_INFO("----------------------------------------------------------------");
+
+    { //...Read input file, parse it
+        if (!parse(onnx_data, size))
+        {
+            const int32_t nerror = getNbErrors();
+            for (int32_t i = 0; i < nerror; ++i)
+            {
+                nvonnxparser::IParserError const* error = getError(i);
+                if (error->node() != -1)
+                {
+                    ::ONNX_NAMESPACE::NodeProto const& node = onnx_model.graph().node(error->node());
+                    LOG_ERROR("While parsing node number " << error->node() << " [" << node.op_type() << " -> \"" << node.output(0) << "\"" << "]:");
+                    LOG_ERROR("--- Begin node ---");
+                    LOG_ERROR(pretty_print_onnx_to_string(node));
+                    LOG_ERROR("--- End node ---");
+                }
+                LOG_ERROR("ERROR: " << error->file() << ":" << error->line() << " In function " << error->func() << ":\n"
+                     << "[" << static_cast<int>(error->code()) << "] " << error->desc());
+            }
+            return false;
+        }
+    } //...End Reading input file, parsing it
+    return true;
+}
+
 } // namespace onnx2trt

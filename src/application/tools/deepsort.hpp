@@ -35,6 +35,31 @@ enum class State : int{
     Deleted   = 3
 };
 
+struct TrackerConfig{
+
+    int max_age  = 150;
+    int nhit     = 3;
+    float distance_threshold = 100;
+    int nbuckets = 0;
+    bool has_feature = false;
+
+    // kalman
+    // 初始状态
+    float initiate_state[8];
+
+    // 每一侦的运动量协方差，下一侦 = 当前帧 + 运动量
+    float per_frame_motion[8];
+
+    // 测量噪声，把输入映射到测量空间中后的噪声
+    float noise[4];
+
+    void set_initiate_state(const std::vector<float>& values);
+    void set_per_frame_motion(const std::vector<float>& values);
+    void set_noise(const std::vector<float>& values);
+
+    TrackerConfig();
+};
+
 typedef std::vector<Box> BBoxes;
 
 class TrackObject{
@@ -58,10 +83,7 @@ public:
 };
 
 std::shared_ptr<Tracker> create_tracker(
-    float feature_score_threshold = 0.1f,
-    int nbuckets = 150,
-    int max_age  = 150,
-    int nhit     = 3
+    const TrackerConfig& config = TrackerConfig()
 );
 
 }

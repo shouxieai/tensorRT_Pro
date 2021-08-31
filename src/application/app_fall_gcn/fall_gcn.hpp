@@ -12,6 +12,8 @@ namespace FallGCN{
     using namespace std;
     using namespace cv;
 
+    typedef tuple<vector<Point3f>, Rect> Input;
+
     enum class FallState : int{
         Fall      = 0,
         Stand     = 1,
@@ -22,7 +24,8 @@ namespace FallGCN{
 
     class Infer{
     public:
-        virtual shared_future<tuple<FallState, float>> commit(const vector<Point3f>& keys, const Rect& box) = 0;
+        virtual shared_future<tuple<FallState, float>> commit(const Input& input) = 0;
+        virtual vector<shared_future<tuple<FallState, float>>> commits(const vector<Input>& inputs) = 0;
     };
 
     // RAII，如果创建失败，返回空指针
