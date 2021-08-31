@@ -52,4 +52,4 @@ dummy_input2 = torch.zeros((1, 1, 3, 3))
 model = FooModel()
 
 # 这里演示了2个输入的情况，实际上你可以自己定义几个输入
-torch.onnx.export(model, (dummy_input1, dummy_input2), 'plugin.onnx', verbose=True, opset_version=11)
+torch.onnx.export(model, (dummy_input1, dummy_input2), 'plugin.onnx', verbose=True, opset_version=11, enable_onnx_checker=False)

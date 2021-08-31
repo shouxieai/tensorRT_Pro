@@ -662,6 +662,8 @@ namespace TRT {
 		
 		builder->setMaxBatchSize(maxBatchSize);
 		config->setMaxWorkspaceSize(_1_GB);
+		
+		builder->createOptimizationProfile()->setDimensions();
 		// config->setFlag(BuilderFlag::kGPU_FALLBACK);
 		// config->setDefaultDeviceType(DeviceType::kDLA);
 		// config->setDLACore(0);
