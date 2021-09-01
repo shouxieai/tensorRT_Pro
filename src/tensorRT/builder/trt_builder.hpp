@@ -21,7 +21,6 @@ namespace TRT {
 	class ModelSource {
 	public:
 		ModelSource() = default;
-		ModelSource(const std::string& prototxt, const std::string& caffemodel);
 		ModelSource(const std::string& onnxmodel);
 		ModelSource(const char* onnxmodel);
 		ModelSourceType type() const;
