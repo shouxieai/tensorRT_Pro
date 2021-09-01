@@ -6,27 +6,14 @@
 #include <memory>
 #include <vector>
 #include <map>
-
-// 如果不想依赖opencv，可以去掉这个定义
-#define USE_OPENCV
-
-#ifdef USE_OPENCV
 #include <opencv2/opencv.hpp>
-#endif // USE_OPENCV
-
-#ifdef HAS_CUDA_HALF
-struct __half;
-#endif // HAS_CUDA_HALF
 
 struct CUstream_st;
 typedef CUstream_st CUStreamRaw;
 
 namespace TRT {
 
-    #ifdef HAS_CUDA_HALF
-    typedef __half halfloat;
-    #endif
-
+    typedef struct{unsigned short _;} float16;
     typedef CUStreamRaw* CUStream;
 
     enum class DataHead : int{
@@ -35,19 +22,16 @@ namespace TRT {
         Host   = 2
     };
 
-    #ifdef HAS_CUDA_HALF
     enum class DataType : int {
         Float = 0,
         Float16 = 1
     };
-    #else
-    enum class DataType : int {
-        Float = 0
-    };
-    #endif
 
+    float float16_to_float(float16 value);
+    float16 float_to_float16(float value);
     int data_type_size(DataType dt);
     const char* data_head_string(DataHead dh);
+    const char* data_type_string(DataType dt);
 
     /**
      * @brief 对GPU/CPU内存进行管理、分配/释放
@@ -137,10 +121,7 @@ namespace TRT {
 
         Tensor& to_gpu(bool copyedIfCPU = true);
         Tensor& to_cpu(bool copyedIfGPU = true);
-
-        #ifdef HAS_CUDA_HALF
         Tensor& to_half();
-        #endif
 
         Tensor& to_float();
         inline void* cpu() const { ((Tensor*)this)->to_cpu(); return data_->cpu(); }
@@ -178,11 +159,9 @@ namespace TRT {
         CUStream get_stream(){return stream_;}
         Tensor& set_stream(CUStream stream){stream_ = stream;}
 
-        #ifdef USE_OPENCV
         Tensor& set_mat     (int n, const cv::Mat& image);
         Tensor& set_norm_mat(int n, const cv::Mat& image, float mean[3], float std[3]);
         cv::Mat at_mat(int n = 0, int c = 0) { return cv::Mat(height(), width(), CV_32F, cpu<float>(n, c)); }
-        #endif // USE_OPENCV
 
         Tensor& synchronize();
         const char* shape_string() const{return shape_string_;}

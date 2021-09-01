@@ -31,14 +31,14 @@ using namespace cv;
 
 bool requires(const char* name);
 
-bool compile_retinaface(int input_width, int input_height, string& out_model_file){
+bool compile_retinaface(int input_width, int input_height, string& out_model_file, TRT::Mode mode = TRT::Mode::FP32){
 
     const char* name = "mb_retinaface";
     if(not requires(name))
         return false;
 
     string onnx_file    = iLogger::format("%s.onnx", name);
-    string model_file   = iLogger::format("%s.%dx%d.fp32.trtmodel", name, input_width, input_height);
+    string model_file   = iLogger::format("%s.%dx%d.%s.trtmodel", name, input_width, input_height, TRT::mode_string(mode));
     int test_batch_size = 6;
     out_model_file      = model_file;
     
@@ -47,32 +47,32 @@ bool compile_retinaface(int input_width, int input_height, string& out_model_fil
 
     input_width  = iLogger::upbound(input_width);
     input_height = iLogger::upbound(input_height);
+    int index_of_reshape_layer = 0;
     TRT::set_layer_hook_reshape([&](const string& name, const std::vector<int64_t>& shape){
         
         INFOV("%s, %s", name.c_str(), iLogger::join_dims(shape).c_str());
-        vector<string> layerset{
-            "Reshape_100", "Reshape_104", "Reshape_108", 
-            "Reshape_113", "Reshape_117", "Reshape_121", 
-            "Reshape_126", "Reshape_130", "Reshape_134"
-        };
+        // vector<string> layerset{
+        //     "Reshape_100", "Reshape_104", "Reshape_108", 
+        //     "Reshape_113", "Reshape_117", "Reshape_121", 
+        //     "Reshape_126", "Reshape_130", "Reshape_134"
+        // };
         vector<int> strides{8, 16, 32, 8, 16, 32, 8, 16, 32};
-        auto layer_iter = std::find_if(layerset.begin(),layerset.end(), [&](const string& item){return item==name;});
-        if(layer_iter  != layerset.end()){
-            int pos     = layer_iter - layerset.begin();
-            int stride  = strides[pos];
-            return vector<int64_t>{-1, input_height * input_width / stride / stride * 2, shape[2]};
-        }
-        return shape;
+        //auto layer_iter = std::find_if(layerset.begin(),layerset.end(), [&](const string& item){return item==name;});
+        //if(layer_iter  != layerset.end()){
+        //int pos     = layer_iter - layerset.begin();
+        int pos = index_of_reshape_layer++;
+        int stride  = strides[pos];
+        return vector<int64_t>{-1, input_height * input_width / stride / stride * 2, shape[2]};
+        //}
+        //return shape;
     });
 
     return TRT::compile(
-        TRT::TRTMode_FP32,   // 编译方式有，FP32、FP16、INT8
-        {},                         // onnx时无效，caffe的输出节点标记
+        mode,          // 编译方式有，FP32、FP16、INT8
         test_batch_size,            // 指定编译的batch size
         onnx_file,                  // 需要编译的onnx文件
         model_file,                          // 储存的模型文件
-        {TRT::InputDims({1, 3, input_height, input_width})},  // 注意请让大小能够整除32
-        true                                 // 是否采用动态batch维度，true采用，false不采用，使用静态固定的batch size
+        {TRT::InputDims({1, 3, input_height, input_width})}  // 注意请让大小能够整除32
     );
 }
 
@@ -107,7 +107,7 @@ int app_retinaface(){
     INFO("===================== test retinaface fp32 ==================================");
 
     string model_file;
-    if(!compile_retinaface(640, 640, model_file))
+    if(!compile_retinaface(640, 480, model_file))
         return 0;
 
     auto engine = RetinaFace::create_infer(model_file, 0, 0.7);

@@ -140,7 +140,6 @@ namespace Yolo{
             int max_batch_size = engine->get_max_batch_size();
             auto input         = engine->tensor("images");
             auto output        = engine->tensor("output");
-            bool dynamic_batch = engine->is_dynamic_batch_dimension();
             int num_classes    = output->size(2) - 5;
 
             input_width_       = input->size(3);
@@ -164,10 +163,7 @@ namespace Yolo{
             while(get_jobs_and_wait(fetch_jobs, max_batch_size)){
 
                 int infer_batch_size = fetch_jobs.size();
-                if(dynamic_batch){
-                    // 如果是动态batch，则修改当前推理的batch数量，能有效降低时间
-                    input->resize_single_dim(0, infer_batch_size);
-                }
+                input->resize_single_dim(0, infer_batch_size);
 
                 for(int ibatch = 0; ibatch < infer_batch_size; ++ibatch){
                     auto& job  = fetch_jobs[ibatch];

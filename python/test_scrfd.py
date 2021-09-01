@@ -48,6 +48,7 @@ for face in faces:
     for x, y in face.landmark.astype(int):
         cv2.circle(image, (x, y), 3, (0, 255, 0), -1, 16)
 
+os.makedirs("single_inference", exist_ok=True)
 saveto = "single_inference/scrfd.group.jpg"
 print(f"{len(faces)} faces, Save to {saveto}")
 cv2.imwrite(saveto, image)

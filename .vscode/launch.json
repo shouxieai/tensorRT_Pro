@@ -9,7 +9,7 @@
             "type": "cppdbg",
             "request": "launch",
             "program": "${workspaceFolder}/workspace/pro",
-            "args": ["fall_recognize"],
+            "args": ["yolo"],
             "stopAtEntry": false,
             "cwd": "${workspaceFolder}/workspace",
             "environment": [],

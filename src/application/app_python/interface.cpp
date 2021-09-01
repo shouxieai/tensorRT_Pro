@@ -260,10 +260,8 @@ static bool compileTRT(
 	unsigned int max_batch_size,
 	const TRT::ModelSource& source,
 	const TRT::CompileOutput& saveto,
-	TRT::TRTMode mode, 
-	const vector<string>& mark_outputs,
+	TRT::Mode mode, 
 	const py::array inputs_dims, 
-	bool dynamic_batch,
 	int device_id,
 	CUDAKernel::Norm int8_norm,
 	int int8_preprocess_const_value,
@@ -361,8 +359,8 @@ static bool compileTRT(
 
 	TRT::set_device(device_id);
 	return TRT::compile(
-		mode, mark_outputs, max_batch_size, source, saveto, trt_inputs_dims, 
-		dynamic_batch, int8process, int8_image_directory, 
+		mode, max_batch_size, source, saveto, trt_inputs_dims, 
+		int8process, int8_image_directory, 
 		int8_entropy_calibrator_file
 	);
 }
@@ -479,10 +477,10 @@ PYBIND11_MODULE(libtrtpyc, m) {
 			return py::make_tuple(get<0>(state), get<1>(state));
 		});
 
-	py::enum_<TRT::TRTMode>(m, "TRTMode")
-		.value("FP32", TRT::TRTMode::TRTMode_FP32)
-		.value("FP16", TRT::TRTMode::TRTMode_FP16)
-		.value("INT8", TRT::TRTMode::TRTMode_INT8);
+	py::enum_<TRT::Mode>(m, "Mode")
+		.value("FP32", TRT::Mode::FP32)
+		.value("FP16", TRT::Mode::FP16)
+		.value("INT8", TRT::Mode::INT8);
 
 	py::enum_<CUDAKernel::NormType>(m, "NormType")
 		.value("NONE", CUDAKernel::NormType::None)
@@ -588,19 +586,15 @@ PYBIND11_MODULE(libtrtpyc, m) {
 		.def("commit", &FallInfer::commit, py::arg("keys"), py::arg("box"));
 
 	py::enum_<TRT::ModelSourceType>(m, "ModelSourceType")
-		.value("Caffe", TRT::ModelSourceType::Caffe)
 		.value("OnnX", TRT::ModelSourceType::OnnX)
 		.value("OnnXData", TRT::ModelSourceType::OnnXData);
 
 	py::class_<TRT::ModelSource>(m, "ModelSource")
 		.def_property_readonly("type", [](TRT::ModelSource& self){return self.type();})
-		.def_property_readonly("prototxt", [](TRT::ModelSource& self){return self.prototxt();})
-		.def_property_readonly("caffemodel", [](TRT::ModelSource& self){return self.caffemodel();})
 		.def_property_readonly("onnxmodel", [](TRT::ModelSource& self){return self.onnxmodel();})
 		.def_property_readonly("descript", [](TRT::ModelSource& self){return self.descript();})
 		.def_property_readonly("onnx_data", [](TRT::ModelSource& self){return py::bytes((char*)self.onnx_data(), self.onnx_data_size());})
 		.def_static("from_onnx", [](const string& file){return TRT::ModelSource::onnx(file);}, py::arg("file"))
-		.def_static("from_caffe", [](const string& prototxt, const string& caffemodel){return TRT::ModelSource::caffe(prototxt, caffemodel);}, py::arg("prototxt"), py::arg("caffemodel"))
 		.def_static("from_onnx_data", [](const py::buffer& data){
 			auto info = data.request();
 			return TRT::ModelSource::onnx_data(info.ptr, info.itemsize * info.size);}, py::arg("data"))
@@ -622,10 +616,8 @@ PYBIND11_MODULE(libtrtpyc, m) {
 		py::arg("max_batch_size"),
 		py::arg("source"),
 		py::arg("output"),
-		py::arg("mode")                         = TRT::TRTMode::TRTMode_FP32,
-		py::arg("mark_outputs")                 = vector<string>(),
+		py::arg("mode")                         = TRT::Mode::FP32,
 		py::arg("inputs_dims")                  = py::array_t<int>(),
-		py::arg("dynamic_batch")                = true,
 		py::arg("device_id")                    = 0,
 		py::arg("int8_norm")                    = CUDAKernel::Norm::None(),
 		py::arg("int8_preprocess_const_value")  = 114,
@@ -655,6 +647,10 @@ PYBIND11_MODULE(libtrtpyc, m) {
 		.value("Init",   TRT::DataHead::Init)
 		.value("Device", TRT::DataHead::Device)
 		.value("Host",   TRT::DataHead::Host);
+
+	py::enum_<TRT::DataType>(m, "DataType")
+		.value("Float",   TRT::DataType::Float)
+		.value("Float16", TRT::DataType::Float16);
 
 	py::class_<TRT::MixMemory, shared_ptr<TRT::MixMemory>>(m, "MixMemory")
 		.def(py::init([](uint64_t cpu, size_t cpu_size, uint64_t gpu, size_t gpu_size){
@@ -713,15 +709,16 @@ PYBIND11_MODULE(libtrtpyc, m) {
 		.def("reference_data", [](TRT::Tensor& self, const vector<int>& shape, uint64_t cpu, size_t cpu_size, uint64_t gpu, size_t gpu_size){
 			self.reference_data(shape, (void*)cpu, cpu_size, (void*)gpu, gpu_size, TRT::DataType::Float);
 		})
+		.def_property_readonly("dtype", [](TRT::Tensor& self){return self.type();})
 		.def("__repr__", [](TRT::Tensor& self){
 			return iLogger::format(
-				"<Tensor shape=%s, head=%s, this=%p>", 
-				self.shape_string(), TRT::data_head_string(self.head()), &self
+				"<Tensor shape=%s, head=%s, dtype=%s, this=%p>", 
+				self.shape_string(), TRT::data_head_string(self.head()), TRT::data_type_string(self.type()), &self
 			);
 		});
 
 	py::class_<TRT::Infer, shared_ptr<TRT::Infer>>(m, "Infer")
-		.def("forward", [](TRT::Infer& self, bool sync, bool resize_output_batch_same_input){return self.forward(sync, resize_output_batch_same_input);}, py::arg("sync")=true, py::arg("resize_output_batch_same_input")=true)
+		.def("forward", [](TRT::Infer& self, bool sync){return self.forward(sync);}, py::arg("sync")=true)
 		.def("input", [](TRT::Infer& self, int index){return self.input(index);}, py::arg("index")=0)
 		.def("output", [](TRT::Infer& self, int index){return self.output(index);}, py::arg("index")=0)
 		.def_property("stream", [](TRT::Infer& self){return (uint64_t)self.get_stream();}, [](TRT::Infer& self, uint64_t new_stream){self.set_stream((TRT::CUStream)new_stream);})
@@ -736,7 +733,6 @@ PYBIND11_MODULE(libtrtpyc, m) {
 		.def("tensor", [](TRT::Infer& self, const string& name){return self.tensor(name);})
 		.def_property_readonly("device", [](TRT::Infer& self){return self.device();})
 		.def("print", [](shared_ptr<TRT::Infer>& self){self->print(); return self;})
-		.def_property_readonly("is_dynamic_batch_dimension", [](TRT::Infer& self){return self.is_dynamic_batch_dimension();})
 		.def_property_readonly("workspace", [](TRT::Infer& self){return self.get_workspace();})
 		.def("set_input", [](TRT::Infer& self, int index, shared_ptr<TRT::Tensor> tensor){self.set_input(index, tensor);}, py::arg("index"), py::arg("new_tensor"))
 		.def("set_output", [](TRT::Infer& self, int index, shared_ptr<TRT::Tensor> tensor){self.set_output(index, tensor);}, py::arg("index"), py::arg("new_tensor"))

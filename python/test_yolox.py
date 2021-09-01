@@ -19,6 +19,7 @@ for box in bboxes:
     left, top, right, bottom = map(int, [box.left, box.top, box.right, box.bottom])
     cv2.rectangle(image, (left, top), (right, bottom), tp.random_color(box.class_label), 5)
 
+os.makedirs("single_inference", exist_ok=True)
 saveto = "single_inference/yolox.car.jpg"
 print(f"Save to {saveto}")
 

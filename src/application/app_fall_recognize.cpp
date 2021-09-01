@@ -33,8 +33,7 @@ static bool compile_models(){
         // 找到右边的二维码，扫码加好友后进群交流（免费哈，就是技术人员一起沟通）
         if(not iLogger::exists(model_file)){
             bool ok = TRT::compile(
-                TRT::TRTMode_FP32,   // 编译方式有，FP32、FP16、INT8
-                {},                         // onnx时无效，caffe的输出节点标记
+                TRT::Mode::FP32,   // 编译方式有，FP32、FP16、INT8
                 test_batch_size,            // 指定编译的batch size
                 onnx_file,                  // 需要编译的onnx文件
                 model_file,                 // 储存的模型文件

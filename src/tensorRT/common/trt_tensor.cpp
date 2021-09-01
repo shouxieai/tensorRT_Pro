@@ -3,28 +3,30 @@
 #include <algorithm>
 #include <cuda_runtime.h>
 #include "cuda_tools.hpp"
-
-#ifdef HAS_CUDA_HALF
 #include <cuda_fp16.h>
-#endif
 
 using namespace cv;
 using namespace std;
 
 namespace TRT{
 
+	float float16_to_float(float16 value){
+		return __half2float(*reinterpret_cast<__half*>(&value));
+	}
+
+	float16 float_to_float16(float value){
+		auto val = __float2half(value);
+		return *reinterpret_cast<float16*>(&val);
+	}
+
 	int data_type_size(DataType dt){
 		switch (dt) {
-		case DataType::Float: return sizeof(float);
-
-		#ifdef HAS_CUDA_HALF
-		case DataType::Float16: return sizeof(halfloat);
-		#endif
-
-		default: {
-			INFOE("Not support dtype: %d", dt);
-			return -1;
-		}
+			case DataType::Float: return sizeof(float);
+			case DataType::Float16: return sizeof(float16);
+			default: {
+				INFOE("Not support dtype: %d", dt);
+				return -1;
+			}
 		}
 	}
 
@@ -113,6 +115,14 @@ namespace TRT{
 			case DataHead::Init: return "Init";
 			case DataHead::Device: return "Device";
 			case DataHead::Host: return "Host";
+			default: return "Unknow";
+		}
+	}
+
+	const char* data_type_string(DataType dt){
+		switch(dt){
+			case DataType::Float: return "Float32";
+			case DataType::Float16: return "Float16";
 			default: return "Unknow";
 		}
 	}
@@ -386,32 +396,25 @@ namespace TRT{
 		if (type() == DataType::Float)
 			return *this;
 
-		#ifdef HAS_CUDA_HALF
-
-			if (type() != DataType::Float16) {
-				INFOF("not implement function");
-			}
-
-			auto c = count();
-			float* convert_memory = (float*)malloc(c * data_type_size(DataType::Float));
-			float* dst = convert_memory;
-			halfloat* src = cpu<halfloat>();
-
-			for (int i = 0; i < c; ++i)
-				*dst++ = *src++;
-
-			this->dtype_ = DataType::Float;
-			adajust_memory_by_update_dims_or_type();
-			memcpy(cpu(), convert_memory, bytes_);
-			free(convert_memory);
-
-		#else
+		if (type() != DataType::Float16) {
 			INFOF("not implement function");
-		#endif
+		}
+
+		auto c = count();
+		float* convert_memory = (float*)malloc(c * data_type_size(DataType::Float));
+		float* dst = convert_memory;
+		float16* src = cpu<float16>();
+
+		for (int i = 0; i < c; ++i)
+			*dst++ = float16_to_float(*src++);
+
+		this->dtype_ = DataType::Float;
+		adajust_memory_by_update_dims_or_type();
+		memcpy(cpu(), convert_memory, bytes_);
+		free(convert_memory);
 		return *this;
 	}
 
-	#ifdef HAS_CUDA_HALF
 	Tensor& Tensor::to_half() {
 
 		if (type() == DataType::Float16)
@@ -422,12 +425,12 @@ namespace TRT{
 		}
 
 		auto c = count();
-		halfloat* convert_memory = (halfloat*)malloc(c * data_type_size(DataType::Float16));
-		halfloat* dst = convert_memory;
+		float16* convert_memory = (float16*)malloc(c * data_type_size(DataType::Float16));
+		float16* dst = convert_memory;
 		float* src = cpu<float>();
 
 		for (int i = 0; i < c; ++i) 
-			*dst++ = *src++;
+			*dst++ = float_to_float16(*src++);
 
 		this->dtype_ = DataType::Float16;
 		adajust_memory_by_update_dims_or_type();
@@ -435,7 +438,6 @@ namespace TRT{
 		free(convert_memory);
 		return *this;
 	}
-	#endif
 
 	Tensor& Tensor::set_to(float value) {
 		int c = count();
@@ -445,13 +447,10 @@ namespace TRT{
 				*ptr++ = value;
 		}
 		else {
-			#ifdef HAS_CUDA_HALF
-				halfloat* ptr = cpu<halfloat>();
-				for (int i = 0; i < c; ++i)
-					*ptr++ = value;
-			#else
-				INFOF("not implement function");
-			#endif
+			float16* ptr = cpu<float16>();
+			auto val = float_to_float16(value);
+			for (int i = 0; i < c; ++i)
+				*ptr++ = val;
 		}
 		return *this;
 	}
@@ -473,7 +472,6 @@ namespace TRT{
 		return value;
 	}
 
-	#ifdef USE_OPENCV
 	Tensor& Tensor::set_norm_mat(int n, const cv::Mat& image, float mean[3], float std[3]) {
 
 		Assert(image.channels() == 3 && !image.empty() && type() == DataType::Float);
@@ -528,7 +526,6 @@ namespace TRT{
 		Assert((void*)ms[0].data == (void*)cpu<float>(n));
 		return *this;
 	}
-	#endif // USE_OPENCV
 
 	bool Tensor::save_to_file(const std::string& file){
 

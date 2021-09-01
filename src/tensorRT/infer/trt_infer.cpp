@@ -103,14 +103,13 @@ namespace TRT {
 		virtual bool load(const std::string& file);
 		virtual bool load_from_memory(const void* pdata, size_t size);
 		virtual void destroy();
-		virtual void forward(bool sync, bool resize_output_batch_same_input) override;
+		virtual void forward(bool sync) override;
 		virtual int get_max_batch_size() override;
 		virtual CUStream get_stream() override;
 		virtual void set_stream(CUStream stream) override;
 		virtual void synchronize() override;
 		virtual size_t get_device_memory_size() override;
 		virtual std::shared_ptr<MixMemory> get_workspace() override;
-		virtual bool is_dynamic_batch_dimension() override;
 		virtual std::shared_ptr<Tensor> input(int index = 0) override;
 		virtual std::string get_input_name(int index = 0) override;
 		virtual std::shared_ptr<Tensor> output(int index = 0) override;
@@ -156,10 +155,6 @@ namespace TRT {
 		this->outputs_name_.clear();
 	}
 
-	bool InferImpl::is_dynamic_batch_dimension(){
-		return context_->engine_->hasImplicitBatchDimension();
-	}
-
 	void InferImpl::print(){
 		if(!context_){
 			INFO("Infer print, nullptr.");
@@ -168,7 +163,6 @@ namespace TRT {
 
 		INFO("Infer %p detail", this);
 		INFO("\tMax Batch Size: %d", this->get_max_batch_size());
-		INFO("\tDynamic Batch Dimension: %s", this->is_dynamic_batch_dimension() ? "true" : "false");
 		INFO("\tInputs: %d", inputs_.size());
 		for(int i = 0; i < inputs_.size(); ++i){
 			auto& tensor = inputs_[i];
@@ -239,6 +233,16 @@ namespace TRT {
 		return context->context_->getEngine().getDeviceMemorySize();
 	}
 
+	static TRT::DataType convert_trt_datatype(nvinfer1::DataType dt){
+		switch(dt){
+			case nvinfer1::DataType::kFLOAT: return TRT::DataType::Float;
+			case nvinfer1::DataType::kHALF: return TRT::DataType::Float16;
+			default:
+				INFOE("Unsupport data type %d", dt);
+				return TRT::DataType::Float;
+		}
+	}
+
 	void InferImpl::build_engine_input_and_outputs_mapper() {
 		
 		EngineContext* context = (EngineContext*)this->context_.get();
@@ -255,9 +259,10 @@ namespace TRT {
 		for (int i = 0; i < nbBindings; ++i) {
 
 			auto dims = context->engine_->getBindingDimensions(i);
+			auto type = context->engine_->getBindingDataType(i);
 			const char* bindingName = context->engine_->getBindingName(i);
-			auto mapperTensor = new Tensor(dims.nbDims, dims.d, TRT::DataType::Float);
-			auto newTensor = shared_ptr<Tensor>(mapperTensor);
+			dims.d[0] = max_batchsize;
+			auto newTensor = make_shared<Tensor>(dims.nbDims, dims.d, convert_trt_datatype(type));
 			newTensor->set_stream(this->context_->stream_);
 			newTensor->set_workspace(this->workspace_);
 			if (context->engine_->bindingIsInput(i)) {
@@ -305,28 +310,30 @@ namespace TRT {
 		return std::find(inputs_name_.begin(), inputs_name_.end(), name) != inputs_name_.end();
 	}
 
-	void InferImpl::forward(bool sync, bool resize_output_batch_same_input) {
+	void InferImpl::forward(bool sync) {
 
 		EngineContext* context = (EngineContext*)context_.get();
 		int inputBatchSize = inputs_[0]->size(0);
-		if(this->is_dynamic_batch_dimension())
-			Assert(inputBatchSize <= context->engine_->getMaxBatchSize());
-		else
-			Assert(inputBatchSize == context->engine_->getMaxBatchSize());
-
-		if(resize_output_batch_same_input){
-			for (int i = 0; i < outputs_.size(); ++i) {
-				outputs_[i]->resize_single_dim(0, inputBatchSize);
-				outputs_[i]->to_gpu(false);
+		for(int i = 0; i < context->engine_->getNbBindings(); ++i){
+			auto dims = context->engine_->getBindingDimensions(i);
+			auto type = context->engine_->getBindingDataType(i);
+			dims.d[0] = inputBatchSize;
+			if(context->engine_->bindingIsInput(i)){
+				context->context_->setBindingDimensions(i, dims);
 			}
+		}
+
+		for (int i = 0; i < outputs_.size(); ++i) {
+			outputs_[i]->resize_single_dim(0, inputBatchSize);
+			outputs_[i]->to_gpu(false);
 		}
 
 		for (int i = 0; i < orderdBlobs_.size(); ++i)
 			bindingsPtr_[i] = orderdBlobs_[i]->gpu();
 
 		void** bindingsptr = bindingsPtr_.data();
-		bool execute_result = context->context_->enqueue(inputBatchSize, bindingsptr, context->stream_, nullptr);
-		//bool execute_result = context->context_->enqueueV2(bindingsptr, context->stream_, nullptr);
+		//bool execute_result = context->context_->enqueue(inputBatchSize, bindingsptr, context->stream_, nullptr);
+		bool execute_result = context->context_->enqueueV2(bindingsptr, context->stream_, nullptr);
 		if(!execute_result){
 			auto code = cudaGetLastError();
 			INFOF("execute fail, code %d[%s], message %s", code, cudaGetErrorName(code), cudaGetErrorString(code));

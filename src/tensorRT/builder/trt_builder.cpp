@@ -239,13 +239,13 @@ namespace TRT {
 		if (ptr) ptr->destroy();
 	}
 
-	const char* mode_string(TRTMode type) {
+	const char* mode_string(Mode type) {
 		switch (type) {
-		case TRTMode_FP32:
+		case Mode::FP32:
 			return "FP32";
-		case TRTMode_FP16:
+		case Mode::FP16:
 			return "FP16";
-		case TRTMode_INT8:
+		case Mode::INT8:
 			return "INT8";
 		default:
 			return "UnknowTRTMode";
@@ -283,12 +283,6 @@ namespace TRT {
 		:dims_(dims){
 	}
 
-	ModelSource::ModelSource(const std::string& prototxt, const std::string& caffemodel) {
-		this->type_ = ModelSourceType::Caffe;
-		this->prototxt_ = prototxt;
-		this->caffemodel_ = caffemodel;
-	}
-
 	ModelSource::ModelSource(const char* onnxmodel){
 		this->type_ = ModelSourceType::OnnX;
 		this->onnxmodel_ = onnxmodel;
@@ -307,8 +301,6 @@ namespace TRT {
 		return this->onnx_data_size_;
 	}
 
-	std::string ModelSource::prototxt() const { return this->prototxt_; }
-	std::string ModelSource::caffemodel() const { return this->caffemodel_; }
 	std::string ModelSource::onnxmodel() const { return this->onnxmodel_; }
 	ModelSourceType ModelSource::type() const { return this->type_; }
 	std::string ModelSource::descript() const{
@@ -316,8 +308,6 @@ namespace TRT {
 			return format("Onnx Model '%s'", onnxmodel_.c_str());
 		else if(this->type_ == ModelSourceType::OnnXData)
 			return format("OnnXData Data: '%p', Size: '%lld'", onnx_data_, onnx_data_size_);
-		else
-			return format("Caffe Model Prototxt: '%s', Caffemodel: '%s'", prototxt_.c_str(), caffemodel_.c_str());
 	}
 
 	CompileOutput::CompileOutput(CompileOutputType type):type_(type){}
@@ -416,17 +406,16 @@ namespace TRT {
 	};
 
 	bool compile(
-		TRTMode mode,
-		const std::vector<std::string>& outputs,
+		Mode mode,
 		unsigned int maxBatchSize,
 		const ModelSource& source,
 		const CompileOutput& saveto,
-		std::vector<InputDims> inputsDimsSetup, bool dynamicBatch,
+		std::vector<InputDims> inputsDimsSetup,
 		Int8Process int8process,
 		const std::string& int8ImageDirectory,
 		const std::string& int8EntropyCalibratorFile) {
 
-		if (mode == TRTMode::TRTMode_INT8 && int8process == nullptr) {
+		if (mode == Mode::INT8 && int8process == nullptr) {
 			INFOE("int8process must not nullptr, when in int8 mode.");
 			return false;
 		}
@@ -434,7 +423,7 @@ namespace TRT {
 		bool hasEntropyCalibrator = false;
 		vector<uint8_t> entropyCalibratorData;
 		vector<string> entropyCalibratorFiles;
-		if (mode == TRTMode_INT8) {
+		if (mode == Mode::INT8) {
 			if (!int8EntropyCalibratorFile.empty()) {
 				if (iLogger::exists(int8EntropyCalibratorFile)) {
 					entropyCalibratorData = iLogger::load_file(int8EntropyCalibratorFile);
@@ -478,13 +467,13 @@ namespace TRT {
 		}
 
 		shared_ptr<IBuilderConfig> config(builder->createBuilderConfig(), destroy_nvidia_pointer<IBuilderConfig>);
-		if (mode == TRTMode_FP16) {
+		if (mode == Mode::FP16) {
 			if (!builder->platformHasFastFp16()) {
 				INFOW("Platform not have fast fp16 support");
 			}
 			config->setFlag(BuilderFlag::kFP16);
 		}
-		else if (mode == TRTMode_INT8) {
+		else if (mode == Mode::INT8) {
 			if (!builder->platformHasFastInt8()) {
 				INFOW("Platform not have fast int8 support");
 			}
@@ -494,42 +483,10 @@ namespace TRT {
 		shared_ptr<INetworkDefinition> network;
 		//shared_ptr<ICaffeParser> caffeParser;
 		shared_ptr<nvonnxparser::IParser> onnxParser;
-		if (source.type() == ModelSourceType::Caffe) {
-			
-			// const auto explicitBatch = 0; //1U << static_cast<uint32_t>(nvinfer1::NetworkDefinitionCreationFlag::kEXPLICIT_BATCH);
-			// network = shared_ptr<INetworkDefinition>(builder->createNetworkV2(explicitBatch), destroy_nvidia_pointer<INetworkDefinition>);
-			// caffeParser.reset(createCaffeParser(), destroy_nvidia_pointer<ICaffeParser>);
-			// if (!caffeParser) {
-			// 	INFOW("Can not create caffe parser.");
-			// 	return false;
-			// }
-
-			// auto blobNameToTensor = caffeParser->parse(source.prototxt().c_str(), source.caffemodel().c_str(), *network, nvinfer1::DataType::kFLOAT);
-			// if (blobNameToTensor == nullptr) {
-			// 	INFO("parse network fail, prototxt: %s, caffemodel: %s", source.prototxt().c_str(), source.caffemodel().c_str());
-			// 	return false;
-			// }
-
-			// for (auto& output : outputs) {
-			// 	auto blobMarked = blobNameToTensor->find(output.c_str());
-			// 	if (blobMarked == nullptr) {
-			// 		INFO("Can not found marked output '%s' in network.", output.c_str());
-			// 		return false;
-			// 	}
-
-			// 	INFO("Marked output blob '%s'.", output.c_str());
-			// 	network->markOutput(*blobMarked);
-			// }
-
-			// if (network->getNbInputs() > 1) {
-			// 	INFO("Warning: network has %d input, maybe have errors", network->getNbInputs());
-			// }
-			INFOE("Unsupport type caffe");
-		}
-		else if(source.type() == ModelSourceType::OnnX || source.type() == ModelSourceType::OnnXData){
+		if(source.type() == ModelSourceType::OnnX || source.type() == ModelSourceType::OnnXData){
 			
 			int explicit_batch_size = maxBatchSize;
-			const auto explicitBatch = dynamicBatch ? 0U : 1U;   //1U << static_cast<uint32_t>(nvinfer1::NetworkDefinitionCreationFlag::kEXPLICIT_BATCH);
+			const auto explicitBatch = 1U << static_cast<uint32_t>(nvinfer1::NetworkDefinitionCreationFlag::kEXPLICIT_BATCH);
 			//network = shared_ptr<INetworkDefinition>(builder->createNetworkV2(explicitBatch), destroy_nvidia_pointer<INetworkDefinition>);
 			network = shared_ptr<INetworkDefinition>(builder->createNetworkV2(explicitBatch), destroy_nvidia_pointer<INetworkDefinition>);
 
@@ -537,18 +494,7 @@ namespace TRT {
 			for(int i = 0; i < inputsDimsSetup.size(); ++i){
 				auto s = inputsDimsSetup[i];
 				dims_setup[i] = convert_to_trt_dims(s.dims());
-
-				if(dynamicBatch){
-					if(dims_setup[i].d[0] != 1){
-						INFOW("The dynamic batch size is set, the setup[%d] dimension batch[%d] is not 1, will change it to 1", i, dims_setup[i].d[0]);
-						dims_setup[i].d[0] = 1;
-					}
-				}else{
-					if(dims_setup[i].d[0] != explicit_batch_size){
-						INFOW("The dynamic batch size is set, the setup[%d] dimension batch[%d] is not %d, will change it to %d", i, dims_setup[i].d[0], explicit_batch_size, explicit_batch_size);
-						dims_setup[i].d[0] = explicit_batch_size;
-					}
-				}
+				dims_setup[i].d[0] = -1;
 			}
 
 			//from onnx is not markOutput
@@ -580,7 +526,7 @@ namespace TRT {
 		auto inputDims = inputTensor->getDimensions();
 
 		shared_ptr<Int8EntropyCalibrator> int8Calibrator;
-		if (mode == TRTMode_INT8) {
+		if (mode == Mode::INT8) {
 			auto calibratorDims = inputDims;
 			calibratorDims.d[0] = maxBatchSize;
 
@@ -603,7 +549,6 @@ namespace TRT {
 		INFO("Input shape is %s", join_dims(vector<int>(inputDims.d, inputDims.d + inputDims.nbDims)).c_str());
 		INFO("Set max batch size = %d", maxBatchSize);
 		INFO("Set max workspace size = %.2f MB", _1_GB / 1024.0f / 1024.0f);
-		INFO("Dynamic batch dimension is %s", dynamicBatch ? "true" : "false");
 
 		int net_num_input = network->getNbInputs();
 		INFO("Network has %d inputs:", net_num_input);
@@ -663,6 +608,28 @@ namespace TRT {
 		
 		builder->setMaxBatchSize(maxBatchSize);
 		config->setMaxWorkspaceSize(_1_GB);
+
+		auto profile = builder->createOptimizationProfile();
+		for(int i = 0; i < net_num_input; ++i){
+			auto input = network->getInput(i);
+			auto input_dims = input->getDimensions();
+			input_dims.d[0] = 1;
+			profile->setDimensions(input->getName(), nvinfer1::OptProfileSelector::kMIN, input_dims);
+			profile->setDimensions(input->getName(), nvinfer1::OptProfileSelector::kOPT, input_dims);
+			input_dims.d[0] = maxBatchSize;
+			profile->setDimensions(input->getName(), nvinfer1::OptProfileSelector::kMAX, input_dims);
+		}
+
+		for(int i = 0; i < net_num_output; ++i){
+			auto input = network->getOutput(i);
+			auto input_dims = input->getDimensions();
+			input_dims.d[0] = 1;
+			profile->setDimensions(input->getName(), nvinfer1::OptProfileSelector::kMIN, input_dims);
+			profile->setDimensions(input->getName(), nvinfer1::OptProfileSelector::kOPT, input_dims);
+			input_dims.d[0] = maxBatchSize;
+			profile->setDimensions(input->getName(), nvinfer1::OptProfileSelector::kMAX, input_dims);
+		}
+		config->addOptimizationProfile(profile);
 		// config->setFlag(BuilderFlag::kGPU_FALLBACK);
 		// config->setDefaultDeviceType(DeviceType::kDLA);
 		// config->setDLACore(0);
@@ -675,7 +642,7 @@ namespace TRT {
 			return false;
 		}
 
-		if (mode == TRTMode_INT8) {
+		if (mode == Mode::INT8) {
 			if (!hasEntropyCalibrator) {
 				if (!int8EntropyCalibratorFile.empty()) {
 					INFO("Save calibrator to: %s", int8EntropyCalibratorFile.c_str());

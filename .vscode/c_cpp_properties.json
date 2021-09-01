@@ -11,7 +11,7 @@
                 "/data/sxai/lean/cudnn7.6.5.32-cuda10.2/include/**",
                 "/data/datav/newbb/lean/anaconda3/envs/torch1.8/include/python3.9/**"
             ],
-            "defines": ["__CUDACC__", "HAS_CUDA_HALF", "HAS_PYTHON"],
+            "defines": ["__CUDACC__", "HAS_PYTHON"],
             "compilerPath": "/usr/bin/gcc", 
             "cStandard": "gnu11",
             "cppStandard": "gnu++11",

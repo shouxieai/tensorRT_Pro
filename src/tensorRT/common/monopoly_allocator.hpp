@@ -79,6 +79,10 @@ public:
         return num_available_;
     }
 
+    int capacity(){
+        return capacity_;
+    }
+
 private:
     void release_one(MonopolyData* prq){
         std::unique_lock<std::mutex> l(lock_);

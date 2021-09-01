@@ -27,7 +27,7 @@ lean_cudnn     := /data/sxai/lean/cudnn8.2.2.26
 lean_opencv    := /data/sxai/lean/opencv4.2.0
 lean_cuda      := /data/sxai/lean/cuda10.2
 lean_python    := /data/datav/newbb/lean/anaconda3/envs/torch1.8
-use_python     := false
+use_python     := true
 
 include_paths := src        \
 			src/application \
@@ -51,12 +51,8 @@ link_librarys := opencv_core opencv_imgproc opencv_videoio opencv_imgcodecs \
 			stdc++ protobuf dl
 
 
-# 如果要支持FP16的插件推理（非插件不需要），请在编译选项上加-DHAS_CUDA_HALF，CPP和CU都加
-# 这种特殊的宏可以在.vscode/c_cpp_properties.json文件中configurations下的defines中也加进去，使得看代码的时候
-# 效果与编译一致
 # HAS_PYTHON表示是否编译python支持
-# support_define    := -DHAS_CUDA_HALF
-support_define    := -DHAS_CUDA_HALF
+support_define    := 
 
 ifeq ($(use_python), true) 
 include_paths  += $(lean_python)/include/python3.9
@@ -71,8 +67,8 @@ library_paths := $(foreach item,$(library_paths),-L$(item))
 link_librarys := $(foreach item,$(link_librarys),-l$(item))
 
 # 如果是其他显卡，请修改-gencode=arch=compute_75,code=sm_75为对应显卡的能力
-cpp_compile_flags := -std=c++11 -fPIC -m64 -g -fopenmp -w -O0 $(support_define)
-cu_compile_flags  := -std=c++11 -m64 -Xcompiler -fPIC -g -w -gencode=arch=compute_75,code=sm_75 -O0 $(support_define)
+cpp_compile_flags := -std=c++11 -fPIC -m64 -g -fopenmp -w -O3 $(support_define)
+cu_compile_flags  := -std=c++11 -m64 -Xcompiler -fPIC -g -w -gencode=arch=compute_75,code=sm_75 -O3 $(support_define)
 link_flags        := -pthread -fopenmp -Wl,-rpath='$$ORIGIN'
 
 cpp_compile_flags += $(include_paths)
@@ -166,5 +162,10 @@ debug :
 
 clean :
 	@rm -rf objs workspace/pro python/trtpy/libtrtpyc.so python/build python/dist python/trtpy.egg-info python/trtpy/__pycache__
+	@rm -rf workspace/single_inference
+	@rm -rf workspace/scrfd_result workspace/retinaface_result
+	@rm -rf workspace/YoloV5_result workspace/YoloX_result
+	@rm -rf workspace/face/library_draw workspace/face/result
+	@rm -rf build
 
 .PHONY : clean yolo alphapose fall debug

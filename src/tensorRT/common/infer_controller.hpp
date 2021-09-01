@@ -65,26 +65,33 @@ public:
 
     virtual std::vector<std::shared_future<Output>> commits(const std::vector<Input>& inputs){
 
+        int batch_size = std::min((int)inputs.size(), this->tensor_allocator_->capacity());
         std::vector<Job> jobs(inputs.size());
         std::vector<std::shared_future<Output>> results(inputs.size());
 
-        for(int i = 0; i < inputs.size(); ++i){
-            Job& job = jobs[i];
-            job.pro = std::make_shared<std::promise<Output>>();
-            if(!preprocess(job, inputs[i])){
-                job.pro->set_value(Output());
-            }
-            results[i] = job.pro->get_future();
-        }
-        
-        ///////////////////////////////////////////////////////////
-        {
-            std::unique_lock<std::mutex> l(jobs_lock_);
-            for(auto& job : jobs)
-                jobs_.emplace(std::move(job));
-        };
+        int nepoch = (inputs.size() + batch_size - 1) / batch_size;
+        for(int epoch = 0; epoch < nepoch; ++epoch){
+            int begin = epoch * batch_size;
+            int end   = std::min((int)inputs.size(), begin + batch_size);
 
-        cond_.notify_one();
+            for(int i = begin; i < end; ++i){
+                Job& job = jobs[i];
+                job.pro = std::make_shared<std::promise<Output>>();
+                if(!preprocess(job, inputs[i])){
+                    job.pro->set_value(Output());
+                }
+                results[i] = job.pro->get_future();
+            }
+
+            ///////////////////////////////////////////////////////////
+            {
+                std::unique_lock<std::mutex> l(jobs_lock_);
+                for(int i = begin; i < end; ++i){
+                    jobs_.emplace(std::move(jobs[i]));
+                };
+            }
+            cond_.notify_one();
+        }
         return results;
     }
 

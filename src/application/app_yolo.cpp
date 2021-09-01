@@ -64,48 +64,6 @@ static void forward_engine(const string& engine_file, Yolo::Type type){
     iLogger::mkdir(root);
 
     auto files = iLogger::find_files("inference", "*.jpg;*.jpeg;*.png;*.gif;*.tif");
-    for(int i = 0; i < files.size(); ++i){
-        auto image = cv::imread(files[i]);
-
-        auto t0    = iLogger::timestamp_now_float();
-        auto boxes = engine->commit(image).get();
-        float inference_time = iLogger::timestamp_now_float() - t0;
-
-        // 框给画到图上
-        for(auto& obj : boxes){
-
-            // 使用根据类别计算的随机颜色填充
-            uint8_t b, g, r;
-            tie(r, g, b) = iLogger::random_color(obj.class_label);
-            cv::rectangle(image, cv::Point(obj.left, obj.top), cv::Point(obj.right, obj.bottom), cv::Scalar(b, g, r), 5);
-
-            // 绘制类别名字
-            auto name = cocolabels[obj.class_label];
-            int width = cv::getTextSize(name, 0, 1, 2, nullptr).width + 10;
-            cv::rectangle(image, cv::Point(obj.left-3, obj.top-33), cv::Point(obj.left + width, obj.top), cv::Scalar(b, g, r), -1);
-            cv::putText(image, iLogger::format("%s", name), cv::Point(obj.left, obj.top-5), 0, 1, cv::Scalar::all(0), 2, 16);
-        }
-
-        string file_name = iLogger::file_name(files[i], false);
-        string save_path = iLogger::format("%s/%s.jpg", root.c_str(), file_name.c_str());
-        INFO("Save to %s, %d object, %.2f ms", save_path.c_str(), boxes.size(), inference_time);
-        cv::imwrite(save_path, image);
-    }
-}
-
-static void forward_engine_dynamic_batch(const string& engine_file, Yolo::Type type){
-
-    auto engine = Yolo::create_infer(engine_file, type, 0, 0.4f);
-    if(engine == nullptr){
-        INFOE("Engine is nullptr");
-        return;
-    }
-
-    string root = iLogger::format("%s_result", Yolo::type_name(type));
-    iLogger::rmtree(root);
-    iLogger::mkdir(root);
-
-    auto files = iLogger::find_files("inference", "*.jpg;*.jpeg;*.png;*.gif;*.tif");
     vector<cv::Mat> images;
     for(int i = 0; i < files.size(); ++i){
         auto image = cv::imread(files[i]);
@@ -154,11 +112,12 @@ static void test_plugin(){
     // 通过以下代码即可生成plugin.onnx
     // cd workspace
     // python test_plugin.py
+    iLogger::set_log_level(ILOGGER_VERBOSE);
     TRT::set_device(0);
 
     // plugin.onnx是通过test_plugin.py生成的
     TRT::compile(
-        TRT::TRTMode_FP32, {}, 3, "plugin.onnx", "plugin.fp32.trtmodel", {}, false
+        TRT::Mode::FP32, 3, "plugin.onnx", "plugin.fp32.trtmodel", {}
     );
  
     auto engine = TRT::load_infer("plugin.fp32.trtmodel");
@@ -172,15 +131,19 @@ static void test_plugin(){
     INFO("input0: %s", input0->shape_string());
     INFO("input1: %s", input1->shape_string());
     INFO("output: %s", output->shape_string());
-    input0->set_to(0.80);
+    
+    float input0_val = 0.8;
+    float input1_val = 2;
+    input0->set_to(input0_val);
+    input1->set_to(input1_val);
 
-    // output = input1 + hswish(input0)
-    // output = 0 + hswish(0.8)
-    // output = 0 + 0.8 * relu6(0.8 + 3) / 6
-    // output = 0.8 * 3.8f / 6
-    float output_real = 0.8f * 3.8f / 6.0f;
+    auto hswish = [](float x){float a = x + 3; a=a<0?0:(a>=6?6:a); return x * a / 6;};
+    auto sigmoid = [](float x){return 1 / (1 + exp(-x));};
+    auto relu   = [](float x){return max(0.0f, x);};
+    float output_real = relu(hswish(input0_val) * input1_val);
     engine->forward(true);
-    INFO("output %f, output_real = %f", output->at<float>(0), output_real);
+
+    INFO("output %f, output_real = %f", output->at<float>(0, 0), output_real);
 }
 
 static void test_int8(Yolo::Type type){
@@ -217,13 +180,11 @@ static void test_int8(Yolo::Type type){
 
     if(not iLogger::exists(model_file)){
         TRT::compile(
-            TRT::TRTMode_INT8,   // 编译方式有，FP32、FP16、INT8
-            {},                         // onnx时无效，caffe的输出节点标记
+            TRT::Mode::INT8,   // 编译方式有，FP32、FP16、INT8
             test_batch_size,            // 指定编译的batch size
             onnx_file,                  // 需要编译的onnx文件
             model_file,                 // 储存的模型文件
             {},                         // 指定需要重定义的输入shape，这里可以对onnx的输入shape进行重定义
-            false,                      // 是否采用动态batch维度，true采用，false不采用，使用静态固定的batch size
             int8process,                // int8标定时的数据输入处理函数
             "inference"                 // 图像数据的路径，在当前路径下找到用以标定的图像，图像可以随意给，不需要标注
         );
@@ -248,69 +209,29 @@ static void test_fp32(Yolo::Type type){
         return;
 
     string onnx_file = iLogger::format("%s.onnx", name);
-    string model_file = iLogger::format("%s.fp32.trtmodel", name);
-    int test_batch_size = 1;  // 当你需要修改batch大于1时，请注意你的模型是否修改（看readme.md代码修改部分），否则会有错误
+    string model_file = iLogger::format("%s.dynamic.batch.fp32.trtmodel", name);
+    int test_batch_size = 12;
     
     // 动态batch和静态batch，如果你想要弄清楚，请打开http://www.zifuture.com:8090/
     // 找到右边的二维码，扫码加好友后进群交流（免费哈，就是技术人员一起沟通）
     if(not iLogger::exists(model_file)){
         TRT::compile(
-            TRT::TRTMode_FP32,   // 编译方式有，FP32、FP16、INT8
-            {},                         // onnx时无效，caffe的输出节点标记
+            TRT::Mode::FP32,   // 编译方式有，FP32、FP16、INT8
             test_batch_size,            // 指定编译的batch size
             onnx_file,                  // 需要编译的onnx文件
-            model_file,                 // 储存的模型文件
-            {},                         // 指定需要重定义的输入shape，这里可以对onnx的输入shape进行重定义
-            false                       // 是否采用动态batch维度，true采用，false不采用，使用静态固定的batch size
+            model_file                 // 储存的模型文件
         );
     }
 
     forward_engine(model_file, type);
 }
 
-static void test_dynamic_batch(Yolo::Type type){
-
-    TRT::set_device(0);
-    INFO("===================== test %s dynamic batch fp32 ==================================", Yolo::type_name(type));
-
-    const char* name = nullptr;
-    if(type == Yolo::Type::V5){
-        name = "yolov5m";
-    }else if(type == Yolo::Type::X){
-        name = "yolox_m";
-    }
-
-    if(not requires(name))
-        return;
-
-    string onnx_file = iLogger::format("%s.onnx", name);
-    string model_file = iLogger::format("%s.dynamic.batch.fp32.trtmodel", name);
-    int test_batch_size = 5;
-    
-    // 动态batch和静态batch，如果你想要弄清楚，请打开http://www.zifuture.com:8090/
-    // 找到右边的二维码，扫码加好友后进群交流（免费哈，就是技术人员一起沟通）
-    if(not iLogger::exists(model_file)){
-        TRT::compile(
-            TRT::TRTMode_FP32,   // 编译方式有，FP32、FP16、INT8
-            {},                         // onnx时无效，caffe的输出节点标记
-            test_batch_size,            // 指定编译的batch size
-            onnx_file,                  // 需要编译的onnx文件
-            model_file,                 // 储存的模型文件
-            {},                         // 指定需要重定义的输入shape，这里可以对onnx的输入shape进行重定义
-            true                        // 是否采用动态batch维度，true采用，false不采用，使用静态固定的batch size
-        );
-    }
-
-    forward_engine_dynamic_batch(model_file, type);
-}
-
 int app_yolo(){
 
-    test_dynamic_batch(Yolo::Type::V5);
-    test_dynamic_batch(Yolo::Type::X);
     test_fp32(Yolo::Type::V5);
     test_fp32(Yolo::Type::X);
-    // test_plugin();
-    // test_int8(Yolo::Type::X);
+    test_int8(Yolo::Type::X);
+    test_int8(Yolo::Type::V5);
+    test_plugin();
     return 0;
 }

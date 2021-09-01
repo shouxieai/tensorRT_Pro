@@ -76,9 +76,8 @@ class Infer(object):
     max_batch_size : int
     device         : int
     workspace      : MixMemory
-    is_dynamic_batch_dimension : bool
     def __init__(self, file : str): ...
-    def forward(self, sync : bool=True, resize_output_batch_same_input : bool=True): ...
+    def forward(self, sync : bool=True): ...
     def input(self, index : int = 0)->Tensor: ...
     def output(self, index : int = 0)->Tensor: ...
     def synchronize(self): ...
@@ -98,7 +97,7 @@ def hook_reshape_layer_func(name : str, shape : List[int]): ...
 # 注册编译onnx时的reshapelayer的钩子，一旦执行compileTRT后立即失效
 def set_compile_hook_reshape_layer(func : hook_reshape_layer_func): ...
 
-class TRTMode(Enum):
+class Mode(Enum):
     FP32 : int = 0
     FP16 : int = 1
     INT8 : int = 2
@@ -141,17 +140,12 @@ class ModelSourceType(Enum):
 
 class ModelSource(object):
     type       : ModelSourceType
-    prototxt   : str
-    caffemodel : str
     onnxmodel  : str
     descript   : str
     onnx_data  : bytes
 
     @staticmethod
     def from_onnx(file : str): ...
-
-    @staticmethod
-    def from_caffe(prototxt : str, caffemodel : str): ...
 
     @staticmethod
     def from_onnx_data(data : bytes): ...
@@ -175,10 +169,8 @@ def compileTRT(
     max_batch_size               : int,
     source                       : ModelSource,
     saveto                       : CompileOutput,
-    mode                         : TRTMode     = TRTMode.FP32,
-    mark_outputs                 : List[str]   = [],
+    mode                         : Mode        = Mode.FP32,
     inputs_dims                  : np.ndarray  = np.array([], dtype=int),
-    dynamic_batch                : bool        = True,
     device_id                    : int         = 0,
     int8_norm                    : Norm        = Norm.none(),
     int8_preprocess_const_value  : int = 114,
@@ -355,7 +347,7 @@ def infer_torch__call__(self : Infer, *args):
         reference_tensor(self.output(index), out_tensor)
         outputs.append(out_tensor)
 
-    self.forward(False, True)
+    self.forward(False)
 
     if not templ.is_cuda:
         for index in range(self.num_output):
@@ -371,11 +363,7 @@ def infer_numpy__call__(self : Infer, *args):
 
     templ = args[0]
     batch = templ.shape[0]
-
-    if not self.is_dynamic_batch_dimension:
-        assert batch == self.max_batch_size, "Explicit batch require batch == max_batch_size"
-    else:
-        assert batch <= self.max_batch_size, "Batch must be less max_batch_size"
+    assert batch <= self.max_batch_size, "Batch must be less max_batch_size"
 
     for index, x in enumerate(args):
         reference_tensor(self.input(index), x)
@@ -479,9 +467,8 @@ def compile_onnx_to_file(
     max_batch_size               : int,
     file                         : str,
     saveto                       : str,
-    mode                         : TRTMode     = TRTMode.FP32,
+    mode                         : Mode        = Mode.FP32,
     inputs_dims                  : np.ndarray  = np.array([], dtype=int),
-    dynamic_batch                : bool        = True,
     device_id                    : int         = 0,
     int8_norm                    : Norm        = Norm.none(),
     int8_preprocess_const_value  : int = 114,
@@ -493,9 +480,7 @@ def compile_onnx_to_file(
         source                       = ModelSource.from_onnx(file),
         output                       = CompileOutput.to_file(saveto),
         mode                         = mode,
-        mark_outputs                 = [],
         inputs_dims                  = inputs_dims,
-        dynamic_batch                = dynamic_batch,
         device_id                    = device_id,
         int8_norm                    = int8_norm,
         int8_preprocess_const_value  = int8_preprocess_const_value,
@@ -506,9 +491,8 @@ def compile_onnx_to_file(
 def compile_onnxdata_to_memory(
     max_batch_size               : int,
     data                         : bytes,
-    mode                         : TRTMode     = TRTMode.FP32,
+    mode                         : Mode        = Mode.FP32,
     inputs_dims                  : np.ndarray  = np.array([], dtype=int),
-    dynamic_batch                : bool        = True,
     device_id                    : int         = 0,
     int8_norm                    : Norm        = Norm.none(),
     int8_preprocess_const_value  : int = 114,
@@ -521,9 +505,7 @@ def compile_onnxdata_to_memory(
         source                       = ModelSource.from_onnx_data(data),
         output                       = mem,
         mode                         = mode,
-        mark_outputs                 = [],
         inputs_dims                  = inputs_dims,
-        dynamic_batch                = dynamic_batch,
         device_id                    = device_id,
         int8_norm                    = int8_norm,
         int8_preprocess_const_value  = int8_preprocess_const_value,
@@ -556,6 +538,8 @@ def convert_torch_to_trt(torch_model, input, max_batch_size=None)->Infer:
     trt_model.stream = torch.cuda.current_stream().cuda_stream
     return trt_model
 
+def upbound(value, align=32):
+    return (value + align - 1) // align * align
 
 RETINFACE_NORM = Norm.mean_std([104, 117, 123], [1, 1, 1], 1.0, ChannelType.NONE)
 YOLOV5_NORM    = Norm.alpha_beta(1 / 255.0, 0.0, ChannelType.Invert)

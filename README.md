@@ -269,7 +269,7 @@ auto box = engine->commit(image).get();
 ## 模型编译-FP32/16
 ```cpp
 TRT::compile(
-  TRT::TRTMode_FP32,   // 使用fp32模型编译
+  TRT::Mode::FP32,   // 使用fp32模型编译
   {},                         // caffe时指定输出节点
   3,                          // max batch size
   "plugin.onnx",              // onnx 文件
@@ -300,7 +300,7 @@ auto int8process = [](int current, int count, vector<string>& images, shared_ptr
 // 编译模型指定为INT8
 auto model_file = "yolov5m.int8.trtmodel";
 TRT::compile(
-  TRT::TRTMode_INT8,   // 选择INT8
+  TRT::Mode::INT8,   // 选择INT8
   {},                         // 对于caffe的输出节点名称
   3,                          // max batch size
   "yolov5m.onnx",             // onnx文件

@@ -243,27 +243,12 @@ Status importInput(ImporterContext* ctx, ::ONNX_NAMESPACE::ValueInfoProto const&
     if(dims_setup){
         nvinfer1::Dims origin_dims = trt_dims;
         ASSERT_INPUT(trt_dims.nbDims == dims_setup->nbDims && "Setup nbDims mismatch.", ErrorCode::kINVALID_VALUE, input.name());
-        for(int i = 0; i < trt_dims.nbDims; ++i){
-            if(dims_setup->d[i] != -1)
-                trt_dims.d[i] = dims_setup->d[i];
-        }
+        trt_dims = *dims_setup;
         LOG_WARNING("Setup network input: " << input.name() << ", final dimensions: " << trt_dims << ", origin dimensions: " << origin_dims << ", setup dimensions: " << *dims_setup);
     }else{
-        // if dynamic batch size
-        if(ctx->network()->hasImplicitBatchDimension()){
-            if(trt_dims.d[0] != 1){
-                nvinfer1::Dims origin_dims = trt_dims;
-                trt_dims.d[0] = 1;
-                LOG_WARNING("Change input batch size: " << input.name() << ", final dimensions: " << trt_dims << ", origin dimensions: " << origin_dims);
-            }
-        }else{
-            if(trt_dims.d[0] != explicit_batch_size){
-                nvinfer1::Dims origin_dims = trt_dims;
-                trt_dims.d[0] = explicit_batch_size;
-                LOG_WARNING("Change input batch size: " << input.name() << ", final dimensions: " << trt_dims << ", origin dimensions: " << origin_dims);
-            }
-        }
+        trt_dims.d[0] = -1;
     }
+
     LOG_VERBOSE(
         "Adding network input: " << input.name() << " with dtype: " << trtDtype << ", dimensions: " << trt_dims);
     ASSERT_INPUT( (*tensor = ctx->network()->addInput(input.name().c_str(), trtDtype, trt_dims)) && "Failed to add input to the network.",

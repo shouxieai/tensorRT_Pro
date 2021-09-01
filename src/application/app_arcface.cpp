@@ -10,7 +10,7 @@ using namespace std;
 using namespace cv;
 
 bool requires(const char* name);
-bool compile_retinaface(int input_width, int input_height, string& out_model_file);
+bool compile_retinaface(int input_width, int input_height, string& out_model_file, TRT::Mode mode=TRT::Mode::FP32);
 
 static bool compile_models(){
 
@@ -33,13 +33,11 @@ static bool compile_models(){
         // 找到右边的二维码，扫码加好友后进群交流（免费哈，就是技术人员一起沟通）
         if(not iLogger::exists(model_file)){
             bool ok = TRT::compile(
-                TRT::TRTMode_FP32,   // 编译方式有，FP32、FP16、INT8
-                {},                         // onnx时无效，caffe的输出节点标记
+                TRT::Mode::FP32,   // 编译方式有，FP32、FP16、INT8
                 test_batch_size,            // 指定编译的batch size
                 onnx_file,                  // 需要编译的onnx文件
                 model_file,                 // 储存的模型文件
-                {},                         // 指定需要重定义的输入shape，这里可以对onnx的输入shape进行重定义
-                true                        // 是否采用动态batch维度，true采用，false不采用，使用静态固定的batch size
+                {}                          // 指定需要重定义的输入shape，这里可以对onnx的输入shape进行重定义
             );
 
             if(!ok) return false;
@@ -121,7 +119,7 @@ int app_arcface(){
     iLogger::mkdirs("face/library_draw");
     iLogger::mkdirs("face/result");
 
-    auto detector = RetinaFace::create_infer("mb_retinaface.640x480.fp32.trtmodel", 0, 0.5f);
+    auto detector = RetinaFace::create_infer("mb_retinaface.640x480.FP32.trtmodel", 0, 0.5f);
     auto arcface  = Arcface::create_infer("arcface_iresnet50.fp32.trtmodel", 0);
     auto library  = build_library(detector, arcface);
 
@@ -186,10 +184,11 @@ int app_arcface_video(){
     iLogger::mkdirs("face/library_draw");
     iLogger::mkdirs("face/result");
 
-    auto detector = RetinaFace::create_infer("mb_retinaface.640x480.fp32.trtmodel", 0, 0.5f);
+    auto detector = RetinaFace::create_infer("mb_retinaface.640x480.FP32.trtmodel", 0, 0.5f);
     auto arcface  = Arcface::create_infer("arcface_iresnet50.fp32.trtmodel", 0);
     auto library  = build_library(detector, arcface);
     //auto remote_show = create_zmq_remote_show();
+    INFO("这个程序需要展示，请使用tools/show.py做客户端，然后启用这里的remote_show进行实时展示");
 
     // 这是一段人脸晃来晃去的视频
     VideoCapture cap("exp/WIN_20210425_14_23_24_Pro.mp4");

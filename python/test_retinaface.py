@@ -7,20 +7,24 @@ import trtpy as tp
 os.chdir("../workspace/")
 
 def compile_model(width, height):
+
+    width  = tp.upbound(width)
+    height = tp.upbound(height)
+    index_of_reshape_layer = 0
     def hook_reshape(name, shape):
-        layerset = [
-            "Reshape_100", "Reshape_104", "Reshape_108", 
-            "Reshape_113", "Reshape_117", "Reshape_121", 
-            "Reshape_126", "Reshape_130", "Reshape_134"
-        ]
+        # print(name)
+        # layerset = [
+        #     "Reshape_100", "Reshape_104", "Reshape_108", 
+        #     "Reshape_113", "Reshape_117", "Reshape_121", 
+        #     "Reshape_126", "Reshape_130", "Reshape_134"
+        # ]
+        nonlocal index_of_reshape_layer
         strides = [8, 16, 32, 8, 16, 32, 8, 16, 32]
+        index  = index_of_reshape_layer
+        index_of_reshape_layer += 1
 
-        if name in layerset:
-            index  = layerset.index(name)
-            stride = strides[index]
-            return [-1, height * width // stride // stride * 2, shape[2]]
-
-        return shape
+        stride = strides[index]
+        return [-1, height * width // stride // stride * 2, shape[2]]
 
     engine_file = f"retinaface.{width}x{height}.fp32.trtmodel"
     if not os.path.exists(engine_file):
@@ -47,6 +51,7 @@ for face in faces:
     for x, y in face.landmark.astype(int):
         cv2.circle(image, (x, y), 3, (0, 255, 0), -1, 16)
 
+os.makedirs("single_inference", exist_ok=True)
 saveto = "single_inference/retinaface.group.jpg"
 print(f"{len(faces)} faces, Save to {saveto}")
 cv2.imwrite(saveto, image)

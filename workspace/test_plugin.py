@@ -45,11 +45,22 @@ class FooModel(torch.nn.Module):
         self.hswish = MemoryEfficientHSwish()
 
     def forward(self, input1, input2):
-        return input2 + self.hswish(input1)
+        return F.relu(input2 * self.hswish(input1))
 
 dummy_input1 = torch.zeros((1, 3, 3, 3))
-dummy_input2 = torch.zeros((1, 1, 3, 3))
+dummy_input2 = torch.zeros((1, 3, 3, 3))
 model = FooModel()
 
 # 这里演示了2个输入的情况，实际上你可以自己定义几个输入
-torch.onnx.export(model, (dummy_input1, dummy_input2), 'plugin.onnx', verbose=True, opset_version=11, enable_onnx_checker=False)
+torch.onnx.export(
+    model, 
+    (dummy_input1, dummy_input2), 
+    'plugin.onnx', 
+    input_names=["input.0", "input.1"],
+    output_names=["output.0"], 
+    verbose=True, 
+    opset_version=11,
+    dynamic_axes={"input.0": {0:"batch"}, "input.1": {0:"batch"}, "output.0": {0:"batch"}},
+    enable_onnx_checker=False
+)
+print("Done")

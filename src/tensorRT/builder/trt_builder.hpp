@@ -14,7 +14,6 @@ namespace TRT {
 	typedef std::function<std::vector<int64_t>(const std::string& name, const std::vector<int64_t>& shape)> LayerHookFuncReshape;
 
 	enum class ModelSourceType : int{
-		Caffe,
 		OnnX,
 		OnnXData
 	};
@@ -26,20 +25,10 @@ namespace TRT {
 		ModelSource(const std::string& onnxmodel);
 		ModelSource(const char* onnxmodel);
 		ModelSourceType type() const;
-		std::string prototxt() const;
-		std::string caffemodel() const;
 		std::string onnxmodel() const;
 		std::string descript() const;
 		const void* onnx_data() const;
 		size_t onnx_data_size() const;
-
-		static ModelSource caffe(const std::string& prototxt, const std::string& caffemodel){
-			ModelSource output;
-			output.prototxt_   = prototxt;
-			output.caffemodel_ = caffemodel;
-			output.type_       = ModelSourceType::Caffe;
-			return output;
-		}
 
 		static ModelSource onnx(const std::string& file){
 			ModelSource output;
@@ -57,7 +46,6 @@ namespace TRT {
 		}
 
 	private:
-		std::string prototxt_, caffemodel_;
 		std::string onnxmodel_;
 		const void* onnx_data_ = nullptr;
 		size_t onnx_data_size_ = 0;
@@ -101,13 +89,13 @@ namespace TRT {
 		std::vector<int> dims_;
 	};
 
-	enum TRTMode {
-		TRTMode_FP32,
-		TRTMode_FP16,
-		TRTMode_INT8
+	enum class Mode : int {
+		FP32,
+		FP16,
+		INT8
 	};
 
-	const char* mode_string(TRTMode type);
+	const char* mode_string(Mode type);
 
 	void set_layer_hook_reshape(const LayerHookFuncReshape& func);
 
@@ -126,12 +114,11 @@ namespace TRT {
 	//                     否则报错
 	//                  3. 对于很多onnx，可以直接编译通过，不需要做任何修改，例如yolov5
 	bool compile(
-		TRTMode mode,
-		const std::vector<std::string>& outputs,
+		Mode mode,
 		unsigned int maxBatchSize,
 		const ModelSource& source,
 		const CompileOutput& saveto,
-		const std::vector<InputDims> inputsDimsSetup = {}, bool dynamicBatch = true,
+		const std::vector<InputDims> inputsDimsSetup = {},
 		Int8Process int8process = nullptr,
 		const std::string& int8ImageDirectory = "",
 		const std::string& int8EntropyCalibratorFile = "");

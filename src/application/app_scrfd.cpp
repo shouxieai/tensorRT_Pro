@@ -46,13 +46,11 @@ bool compile_scrfd(int input_width, int input_height, string& out_model_file){
     });
 
     return TRT::compile(
-        TRT::TRTMode_FP32,   // 编译方式有，FP32、FP16、INT8
-        {},                         // onnx时无效，caffe的输出节点标记
+        TRT::Mode::FP32,   // 编译方式有，FP32、FP16、INT8
         test_batch_size,            // 指定编译的batch size
         onnx_file,                  // 需要编译的onnx文件
         model_file,                          // 储存的模型文件
-        {TRT::InputDims({1, 3, input_height, input_width})},  // 注意请让大小能够整除32
-        true                                 // 是否采用动态batch维度，true采用，false不采用，使用静态固定的batch size
+        {TRT::InputDims({1, 3, input_height, input_width})}  // 注意请让大小能够整除32
     );
 }
 

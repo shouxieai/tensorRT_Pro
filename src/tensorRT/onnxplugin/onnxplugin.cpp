@@ -30,13 +30,11 @@ namespace ONNXPlugin {
 		return value;
 	}
 
-	#ifdef HAS_CUDA_HALF
-	GTensor::GTensor(TRT::halfloat* ptr, int ndims, int* dims) {
+	GTensor::GTensor(TRT::float16* ptr, int ndims, int* dims) {
 		this->ptr_ = ptr;
 		this->shape_.insert(shape_.end(), dims, dims + ndims);
 		this->dtType_ = TRT::DataType::Float16;
 	}
-	#endif
 
 	GTensor::GTensor(const TRT::Tensor& tensor) {
 		this->ptr_ = (float*)tensor.gpu();
@@ -71,12 +69,9 @@ namespace ONNXPlugin {
 	int LayerConfig::serialize() {
 
 		Plugin::BinIO out;
-		out << input;
-		out << output;
 		out << workspaceSize_;
 		out << configDataType_;
 		out << configPluginFormat_;
-		out << configMaxbatchSize_;
 		out << info_;
 
 		out << (int)weights_.size();
@@ -85,13 +80,9 @@ namespace ONNXPlugin {
 			if (configDataType_ == TRT::DataType::Float) {
 				weights_[i]->to_float();
 			}
-			
-			#ifdef HAS_CUDA_HALF
 			else if (configDataType_ == TRT::DataType::Float16) {
 				weights_[i]->to_half();
 			}
-			#endif
-
 			else{
 				INFOE("unsupport datatype: %d", (int)configDataType_);
 			}
@@ -109,12 +100,9 @@ namespace ONNXPlugin {
 	void LayerConfig::deserialize(const void* ptr, size_t length) {
 
 		Plugin::BinIO in(ptr, length);
-		in >> input;
-		in >> output;
 		in >> workspaceSize_;
 		in >> configDataType_;
 		in >> configPluginFormat_;
-		in >> configMaxbatchSize_;
 		in >> info_;
 
 		int nbWeights = 0;
@@ -143,6 +131,16 @@ namespace ONNXPlugin {
 
 	///////////////////////////////////////////////////////////////////////////////////
 
+	static TRT::DataType convert_trt_datatype(nvinfer1::DataType dt){
+		switch(dt){
+			case nvinfer1::DataType::kFLOAT: return TRT::DataType::Float;
+			case nvinfer1::DataType::kHALF: return TRT::DataType::Float16;
+			default:
+				INFOE("Unsupport data type %d", dt);
+				return TRT::DataType::Float;
+		}
+	}
+
 	TRTPlugin::~TRTPlugin() {
 	}
 
@@ -151,7 +149,6 @@ namespace ONNXPlugin {
 		layerName_ = name;
 		config_ = this->config(name);
 		Assert(config_ != nullptr);
-		config_->output.resize(config_->nbOutput_);
 		config_->setup(info, weights);
 		config_->init();
 		this->pluginConfigFinish();
@@ -171,50 +168,19 @@ namespace ONNXPlugin {
 		return std::shared_ptr<LayerConfig>(new LayerConfig());
 	}
 
-	bool TRTPlugin::supportsFormat(nvinfer1::DataType type, nvinfer1::PluginFormat format) const noexcept{
-		bool match = config_->supportDataType_.find(type) != config_->supportDataType_.end() &&
-			config_->supportPluginFormat_.find(format) != config_->supportPluginFormat_.end();
-
-		//INFO("supportsFormat %d, %d, match = %s", type, format, match ? "true" : "false");
-		return match;
-	}
-
-	void TRTPlugin::configureWithFormat(
-		const nvinfer1::Dims* inputDims, int nbInputs, const nvinfer1::Dims* outputDims,
-		int nbOutputs, nvinfer1::DataType type, nvinfer1::PluginFormat format, int maxBatchSize)noexcept {
-
-		//INFO("configureWithFormat: type: %d, format: %d", type, format);
-		if (type == nvinfer1::DataType::kFLOAT) {
-			this->config_->configDataType_ = TRT::DataType::Float;
-		}
-
-		#ifdef HAS_CUDA_HALF
-		else if (type == nvinfer1::DataType::kHALF) {
-			this->config_->configDataType_ = TRT::DataType::Float16;
-		}
-		#endif
-		
-		else {
-			INFOE("unsuport datatype: %d", (int)type);
-		}
-		this->config_->configPluginFormat_ = format;
-		this->config_->configMaxbatchSize_ = maxBatchSize;
-	}
-
 	int TRTPlugin::getNbOutputs() const noexcept{
 		return config_->nbOutput_;
 	}
 
-	nvinfer1::Dims TRTPlugin::getOutputDimensions(int index, const nvinfer1::Dims* inputs, int nbInputDims) noexcept{
+	void TRTPlugin::configurePlugin(
+		const nvinfer1::DynamicPluginTensorDesc* in, int32_t nbInputs, 
+		const nvinfer1::DynamicPluginTensorDesc* out, int32_t nbOutputs) noexcept{
 
-		if (config_->input.empty()) {
-			for (int i = 0; i < nbInputDims; ++i)
-				config_->input.push_back(inputs[i]);
-		}
-
-		auto dims = outputDims(index, inputs, nbInputDims);
-		config_->output[index] = dims;
-		return dims;
+		auto type = in->desc.type;
+		auto format = in->desc.format;
+		this->config_->configDataType_     = convert_trt_datatype(type);
+		this->config_->configPluginFormat_ = format;
+		this->config_->nbInput_ = nbInputs;
 	}
 
 	int TRTPlugin::initialize() noexcept{
@@ -224,24 +190,26 @@ namespace ONNXPlugin {
 	void TRTPlugin::terminate() noexcept{
 	}
 
-	size_t TRTPlugin::getWorkspaceSize(int maxBatchSize) const noexcept{
+	bool TRTPlugin::supportsFormatCombination(
+		int32_t pos, const nvinfer1::PluginTensorDesc* inOut, int32_t nbInputs, int32_t nbOutputs) noexcept{
+		
+		bool match = config_->supportDataType_.find(inOut[pos].type) != config_->supportDataType_.end() &&
+		config_->supportPluginFormat_.find(inOut[pos].format) != config_->supportPluginFormat_.end();
+		return match;
+	}
+
+	size_t TRTPlugin::getWorkspaceSize(const nvinfer1::PluginTensorDesc* inputs, int32_t nbInputs, const nvinfer1::PluginTensorDesc* outputs,
+		int32_t nbOutputs) const noexcept{
 		return config_->workspaceSize_;
 	}
 
-	void TRTPlugin::mappingToGTensor() {
-		if (inputTensors_.empty()) {
-			inputTensors_.resize(config_->input.size());
-			outputTensors_.resize(config_->output.size());
-			weightTensors_.resize(config_->weights_.size());
-			for (int i = 0; i < inputTensors_.size(); ++i) {
-				auto& dims = config_->input[i];
-				inputTensors_[i].shape_ = std::vector<int>(dims.d, dims.d + dims.nbDims);
-			}
+	int32_t TRTPlugin::enqueue(const nvinfer1::PluginTensorDesc* inputDesc, const nvinfer1::PluginTensorDesc* outputDesc,
+        const void* const* inputs, void* const* outputs, void* workspace, cudaStream_t stream) noexcept{
 
-			for (int i = 0; i < outputTensors_.size(); ++i) {
-				auto& dims = config_->output[i];
-				outputTensors_[i].shape_ = std::vector<int>(dims.d, dims.d + dims.nbDims);
-			}
+		if (inputTensors_.empty()) {
+			inputTensors_.resize(config_->nbInput_);
+			outputTensors_.resize(config_->nbOutput_);
+			weightTensors_.resize(config_->weights_.size());
 
 			for (int i = 0; i < weightTensors_.size(); ++i) {
 				auto& w = config_->weights_[i];
@@ -250,24 +218,20 @@ namespace ONNXPlugin {
 				weightTensors_[i].dtType_ = w->type();
 			}
 		}
-	}
-
-	int32_t TRTPlugin::enqueue(int32_t batchSize, void const* const* inputs, void* const* outputs, void* workspace, cudaStream_t stream) noexcept {
-		mappingToGTensor();
 
 		for (int i = 0; i < inputTensors_.size(); ++i) {
-			inputTensors_[i].shape_[0] = batchSize;
+			inputTensors_[i].shape_ = std::vector<int>(inputDesc[i].dims.d, inputDesc[i].dims.d+inputDesc[i].dims.nbDims);
 			inputTensors_[i].ptr_ = (void*)inputs[i];
-			inputTensors_[i].dtType_ = config_->configDataType_;
+			inputTensors_[i].dtType_ = convert_trt_datatype(inputDesc[i].type);
 		}
 
 		for (int i = 0; i < outputTensors_.size(); ++i) {
-			outputTensors_[i].shape_[0] = batchSize;
+			outputTensors_[i].shape_ = std::vector<int>(outputDesc[i].dims.d, outputDesc[i].dims.d+outputDesc[i].dims.nbDims);
 			outputTensors_[i].ptr_ = outputs[i];
-			inputTensors_[i].dtType_ = config_->configDataType_;
+			outputTensors_[i].dtType_ = convert_trt_datatype(outputDesc[i].type);
 		}
 		return enqueue(inputTensors_, outputTensors_, weightTensors_, workspace, stream);
-	} 
+	}
 
 	size_t TRTPlugin::getSerializationSize() const noexcept{
 		return config_->serialize();
