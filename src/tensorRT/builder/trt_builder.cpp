@@ -462,7 +462,7 @@ namespace TRT {
 			}
 		}
 
-		INFOV("Compile %s %s.", mode_string(mode), source.descript().c_str());
+		INFO("Compile %s %s.", mode_string(mode), source.descript().c_str());
 		shared_ptr<IBuilder> builder(createInferBuilder(gLogger), destroy_nvidia_pointer<IBuilder>);
 		if (builder == nullptr) {
 			INFOE("Can not create builder.");
@@ -549,33 +549,33 @@ namespace TRT {
 		}
 
 		size_t _1_GB = 1 << 30;
-		INFOV("Input shape is %s", join_dims(vector<int>(inputDims.d, inputDims.d + inputDims.nbDims)).c_str());
-		INFOV("Set max batch size = %d", maxBatchSize);
-		INFOV("Set max workspace size = %.2f MB", _1_GB / 1024.0f / 1024.0f);
+		INFO("Input shape is %s", join_dims(vector<int>(inputDims.d, inputDims.d + inputDims.nbDims)).c_str());
+		INFO("Set max batch size = %d", maxBatchSize);
+		INFO("Set max workspace size = %.2f MB", _1_GB / 1024.0f / 1024.0f);
 
 		int net_num_input = network->getNbInputs();
-		INFOV("Network has %d inputs:", net_num_input);
+		INFO("Network has %d inputs:", net_num_input);
 		vector<string> input_names(net_num_input);
 		for(int i = 0; i < net_num_input; ++i){
 			auto tensor = network->getInput(i);
 			auto dims = tensor->getDimensions();
 			auto dims_str = join_dims(vector<int>(dims.d, dims.d+dims.nbDims));
-			INFOV("      %d.[%s] shape is %s", i, tensor->getName(), dims_str.c_str());
+			INFO("      %d.[%s] shape is %s", i, tensor->getName(), dims_str.c_str());
 
 			input_names[i] = tensor->getName();
 		}
 
 		int net_num_output = network->getNbOutputs();
-		INFOV("Network has %d outputs:", net_num_output);
+		INFO("Network has %d outputs:", net_num_output);
 		for(int i = 0; i < net_num_output; ++i){
 			auto tensor = network->getOutput(i);
 			auto dims = tensor->getDimensions();
 			auto dims_str = join_dims(vector<int>(dims.d, dims.d+dims.nbDims));
-			INFOV("      %d.[%s] shape is %s", i, tensor->getName(), dims_str.c_str());
+			INFO("      %d.[%s] shape is %s", i, tensor->getName(), dims_str.c_str());
 		}
 
 		int net_num_layers = network->getNbLayers();
-		INFOV("Network has %d layers:", net_num_layers);
+		INFO("Network has %d layers:", net_num_layers);
 		for(int i = 0; i < net_num_layers; ++i){
 			auto layer = network->getLayer(i);
 			auto name = layer->getName();
@@ -640,7 +640,7 @@ namespace TRT {
 		// config->setDefaultDeviceType(DeviceType::kDLA);
 		// config->setDLACore(0);
 
-		INFOV("Building engine...");
+		INFO("Building engine...");
 		auto time_start = iLogger::timestamp_now();
 		shared_ptr<ICudaEngine> engine(builder->buildEngineWithConfig(*network, *config), destroy_nvidia_pointer<ICudaEngine>);
 		if (engine == nullptr) {
@@ -651,16 +651,16 @@ namespace TRT {
 		if (mode == Mode::INT8) {
 			if (!hasEntropyCalibrator) {
 				if (!int8EntropyCalibratorFile.empty()) {
-					INFOV("Save calibrator to: %s", int8EntropyCalibratorFile.c_str());
+					INFO("Save calibrator to: %s", int8EntropyCalibratorFile.c_str());
 					iLogger::save_file(int8EntropyCalibratorFile, int8Calibrator->getEntropyCalibratorData());
 				}
 				else {
-					INFOV("No set entropyCalibratorFile, and entropyCalibrator will not save.");
+					INFO("No set entropyCalibratorFile, and entropyCalibrator will not save.");
 				}
 			}
 		}
 
-		INFOV("Build done %lld ms !", iLogger::timestamp_now() - time_start);
+		INFO("Build done %lld ms !", iLogger::timestamp_now() - time_start);
 		
 		// serialize the engine, then close everything down
 		shared_ptr<IHostMemory> seridata(engine->serialize(), destroy_nvidia_pointer<IHostMemory>);

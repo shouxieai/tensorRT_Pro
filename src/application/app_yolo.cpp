@@ -107,7 +107,7 @@ static void forward_engine(const string& engine_file, Yolo::Type type){
     }
 }
 
-static void test_plugin(){
+static void test_plugin(TRT::Mode mode){
 
     // 通过以下代码即可生成plugin.onnx
     // cd workspace
@@ -115,12 +115,14 @@ static void test_plugin(){
     iLogger::set_log_level(iLogger::LogLevel::Verbose);
     TRT::set_device(0);
 
+    auto mode_name = TRT::mode_string(mode);
+    auto engine_name = iLogger::format("plugin.%s.trtmodel", mode_name);
     // plugin.onnx是通过test_plugin.py生成的
     TRT::compile(
-        TRT::Mode::FP32, 3, "plugin.onnx", "plugin.fp32.trtmodel", {}
+        mode, 3, "plugin.onnx", engine_name, {}
     );
  
-    auto engine = TRT::load_infer("plugin.fp32.trtmodel");
+    auto engine = TRT::load_infer(engine_name);
     engine->print();
 
     auto input0 = engine->input(0);
@@ -176,7 +178,7 @@ static void test_int8(Yolo::Type type){
 
     string onnx_file = iLogger::format("%s.onnx", name);
     string model_file = iLogger::format("%s.int8.trtmodel", name);
-    int test_batch_size = 1;  // 当你需要修改batch大于1时，请查看yolox.cpp:260行备注
+    int test_batch_size = 6;  // 当你需要修改batch大于1时，请查看yolox.cpp:260行备注
 
     if(not iLogger::exists(model_file)){
         TRT::compile(
@@ -193,10 +195,11 @@ static void test_int8(Yolo::Type type){
     forward_engine(model_file, type);
 }
 
-static void test_fp32(Yolo::Type type){
+static void test(Yolo::Type type, TRT::Mode mode){
 
+    auto mode_name = TRT::mode_string(mode);
     TRT::set_device(0);
-    INFO("===================== test %s fp32 ==================================", Yolo::type_name(type));
+    INFO("===================== test %s %s ==================================", Yolo::type_name(type), mode_name);
 
     const char* name = nullptr;
     if(type == Yolo::Type::V5){
@@ -209,17 +212,17 @@ static void test_fp32(Yolo::Type type){
         return;
 
     string onnx_file = iLogger::format("%s.onnx", name);
-    string model_file = iLogger::format("%s.dynamic.batch.fp32.trtmodel", name);
-    int test_batch_size = 12;
+    string model_file = iLogger::format("%s.%s.trtmodel", name, mode_name);
+    int test_batch_size = 6;
     
     // 动态batch和静态batch，如果你想要弄清楚，请打开http://www.zifuture.com:8090/
     // 找到右边的二维码，扫码加好友后进群交流（免费哈，就是技术人员一起沟通）
     if(not iLogger::exists(model_file)){
         TRT::compile(
-            TRT::Mode::FP32,   // 编译方式有，FP32、FP16、INT8
+            mode,                       // 编译方式有，FP32、FP16、INT8
             test_batch_size,            // 指定编译的batch size
             onnx_file,                  // 需要编译的onnx文件
-            model_file                 // 储存的模型文件
+            model_file                  // 储存的模型文件
         );
     }
 
@@ -228,10 +231,14 @@ static void test_fp32(Yolo::Type type){
 
 int app_yolo(){
 
-    test_fp32(Yolo::Type::V5);
-    test_fp32(Yolo::Type::X);
+    iLogger::set_log_level(iLogger::LogLevel::Info);
+    test(Yolo::Type::X, TRT::Mode::FP32);
+    test(Yolo::Type::X, TRT::Mode::FP16);
     test_int8(Yolo::Type::X);
+    test(Yolo::Type::V5, TRT::Mode::FP32);
+    test(Yolo::Type::V5, TRT::Mode::FP16);
     test_int8(Yolo::Type::V5);
-    test_plugin();
+    test_plugin(TRT::Mode::FP32);
+    test_plugin(TRT::Mode::FP16);
     return 0;
 }
