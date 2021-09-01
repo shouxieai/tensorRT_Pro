@@ -40,7 +40,6 @@
 /build
 /workspace/*.avi
 /workspace/.ipynb_checkpoints
-/workspace/*.ipynb
 /workspace/*_result
 /workspace/face/library_draw
 /workspace/face/result

@@ -756,8 +756,19 @@ PYBIND11_MODULE(libtrtpyc, m) {
 			func(current, count, files, tensor);
 		};
 	});
+
+	py::enum_<iLogger::LogLevel>(m, "LogLevel")
+		.value("Debug",   iLogger::LogLevel::Debug)
+		.value("Verbose", iLogger::LogLevel::Verbose)
+		.value("Info",    iLogger::LogLevel::Info)
+		.value("Warning", iLogger::LogLevel::Warning)
+		.value("Error",   iLogger::LogLevel::Error)
+		.value("Fatal",   iLogger::LogLevel::Fatal);
+
 	m.def("set_devie", [](int device_id){TRT::set_device(device_id);});
 	m.def("get_devie", [](){return TRT::get_device();});
+	m.def("set_log_level", [](iLogger::LogLevel level){iLogger::set_log_level(level);});
+	m.def("get_log_level", [](){return iLogger::get_log_level();});
 	m.def("random_color", [](int idd){return iLogger::random_color(idd);});
 }
 #endif // HAS_PYTHON

@@ -8,20 +8,25 @@
 #include <tuple>
 #include <time.h>
 
-#define ILOGGER_VERBOSE				4
-#define ILOGGER_INFO				3
-#define ILOGGER_WARNING			    2
-#define ILOGGER_ERROR				1
-#define ILOGGER_FATAL				0
-#define INFOV(...)			iLogger::__log_func(__FILE__, __LINE__, ILOGGER_VERBOSE, __VA_ARGS__)
-#define INFO(...)			iLogger::__log_func(__FILE__, __LINE__, ILOGGER_INFO, __VA_ARGS__)
-#define INFOW(...)			iLogger::__log_func(__FILE__, __LINE__, ILOGGER_WARNING, __VA_ARGS__)
-#define INFOE(...)			iLogger::__log_func(__FILE__, __LINE__, ILOGGER_ERROR, __VA_ARGS__)
-#define INFOF(...)			iLogger::__log_func(__FILE__, __LINE__, ILOGGER_FATAL, __VA_ARGS__)
-
 namespace iLogger{
 
     using namespace std;
+
+    enum class LogLevel : int{
+        Debug   = 5,
+        Verbose = 4,
+        Info    = 3,
+        Warning = 2,
+        Error   = 1,
+        Fatal   = 0
+    };
+
+    #define INFOD(...)			iLogger::__log_func(__FILE__, __LINE__, iLogger::LogLevel::Debug, __VA_ARGS__)
+    #define INFOV(...)			iLogger::__log_func(__FILE__, __LINE__, iLogger::LogLevel::Verbose, __VA_ARGS__)
+    #define INFO(...)			iLogger::__log_func(__FILE__, __LINE__, iLogger::LogLevel::Info, __VA_ARGS__)
+    #define INFOW(...)			iLogger::__log_func(__FILE__, __LINE__, iLogger::LogLevel::Warning, __VA_ARGS__)
+    #define INFOE(...)			iLogger::__log_func(__FILE__, __LINE__, iLogger::LogLevel::Error, __VA_ARGS__)
+    #define INFOF(...)			iLogger::__log_func(__FILE__, __LINE__, iLogger::LogLevel::Fatal, __VA_ARGS__)
 
     string date_now();
     string time_now();
@@ -75,13 +80,13 @@ namespace iLogger{
     int while_loop();
 
     // 关于logger的api
-    const char* level_string(int level);
+    const char* level_string(LogLevel level);
     void set_logger_save_directory(const string& loggerDirectory);
 
     // 当日志的级别低于这个设置时，会打印出来，否则会直接跳过
-    void set_log_level(int level);
-    int get_log_level();
-    void __log_func(const char* file, int line, int level, const char* fmt, ...);
+    void set_log_level(LogLevel level);
+    LogLevel get_log_level();
+    void __log_func(const char* file, int line, LogLevel level, const char* fmt, ...);
     void destroy_logger();
 
     string base64_decode(const string& base64);

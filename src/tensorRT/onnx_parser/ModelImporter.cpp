@@ -244,7 +244,7 @@ Status importInput(ImporterContext* ctx, ::ONNX_NAMESPACE::ValueInfoProto const&
         nvinfer1::Dims origin_dims = trt_dims;
         ASSERT_INPUT(trt_dims.nbDims == dims_setup->nbDims && "Setup nbDims mismatch.", ErrorCode::kINVALID_VALUE, input.name());
         trt_dims = *dims_setup;
-        LOG_WARNING("Setup network input: " << input.name() << ", final dimensions: " << trt_dims << ", origin dimensions: " << origin_dims << ", setup dimensions: " << *dims_setup);
+        LOG_INFO("Setup network input: " << input.name() << ", final dimensions: " << trt_dims << ", origin dimensions: " << origin_dims << ", setup dimensions: " << *dims_setup);
     }else{
         trt_dims.d[0] = -1;
     }

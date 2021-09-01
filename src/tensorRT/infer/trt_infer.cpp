@@ -19,14 +19,17 @@ public:
 		if (severity == Severity::kINTERNAL_ERROR) {
 			INFOE("NVInfer INTERNAL_ERROR: %s", msg);
 			abort();
-		}
-		else if (severity == Severity::kERROR) {
-			INFOE("NVInfer ERROR: %s", msg);
+		}else if (severity == Severity::kERROR) {
+			INFOE("NVInfer: %s", msg);
 		}
 		else  if (severity == Severity::kWARNING) {
-			INFOW("NVInfer WARNING: %s", msg);
-		}else{
-			//INFO("NVInfer INFOV: %s", msg);
+			INFOW("NVInfer: %s", msg);
+		}
+		else  if (severity == Severity::kINFO) {
+			INFOV("NVInfer: %s", msg);
+		}
+		else {
+			INFOD("%s", msg);
 		}
 	}
 };
@@ -157,7 +160,7 @@ namespace TRT {
 
 	void InferImpl::print(){
 		if(!context_){
-			INFO("Infer print, nullptr.");
+			INFOW("Infer print, nullptr.");
 			return;
 		}
 

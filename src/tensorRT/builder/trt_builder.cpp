@@ -27,13 +27,16 @@ public:
 			INFOE("NVInfer INTERNAL_ERROR: %s", msg);
 			abort();
 		}else if (severity == Severity::kERROR) {
-			INFOE("NVInfer ERROR: %s", msg);
+			INFOE("NVInfer: %s", msg);
 		}
 		else  if (severity == Severity::kWARNING) {
-			INFOW("NVInfer WARNING: %s", msg);
+			INFOW("NVInfer: %s", msg);
+		}
+		else  if (severity == Severity::kINFO) {
+			INFOV("NVInfer: %s", msg);
 		}
 		else {
-			//INFOV("%s", msg);
+			INFOD("%s", msg);
 		}
 	}
 };
@@ -428,7 +431,7 @@ namespace TRT {
 				if (iLogger::exists(int8EntropyCalibratorFile)) {
 					entropyCalibratorData = iLogger::load_file(int8EntropyCalibratorFile);
 					if (entropyCalibratorData.empty()) {
-						INFO("entropyCalibratorFile is set as: %s, but we read is empty.", int8EntropyCalibratorFile.c_str());
+						INFOE("entropyCalibratorFile is set as: %s, but we read is empty.", int8EntropyCalibratorFile.c_str());
 						return false;
 					}
 					hasEntropyCalibrator = true;
@@ -437,29 +440,29 @@ namespace TRT {
 			
 			if (hasEntropyCalibrator) {
 				if (!int8ImageDirectory.empty()) {
-					INFO("imageDirectory is ignore, when entropyCalibratorFile is set");
+					INFOW("imageDirectory is ignore, when entropyCalibratorFile is set");
 				}
 			}
 			else {
 				if (int8process == nullptr) {
-					INFO("int8process must be set. when Mode is '%s'", mode_string(mode));
+					INFOE("int8process must be set. when Mode is '%s'", mode_string(mode));
 					return false;
 				}
 
 				entropyCalibratorFiles = iLogger::find_files(int8ImageDirectory, "*.jpg;*.png;*.bmp;*.jpeg;*.tiff");
 				if (entropyCalibratorFiles.empty()) {
-					INFO("Can not find any images(jpg/png/bmp/jpeg/tiff) from directory: %s", int8ImageDirectory.c_str());
+					INFOE("Can not find any images(jpg/png/bmp/jpeg/tiff) from directory: %s", int8ImageDirectory.c_str());
 					return false;
 				}
 			}
 		}
 		else {
 			if (hasEntropyCalibrator) {
-				INFO("int8EntropyCalibratorFile is ignore, when Mode is '%s'", mode_string(mode));
+				INFOW("int8EntropyCalibratorFile is ignore, when Mode is '%s'", mode_string(mode));
 			}
 		}
 
-		INFO("Compile %s %s.", mode_string(mode), source.descript().c_str());
+		INFOV("Compile %s %s.", mode_string(mode), source.descript().c_str());
 		shared_ptr<IBuilder> builder(createInferBuilder(gLogger), destroy_nvidia_pointer<IBuilder>);
 		if (builder == nullptr) {
 			INFOE("Can not create builder.");
@@ -500,24 +503,24 @@ namespace TRT {
 			//from onnx is not markOutput
 			onnxParser.reset(nvonnxparser::createParser(*network, gLogger, dims_setup, explicit_batch_size), destroy_nvidia_pointer<nvonnxparser::IParser>);
 			if (onnxParser == nullptr) {
-				INFO("Can not create parser.");
+				INFOE("Can not create parser.");
 				return false;
 			}
 
 			if(source.type() == ModelSourceType::OnnX){
 				if (!onnxParser->parseFromFile(source.onnxmodel().c_str(), 1)) {
-					INFO("Can not parse OnnX file: %s", source.onnxmodel().c_str());
+					INFOE("Can not parse OnnX file: %s", source.onnxmodel().c_str());
 					return false;
 				}
 			}else{
 				if (!onnxParser->parseFromData(source.onnx_data(), source.onnx_data_size(), 1)) {
-					INFO("Can not parse OnnX file: %s", source.onnxmodel().c_str());
+					INFOE("Can not parse OnnX file: %s", source.onnxmodel().c_str());
 					return false;
 				}
 			}
 		}
 		else {
-			INFO("not implementation source type: %d", source.type());
+			INFOE("not implementation source type: %d", source.type());
 			Assert(false);
 		}
 
@@ -546,29 +549,29 @@ namespace TRT {
 		}
 
 		size_t _1_GB = 1 << 30;
-		INFO("Input shape is %s", join_dims(vector<int>(inputDims.d, inputDims.d + inputDims.nbDims)).c_str());
-		INFO("Set max batch size = %d", maxBatchSize);
-		INFO("Set max workspace size = %.2f MB", _1_GB / 1024.0f / 1024.0f);
+		INFOV("Input shape is %s", join_dims(vector<int>(inputDims.d, inputDims.d + inputDims.nbDims)).c_str());
+		INFOV("Set max batch size = %d", maxBatchSize);
+		INFOV("Set max workspace size = %.2f MB", _1_GB / 1024.0f / 1024.0f);
 
 		int net_num_input = network->getNbInputs();
-		INFO("Network has %d inputs:", net_num_input);
+		INFOV("Network has %d inputs:", net_num_input);
 		vector<string> input_names(net_num_input);
 		for(int i = 0; i < net_num_input; ++i){
 			auto tensor = network->getInput(i);
 			auto dims = tensor->getDimensions();
 			auto dims_str = join_dims(vector<int>(dims.d, dims.d+dims.nbDims));
-			INFO("      %d.[%s] shape is %s", i, tensor->getName(), dims_str.c_str());
+			INFOV("      %d.[%s] shape is %s", i, tensor->getName(), dims_str.c_str());
 
 			input_names[i] = tensor->getName();
 		}
 
 		int net_num_output = network->getNbOutputs();
-		INFO("Network has %d outputs:", net_num_output);
+		INFOV("Network has %d outputs:", net_num_output);
 		for(int i = 0; i < net_num_output; ++i){
 			auto tensor = network->getOutput(i);
 			auto dims = tensor->getDimensions();
 			auto dims_str = join_dims(vector<int>(dims.d, dims.d+dims.nbDims));
-			INFO("      %d.[%s] shape is %s", i, tensor->getName(), dims_str.c_str());
+			INFOV("      %d.[%s] shape is %s", i, tensor->getName(), dims_str.c_str());
 		}
 
 		int net_num_layers = network->getNbLayers();
@@ -630,11 +633,14 @@ namespace TRT {
 			profile->setDimensions(input->getName(), nvinfer1::OptProfileSelector::kMAX, input_dims);
 		}
 		config->addOptimizationProfile(profile);
+
+		auto timing_cache = shared_ptr<nvinfer1::ITimingCache>(config->createTimingCache(nullptr, 0), [](nvinfer1::ITimingCache* ptr){ptr->reset();});
+		config->setTimingCache(*timing_cache, false);
 		// config->setFlag(BuilderFlag::kGPU_FALLBACK);
 		// config->setDefaultDeviceType(DeviceType::kDLA);
 		// config->setDLACore(0);
 
-		INFO("Building engine...");
+		INFOV("Building engine...");
 		auto time_start = iLogger::timestamp_now();
 		shared_ptr<ICudaEngine> engine(builder->buildEngineWithConfig(*network, *config), destroy_nvidia_pointer<ICudaEngine>);
 		if (engine == nullptr) {
@@ -645,16 +651,16 @@ namespace TRT {
 		if (mode == Mode::INT8) {
 			if (!hasEntropyCalibrator) {
 				if (!int8EntropyCalibratorFile.empty()) {
-					INFO("Save calibrator to: %s", int8EntropyCalibratorFile.c_str());
+					INFOV("Save calibrator to: %s", int8EntropyCalibratorFile.c_str());
 					iLogger::save_file(int8EntropyCalibratorFile, int8Calibrator->getEntropyCalibratorData());
 				}
 				else {
-					INFO("No set entropyCalibratorFile, and entropyCalibrator will not save.");
+					INFOV("No set entropyCalibratorFile, and entropyCalibrator will not save.");
 				}
 			}
 		}
 
-		INFO("Build done %lld ms !", iLogger::timestamp_now() - time_start);
+		INFOV("Build done %lld ms !", iLogger::timestamp_now() - time_start);
 		
 		// serialize the engine, then close everything down
 		shared_ptr<IHostMemory> seridata(engine->serialize(), destroy_nvidia_pointer<IHostMemory>);

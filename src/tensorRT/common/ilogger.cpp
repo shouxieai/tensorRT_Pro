@@ -63,14 +63,15 @@ namespace iLogger{
 
     using namespace std;
 
-    const char* level_string(int level){
+    const char* level_string(LogLevel level){
         switch (level){
-        case ILOGGER_VERBOSE: return "verbo";
-        case ILOGGER_INFO: return "info";
-        case ILOGGER_WARNING: return "warn";
-        case ILOGGER_ERROR: return "error";
-        case ILOGGER_FATAL: return "fatal";
-        default: return "unknow";
+            case LogLevel::Debug: return "debug";
+            case LogLevel::Verbose: return "verbo";
+            case LogLevel::Info: return "info";
+            case LogLevel::Warning: return "warn";
+            case LogLevel::Error: return "error";
+            case LogLevel::Fatal: return "fatal";
+            default: return "unknow";
         }
     }
 
@@ -363,7 +364,7 @@ namespace iLogger{
     static struct Logger{
         mutex logger_lock_;
         string logger_directory;
-        int logger_level{ILOGGER_INFO};
+        LogLevel logger_level{LogLevel::Warning};
         vector<string> cache_, local_;
         shared_ptr<thread> flush_thread_;
         atomic<bool> keep_run_{false};
@@ -455,7 +456,7 @@ namespace iLogger{
 #endif
         }
 
-        void set_logger_level(int level){
+        void set_logger_level(LogLevel level){
             logger_level = level;
         }
 
@@ -516,15 +517,15 @@ namespace iLogger{
         __g_logger.set_save_directory(loggerDirectory);
     }
 
-    void set_log_level(int level){
+    void set_log_level(LogLevel level){
         __g_logger.set_logger_level(level);
     }
 
-    int get_log_level(){
+    LogLevel get_log_level(){
         return __g_logger.logger_level;
     }
 
-    void __log_func(const char* file, int line, int level, const char* fmt, ...) {
+    void __log_func(const char* file, int line, LogLevel level, const char* fmt, ...) {
 
         if(level > __g_logger.logger_level)
             return;
@@ -538,34 +539,40 @@ namespace iLogger{
         int n = snprintf(buffer, sizeof(buffer), "[%s]", now.c_str());
 
 #if defined(U_OS_WINDOWS)
-        if (level == ILOGGER_FATAL or level == ILOGGER_ERROR) {
+        if (level == LogLevel::Fatal or level == LogLevel::Error) {
             n += snprintf(buffer + n, sizeof(buffer) - n, "[%s]", level_string(level));
         }
-        else if (level == ILOGGER_WARNING) {
+        else if (level == LogLevel::Warning) {
             n += snprintf(buffer + n, sizeof(buffer) - n, "[%s]", level_string(level));
         }
         else {
             n += snprintf(buffer + n, sizeof(buffer) - n, "[%s]", level_string(level));
         }
 #elif defined(U_OS_LINUX)
-        if (level == ILOGGER_FATAL or level == ILOGGER_ERROR) {
+        if (level == LogLevel::Fatal or level == LogLevel::Error) {
             n += snprintf(buffer + n, sizeof(buffer) - n, "[\033[31m%s\033[0m]", level_string(level));
         }
-        else if (level == ILOGGER_WARNING) {
+        else if (level == LogLevel::Warning) {
             n += snprintf(buffer + n, sizeof(buffer) - n, "[\033[33m%s\033[0m]", level_string(level));
         }
+        else if (level == LogLevel::Info) {
+            n += snprintf(buffer + n, sizeof(buffer) - n, "[\033[35m%s\033[0m]", level_string(level));
+        }
+        else if (level == LogLevel::Verbose) {
+            n += snprintf(buffer + n, sizeof(buffer) - n, "[\033[34m%s\033[0m]", level_string(level));
+        }
         else {
-            n += snprintf(buffer + n, sizeof(buffer) - n, "[\033[32m%s\033[0m]", level_string(level));
+            n += snprintf(buffer + n, sizeof(buffer) - n, "[%s]", level_string(level));
         }
 #endif
 
         n += snprintf(buffer + n, sizeof(buffer) - n, "[%s:%d]:", filename.c_str(), line);
         vsnprintf(buffer + n, sizeof(buffer) - n, fmt, vl);
 
-        if (level == ILOGGER_FATAL or level == ILOGGER_ERROR) {
+        if (level == LogLevel::Fatal or level == LogLevel::Error) {
             fprintf(stderr, "%s\n", buffer);
         }
-        else if (level == ILOGGER_WARNING) {
+        else if (level == LogLevel::Warning) {
             fprintf(stdout, "%s\n", buffer);
         }
         else {
@@ -578,7 +585,7 @@ namespace iLogger{
             remove_color_text(buffer);
     #endif 
             __g_logger.write(buffer);
-            if (level == ILOGGER_FATAL) {
+            if (level == LogLevel::Fatal) {
                 __g_logger.flush();
                 fflush(stdout);
                 abort();

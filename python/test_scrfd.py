@@ -5,6 +5,7 @@ import trtpy as tp
 
 # 把工作目录切换过去
 os.chdir("../workspace/")
+tp.set_log_level(tp.LogLevel.Verbose)
 
 def compile_model(width, height):
 

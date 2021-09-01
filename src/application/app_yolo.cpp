@@ -112,7 +112,7 @@ static void test_plugin(){
     // 通过以下代码即可生成plugin.onnx
     // cd workspace
     // python test_plugin.py
-    iLogger::set_log_level(ILOGGER_VERBOSE);
+    iLogger::set_log_level(iLogger::LogLevel::Verbose);
     TRT::set_device(0);
 
     // plugin.onnx是通过test_plugin.py生成的

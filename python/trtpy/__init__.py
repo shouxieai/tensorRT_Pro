@@ -19,6 +19,15 @@ def lazy_import():
     import torch
 
 
+class LogLevel(Enum):
+    Debug   = 5
+    Verbose = 4
+    Info    = 3
+    Warning = 2
+    Error   = 1
+    Fatal   = 0
+
+
 class HostFloatPointer(object):
     ptr    : int
     def __getitem__(self, index)->float: ...
@@ -264,6 +273,7 @@ class Yolo(object):
     def crop_face_and_landmark(self, image : np.ndarray, facebox : FaceBox, scale_box : float = 1.5)->np.ndarray: ...
 
 def random_color(idd : int)->Tuple[int, int, int]: ...
+def set_log_level(level : LogLevel): ...
 
 from .libtrtpyc import *
 
