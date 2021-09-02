@@ -243,7 +243,7 @@ int app_arcface_tracker(){
     if(!compile_models())
         return 0;
 
-    auto detector = RetinaFace::create_infer("mb_retinaface.640x480.fp32.trtmodel", 0, 0.7f);
+    auto detector = RetinaFace::create_infer("mb_retinaface.640x480.FP32.trtmodel", 0, 0.7f);
     auto arcface  = Arcface::create_infer("arcface_iresnet50.fp32.trtmodel", 0);
     auto library  = build_library(detector, arcface);
 

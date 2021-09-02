@@ -70,7 +70,7 @@ int app_fall_recognize(){
         (int)cap.get(cv::CAP_PROP_FRAME_HEIGHT)
     );
 
-    //auto remote_show = create_zmq_remote_show();
+    auto remote_show = create_zmq_remote_show();
     INFO("这个程序需要展示，请使用tools/show.py做客户端，然后启用这里的remote_show进行实时展示");
 
     auto config  = DeepSORT::TrackerConfig();
@@ -129,7 +129,7 @@ int app_fall_recognize(){
                 //INFO("Predict is [%s], %.2f %%", label_name, confidence * 100);
            }
         }
-        //remote_show->post(image);
+        remote_show->post(image);
         //writer.write(image);
     }
     INFO("Done");
