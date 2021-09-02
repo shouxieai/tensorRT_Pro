@@ -53,3 +53,5 @@ __pycache__
 /python/dist
 /python/build
 /src/application/app_high_performance
+/workspace/formtest.ipynb
+/workspace/meta.json
