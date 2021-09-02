@@ -231,7 +231,7 @@ static void test(Yolo::Type type, TRT::Mode mode){
 
 int app_yolo(){
 
-    iLogger::set_log_level(iLogger::LogLevel::Info);
+    //iLogger::set_log_level(iLogger::LogLevel::Info);
     test(Yolo::Type::X, TRT::Mode::FP32);
     test(Yolo::Type::X, TRT::Mode::FP16);
     test_int8(Yolo::Type::X);

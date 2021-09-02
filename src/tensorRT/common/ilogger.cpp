@@ -364,7 +364,7 @@ namespace iLogger{
     static struct Logger{
         mutex logger_lock_;
         string logger_directory;
-        LogLevel logger_level{LogLevel::Warning};
+        LogLevel logger_level{LogLevel::Info};
         vector<string> cache_, local_;
         shared_ptr<thread> flush_thread_;
         atomic<bool> keep_run_{false};
