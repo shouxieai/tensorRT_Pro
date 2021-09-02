@@ -30,6 +30,17 @@ public:
         run_ = false;
         cond_.notify_all();
 
+        ////////////////////////////////////////// cleanup jobs
+        {
+            std::unique_lock<std::mutex> l(jobs_lock_);
+            while(!jobs_.empty()){
+                auto& item = jobs_.front();
+                if(item.pro)
+                    item.pro->set_value(Output());
+                jobs_.pop();
+            }
+        };
+
         if(worker_){
             worker_->join();
             worker_.reset();
@@ -108,6 +119,7 @@ protected:
 
         if(!run_) return false;
         
+        fetch_jobs.clear();
         for(int i = 0; i < max_size && !jobs_.empty(); ++i){
             fetch_jobs.emplace_back(std::move(jobs_.front()));
             jobs_.pop();
@@ -122,7 +134,7 @@ protected:
             return !run_ || !jobs_.empty();
         });
 
-        if(!run_) false;
+        if(!run_) return false;
         
         fetch_job = std::move(jobs_.front());
         jobs_.pop();

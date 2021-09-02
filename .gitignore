@@ -52,3 +52,4 @@ __pycache__
 /python/trtpy.egg-info
 /python/dist
 /python/build
+/src/application/app_high_performance

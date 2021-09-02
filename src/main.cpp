@@ -12,6 +12,7 @@ int app_arcface();
 int app_arcface_video();
 int app_arcface_tracker();
 int app_scrfd();
+//int app_high_performance();
 
 void test_all(){
     app_yolo();
@@ -48,16 +49,18 @@ int main(int argc, char** argv){
         app_arcface_tracker();
     }else if(strcmp(method, "scrfd") == 0){
         app_scrfd();
+    //}else if(strcmp(method, "high_perf") == 0){
+        //app_high_performance();
     }else if(strcmp(method, "test_all") == 0){
         test_all();
     }else{
         printf(
             "Help: \n"
-            "    ./pro method[yolo、alphapose、fall_recognize、retinaface、arcface、arcface_video、arcface_tracker]\n"
+            "    ./pro method[yolo、alphapose、fall、retinaface、arcface、arcface_video、arcface_tracker]\n"
             "\n"
             "    ./pro yolo\n"
             "    ./pro alphapose\n"
-            "    ./pro fall_recognize\n"
+            "    ./pro fall\n"
         );
     }
     return 0;

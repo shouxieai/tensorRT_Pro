@@ -22,7 +22,7 @@ cu_mk   := $(cu_objs:.cuo=.cumk)
 # 5. cuda10.2，也可以是11.x看搭配（请自行下载安装）
 
 lean_protobuf  := /data/sxai/lean/protobuf3.11.4
-lean_tensor_rt := /data/sxai/lean/TensorRT-8.0.1.6
+lean_tensor_rt := /data/sxai/lean/TensorRT-8.0.1.6-cuda10.2-cudnn8.2
 lean_cudnn     := /data/sxai/lean/cudnn8.2.2.26
 lean_opencv    := /data/sxai/lean/opencv4.2.0
 lean_cuda      := /data/sxai/lean/cuda10.2
@@ -67,8 +67,8 @@ library_paths := $(foreach item,$(library_paths),-L$(item))
 link_librarys := $(foreach item,$(link_librarys),-l$(item))
 
 # 如果是其他显卡，请修改-gencode=arch=compute_75,code=sm_75为对应显卡的能力
-cpp_compile_flags := -std=c++11 -fPIC -m64 -g -fopenmp -w -O3 $(support_define)
-cu_compile_flags  := -std=c++11 -m64 -Xcompiler -fPIC -g -w -gencode=arch=compute_75,code=sm_75 -O3 $(support_define)
+cpp_compile_flags := -std=c++11 -fPIC -m64 -g -fopenmp -w -O0 $(support_define)
+cu_compile_flags  := -std=c++11 -m64 -Xcompiler -fPIC -g -w -gencode=arch=compute_75,code=sm_75 -O0 $(support_define)
 link_flags        := -pthread -fopenmp -Wl,-rpath='$$ORIGIN'
 
 cpp_compile_flags += $(include_paths)
@@ -138,6 +138,9 @@ test_all : workspace/pro
 
 scrfd : workspace/pro
 	@cd workspace && ./pro scrfd
+
+high_perf : workspace/pro
+	@cd workspace && ./pro high_perf
 
 pytorch : trtpyc
 	@cd python && python test_torch.py

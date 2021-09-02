@@ -1,8 +1,8 @@
 
 
 #include "HSwish.hpp"
-
 #include <cuda_fp16.hpp>
+
 static __global__ void hswish_kernel_fp32(float* input, float* output, int edge) {
 
     KernelPositionBlock;
