@@ -106,9 +106,10 @@ namespace Yolo{
             if(type == Type::V5){
                 normalize_ = CUDAKernel::Norm::alpha_beta(1 / 255.0f, 0.0f, CUDAKernel::ChannelType::Invert);
             }else if(type == Type::X){
-                float mean[] = {0.485, 0.456, 0.406};
-                float std[]  = {0.229, 0.224, 0.225};
-                normalize_ = CUDAKernel::Norm::mean_std(mean, std, 1/255.0f, CUDAKernel::ChannelType::Invert);
+                //float mean[] = {0.485, 0.456, 0.406};
+                //float std[]  = {0.229, 0.224, 0.225};
+                //normalize_ = CUDAKernel::Norm::mean_std(mean, std, 1/255.0f, CUDAKernel::ChannelType::Invert);
+                normalize_ = CUDAKernel::Norm::None();
             }else{
                 INFOE("Unsupport type %d", type);
             }

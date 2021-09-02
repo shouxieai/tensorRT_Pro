@@ -94,10 +94,11 @@ static void forward_engine(const string& engine_file, Yolo::Type type){
             cv::rectangle(image, cv::Point(obj.left, obj.top), cv::Point(obj.right, obj.bottom), cv::Scalar(b, g, r), 5);
 
             // 绘制类别名字
-            auto name = cocolabels[obj.class_label];
-            int width = cv::getTextSize(name, 0, 1, 2, nullptr).width + 10;
+            auto name    = cocolabels[obj.class_label];
+            auto caption = iLogger::format("%s %.2f", name, obj.confidence);
+            int width    = cv::getTextSize(caption, 0, 1, 2, nullptr).width + 10;
             cv::rectangle(image, cv::Point(obj.left-3, obj.top-33), cv::Point(obj.left + width, obj.top), cv::Scalar(b, g, r), -1);
-            cv::putText(image, iLogger::format("%s", name), cv::Point(obj.left, obj.top-5), 0, 1, cv::Scalar::all(0), 2, 16);
+            cv::putText(image, caption, cv::Point(obj.left, obj.top-5), 0, 1, cv::Scalar::all(0), 2, 16);
         }
 
         string file_name = iLogger::file_name(files[i], false);
@@ -148,30 +149,30 @@ static void test_plugin(TRT::Mode mode){
     INFO("output %f, output_real = %f", output->at<float>(0, 0), output_real);
 }
 
-static void test_int8(Yolo::Type type){
+static void test_int8(Yolo::Type type, const string& model){
 
-    INFO("===================== test %s int8 ==================================", Yolo::type_name(type));
-    auto int8process = [](int current, int count, const vector<string>& files, shared_ptr<TRT::Tensor>& tensor){
+    const char* name = model.c_str();
+    INFO("===================== test %s int8 %s ==================================", Yolo::type_name(type), name);
+    auto int8process = [=](int current, int count, const vector<string>& files, shared_ptr<TRT::Tensor>& tensor){
 
         INFO("Int8 %d / %d", current, count);
 
         // 按道理，这里的输入，应该按照推理的方式进行。这里我简单模拟了resize的方式输入
         for(int i = 0; i < files.size(); ++i){
             auto image = cv::imread(files[i]);
-            cv::cvtColor(image, image, cv::COLOR_BGR2RGB);
-            cv::resize(image, image, cv::Size(tensor->size(3), tensor->size(2)));
-            float mean[] = {0.485, 0.456, 0.406};
-            float std[]  = {0.229, 0.224, 0.225};
-            tensor->set_norm_mat(i, image, mean, std);
+
+            if(type == Yolo::Type::V5){
+                cv::cvtColor(image, image, cv::COLOR_BGR2RGB);
+                cv::resize(image, image, cv::Size(tensor->size(3), tensor->size(2)));
+                image.convertTo(image, CV_32F, 1 / 255.0f);
+                tensor->set_mat(i, image);
+            }else if(type == Yolo::Type::X){
+                cv::resize(image, image, cv::Size(tensor->size(3), tensor->size(2)));
+                image.convertTo(image, CV_32F);
+                tensor->set_mat(i, image);
+            }
         }
     };
-
-    const char* name = nullptr;
-    if(type == Yolo::Type::V5){
-        name = "yolov5m";
-    }else if(type == Yolo::Type::X){
-        name = "yolox_m";
-    }
 
     if(not requires(name))
         return;
@@ -195,18 +196,13 @@ static void test_int8(Yolo::Type type){
     forward_engine(model_file, type);
 }
 
-static void test(Yolo::Type type, TRT::Mode mode){
+static void test(Yolo::Type type, TRT::Mode mode, const string& model){
 
     auto mode_name = TRT::mode_string(mode);
     TRT::set_device(0);
-    INFO("===================== test %s %s ==================================", Yolo::type_name(type), mode_name);
 
-    const char* name = nullptr;
-    if(type == Yolo::Type::V5){
-        name = "yolov5m";
-    }else if(type == Yolo::Type::X){
-        name = "yolox_m";
-    }
+    const char* name = model.c_str();
+    INFO("===================== test %s %s %s ==================================", Yolo::type_name(type), mode_name, name);
 
     if(not requires(name))
         return;
@@ -232,13 +228,13 @@ static void test(Yolo::Type type, TRT::Mode mode){
 int app_yolo(){
 
     //iLogger::set_log_level(iLogger::LogLevel::Info);
-    test(Yolo::Type::X, TRT::Mode::FP32);
-    test(Yolo::Type::X, TRT::Mode::FP16);
-    test_int8(Yolo::Type::X);
-    test(Yolo::Type::V5, TRT::Mode::FP32);
-    test(Yolo::Type::V5, TRT::Mode::FP16);
-    test_int8(Yolo::Type::V5);
-    test_plugin(TRT::Mode::FP32);
-    test_plugin(TRT::Mode::FP16);
+    test(Yolo::Type::X, TRT::Mode::FP32, "yolox_s");
+    test(Yolo::Type::V5, TRT::Mode::FP32, "yolov5s");
+    test(Yolo::Type::X, TRT::Mode::FP16, "yolox_s");
+    test(Yolo::Type::V5, TRT::Mode::FP16, "yolov5s");
+    test_int8(Yolo::Type::X, "yolox_s");
+    test_int8(Yolo::Type::V5, "yolov5s");
+    // test_plugin(TRT::Mode::FP32);
+    // test_plugin(TRT::Mode::FP16);
     return 0;
 }

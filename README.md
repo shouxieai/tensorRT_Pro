@@ -106,7 +106,7 @@ z.append(y.view(bs, self.na * ny * nx, self.no))
 3. 导出onnx模型
 ```bash
 cd yolov5
-python export.py
+python export.py --weights=yolov5s.pt --dynamic --opset=11
 ```
 4. 复制模型并执行
 ```bash
@@ -125,7 +125,14 @@ cd YOLOX
 ```
 
 2. 修改代码
+- 这是保证int8能够顺利编译和性能提升的关键，否则提示`Missing scale and zero-point for tensor (Unnamed Layer* 686)`
+- 这是保证模型推理正常顺利的关键，虽然部分情况不修改也可以执行
 ```Python
+# yolox/models/yolo_head.py的206行forward函数，替换为下面代码
+# self.hw = [x.shape[-2:] for x in outputs]
+self.hw = [list(map(int, x.shape[-2:])) for x in outputs]
+
+
 # yolox/models/yolo_head.py的208行forward函数，替换为下面代码
 # [batch, n_anchors_all, 85]
 # outputs = torch.cat(
@@ -136,6 +143,7 @@ outputs = torch.cat(
     [proc_view(x) for x in outputs], dim=2
 ).permute(0, 2, 1)
 
+
 # yolox/models/yolo_head.py的253行decode_outputs函数，替换为下面代码
 #outputs[..., :2] = (outputs[..., :2] + grids) * strides
 #outputs[..., 2:4] = torch.exp(outputs[..., 2:4]) * strides
@@ -144,6 +152,7 @@ xy = (outputs[..., :2] + grids) * strides
 wh = torch.exp(outputs[..., 2:4]) * strides
 return torch.cat((xy, wh, outputs[..., 4:]), dim=-1)
 
+
 # tools/export_onnx.py的77行
 model.head.decode_in_inference = True
 ```
@@ -151,7 +160,7 @@ model.head.decode_in_inference = True
 3. 导出onnx模型
 ```bash
 # 下载模型，或许你需要翻墙
-# wget https://github.com/Megvii-BaseDetection/storage/releases/download/0.0.1/yolox_m.pth
+# wget https://github.com/Megvii-BaseDetection/YOLOX/releases/download/0.1.1rc0/yolox_m.pth
 
 # 导出模型
 python tools/export_onnx.py -c yolox_m.pth -f exps/default/yolox_m.py --output-name=yolox_m.onnx
