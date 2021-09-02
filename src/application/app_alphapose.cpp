@@ -52,8 +52,7 @@ int app_alphapose(){
             test_batch_size,            // 指定编译的batch size
             onnx_file,                  // 需要编译的onnx文件
             model_file,                 // 储存的模型文件
-            {},                         // 指定需要重定义的输入shape，这里可以对onnx的输入shape进行重定义
-            false                       // 是否采用动态batch维度，true采用，false不采用，使用静态固定的batch size
+            {}                         // 指定需要重定义的输入shape，这里可以对onnx的输入shape进行重定义
         );
     }
    
