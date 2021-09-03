@@ -574,7 +574,6 @@ def upbound(value, align=32):
 def load(file_or_data)->Infer:
 
     if isinstance(file_or_data, str):
-        print("Load file")
         return load_infer_file(file_or_data)
     else:
         return load_infer_data(file_or_data)
