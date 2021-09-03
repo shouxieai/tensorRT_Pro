@@ -27,7 +27,7 @@ lean_cudnn     := /data/sxai/lean/cudnn8.2.2.26
 lean_opencv    := /data/sxai/lean/opencv4.2.0
 lean_cuda      := /data/sxai/lean/cuda10.2
 lean_python    := /data/datav/newbb/lean/anaconda3/envs/torch1.8
-use_python     := true
+use_python     := false
 
 include_paths := src        \
 			src/application \

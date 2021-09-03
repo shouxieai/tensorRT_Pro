@@ -367,6 +367,7 @@ float* output_ptr = output->cpu<float>();
 - 请调用tensorRT/common/cuda_tools.hpp中的device_capability函数，查询这个显卡的计算能力，然后配置Makefile或者CMakeLists中的计算能力为对应即可
 - 例如`-gencode=arch=compute_75,code=sm_75`，例如3080Ti是86，则是：`-gencode=arch=compute_86,code=sm_86`
 - 否则你可能能正常编译，但是结果却是随机的，错误的。或者直接报错
+    - 根据型号参考这里：https://developer.nvidia.com/zh-cn/cuda-gpus#compute
 
 ## 一个插件的例子
 - 只需要定义必要的核函数和推理过程，完全隐藏细节，隐藏插件的序列化、反序列化、注入
