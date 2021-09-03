@@ -7,4 +7,4 @@
 
 # 对于Windows而言
 - Visual Studio 2017  （请大于等于2017）
-- [点击下载打包好的lean.zip](http://zifuture.com:1556/fs/sxai/lean.rar)
+- [点击下载打包好的lean.rar](http://zifuture.com:1556/fs/sxai/lean.rar)
