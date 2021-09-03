@@ -55,7 +55,7 @@ model = FooModel()
 torch.onnx.export(
     model, 
     (dummy_input1, dummy_input2), 
-    'plugin.onnx', 
+    'plugin.pluginonnx', 
     input_names=["input.0", "input.1"],
     output_names=["output.0"], 
     verbose=True, 

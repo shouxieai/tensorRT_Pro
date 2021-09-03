@@ -1,11 +1,15 @@
 ﻿
-// 以下语法，在windows下有效，linux无效
-
-//导入OpenCV，根据编译情况选择不同库
-#if defined(_DEBUG)
-#	pragma comment(lib, "opencv_world420d.lib")
+#if defined(_WIN32)
+#	define U_OS_WINDOWS
 #else
-#	pragma comment(lib, "opencv_world420.lib")
+#   define U_OS_LINUX
+#endif
+
+#ifdef U_OS_WINDOWS
+#if defined(_DEBUG)
+#	pragma comment(lib, "opencv_world346d.lib")
+#else
+#	pragma comment(lib, "opencv_world346.lib")
 #endif
 
 //导入cuda
@@ -17,11 +21,16 @@
 //导入tensorRT
 #pragma comment(lib, "nvinfer.lib")
 #pragma comment(lib, "nvinfer_plugin.lib")
-#pragma comment(lib, "nvparsers.lib")
+//#pragma comment(lib, "nvparsers.lib")
 
 #if defined(_DEBUG)
 #pragma comment(lib, "libprotobufd.lib")
 #else
 #pragma comment(lib, "libprotobuf.lib")
 #endif
-//#pragma comment(lib, "nvonnxparser.lib")
+
+#ifdef HAS_PYTHON
+#pragma comment(lib, "python37.lib")
+#endif
+
+#endif // U_OS_WINDOWS

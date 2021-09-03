@@ -22,7 +22,6 @@ namespace RetinaFace{
         ) = 0;
     };
 
-    // RAII，如果创建失败，返回空指针
     shared_ptr<Infer> create_infer(const string& engine_file, int gpuid, float confidence_threshold=0.5f, float nms_threshold=0.5f);
 
 }; // namespace RetinaFace

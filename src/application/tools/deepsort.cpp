@@ -11,9 +11,9 @@
 namespace DeepSORT {
 
     struct BBoxXYAH{
-        int center_x, center_y;   // 中心点
-        float aspect_ratio;       // 宽高比
-        int height;               // 高
+        int center_x, center_y;   
+        float aspect_ratio;       
+        int height;               
 
         BBoxXYAH() = default;
         BBoxXYAH(const Box &box) {
@@ -610,7 +610,7 @@ namespace DeepSORT {
             mean << boxah.center_x, boxah.center_y, boxah.aspect_ratio,
                 boxah.height, 0.0f, 0.0f, 0.0f, 0.0f;
 
-            // 初始状态
+            // 初始状态 **/
             Eigen::Matrix<float, 8, 1> std_val;
             // std_val << 2.0f * std_weight_position_ * boxah.height,
             //            2.0f * std_weight_position_ * boxah.height,
@@ -907,7 +907,6 @@ namespace DeepSORT {
                         boxah, false
                     );
 
-                    // 卡方检验
                     double cost_data = 0;
                     if (maha_distance > chi2inv95_2[3]) {
                         cost_data = 1e5;
@@ -927,7 +926,6 @@ namespace DeepSORT {
                 cost_matrix_data.push_back(cost_matrix_item);
             }
 
-            // 匈牙利算法
             HungarianAlgorithm HungAlgo;
             std::vector<int> assignment;
             double cost = HungAlgo.Solve(cost_matrix_data, assignment);

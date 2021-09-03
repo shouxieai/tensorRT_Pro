@@ -31,7 +31,6 @@ namespace AlphaPose{
             i2d[0] = scale;  i2d[1] = 0;      i2d[2] = -(box_.x - box_.width  * 1 * rate + pad_width * 0.5)  * scale + net_size.width  * 0.5;  
             i2d[3] = 0;      i2d[4] = scale;  i2d[5] = -(box_.y - box_.height * 1 * rate + pad_height * 0.5) * scale + net_size.height * 0.5;
 
-            // 有了i2d矩阵，我们求其逆矩阵，即可得到d2i（用以解码时还原到原始图像分辨率上）
             cv::Mat m2x3_i2d(2, 3, CV_32F, i2d);
             cv::Mat m2x3_d2i(2, 3, CV_32F, d2i);
             cv::invertAffineTransform(m2x3_i2d, m2x3_d2i);
@@ -42,7 +41,6 @@ namespace AlphaPose{
         }
     };
 
-    // 给定x、y坐标，经过仿射变换矩阵，进行映射
     static tuple<float, float> affine_project(float x, float y, float* pmatrix){
 
         float newx = x * pmatrix[0] + y * pmatrix[1] + pmatrix[2];
@@ -94,8 +92,6 @@ namespace AlphaPose{
             vector<Job> fetch_jobs;
             while(get_jobs_and_wait(fetch_jobs, max_batch_size)){
 
-                // 一次推理越多越好
-                // 把图像批次丢引擎里边去
                 int infer_batch_size = fetch_jobs.size();
                 for(int ibatch = 0; ibatch < infer_batch_size; ++ibatch){
                     auto& job = fetch_jobs[ibatch];
@@ -103,10 +99,7 @@ namespace AlphaPose{
                     job.mono_tensor->release();
                 }
                 
-                // 模型推理
                 engine->forward(false);
-
-                // 收取结果，output->cpu里面存在一个同步操作
                 for(int ibatch = 0; ibatch < infer_batch_size; ++ibatch){
                     
                     auto& job                   = fetch_jobs[ibatch];

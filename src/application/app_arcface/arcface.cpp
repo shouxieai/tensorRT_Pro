@@ -121,12 +121,10 @@ namespace Arcface{
                     job.mono_tensor->release();
                 }
 
-                // 模型推理
                 engine->forward(false);
                 CUDAKernel::norm_feature(output->gpu<float>(), output->size(0), output->size(1), stream_);
 
                 output->to_cpu();
-                // 数据转到gpu为主，不需要复制
                 for(int ibatch = 0; ibatch < infer_batch_size; ++ibatch){
                     auto& job                 = fetch_jobs[ibatch];
                     float* image_based_output = output->cpu<float>(ibatch);

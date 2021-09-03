@@ -26,7 +26,6 @@ namespace Yolo{
 
         ObjectBox() = default;
 
-        // 这个值构造函数，是为了给emplace_back函数使用的
         ObjectBox(float left, float top, float right, float bottom, float confidence, int class_label)
         :left(left), top(top), right(right), bottom(bottom), confidence(confidence), class_label(class_label){}
 
@@ -52,7 +51,6 @@ namespace Yolo{
         virtual vector<shared_future<ObjectBoxArray>> commits(const vector<cv::Mat>& images) = 0;
     };
 
-    // RAII，如果创建失败，返回空指针
     shared_ptr<Infer> create_infer(const string& engine_file, Type type, int gpuid, float confidence_threshold=0.25f, float nms_threshold=0.5f);
     const char* type_name(Type type);
 

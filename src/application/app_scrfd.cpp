@@ -1,6 +1,5 @@
 
 
-// 模型编译时使用的头文件
 #include <builder/trt_builder.hpp>
 #include <infer/trt_infer.hpp>
 #include <common/ilogger.hpp>
@@ -46,11 +45,11 @@ bool compile_scrfd(int input_width, int input_height, string& out_model_file){
     });
 
     return TRT::compile(
-        TRT::Mode::FP32,   // 编译方式有，FP32、FP16、INT8
-        test_batch_size,            // 指定编译的batch size
-        onnx_file,                  // 需要编译的onnx文件
-        model_file,                          // 储存的模型文件
-        {TRT::InputDims({1, 3, input_height, input_width})}  // 注意请让大小能够整除32
+        TRT::Mode::FP32,            // FP32、FP16、INT8
+        test_batch_size,            // max batch size
+        onnx_file,                  // source
+        model_file,                 // save to
+        {TRT::InputDims({1, 3, input_height, input_width})}
     );
 }
 

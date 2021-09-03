@@ -15,8 +15,6 @@ namespace ONNXPlugin {
 
 	int GTensor::offset(const std::vector<int>& index){
 
-		// 对于维度超出的，直接报错
-		// 对于维度比shape_少的，则后面全为0
 		Assert(index.size() <= shape_.size());
 		int value = 0;
 		for(int i = 0; i < shape_.size(); ++i){

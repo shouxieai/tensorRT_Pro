@@ -25,7 +25,6 @@ namespace Arcface{
         virtual cv::Mat                        face_alignment(const commit_input& input) = 0;
     };
 
-    // RAII，如果创建失败，返回空指针
     shared_ptr<Infer> create_infer(const string& engine_file, int gpuid=0);
 
 }; // namespace RetinaFace

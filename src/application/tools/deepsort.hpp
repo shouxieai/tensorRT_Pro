@@ -44,13 +44,13 @@ struct TrackerConfig{
     bool has_feature = false;
 
     // kalman
-    // 初始状态
+    // /** 初始状态 **/
     float initiate_state[8];
 
-    // 每一侦的运动量协方差，下一侦 = 当前帧 + 运动量
+    // /** 每一侦的运动量协方差，下一侦 = 当前帧 + 运动量 **/
     float per_frame_motion[8];
 
-    // 测量噪声，把输入映射到测量空间中后的噪声
+    // /** 测量噪声，把输入映射到测量空间中后的噪声 **/
     float noise[4];
 
     void set_initiate_state(const std::vector<float>& values);

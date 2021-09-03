@@ -33,9 +33,6 @@ namespace TRT {
     const char* data_head_string(DataHead dh);
     const char* data_type_string(DataType dt);
 
-    /**
-     * @brief 对GPU/CPU内存进行管理、分配/释放
-     */
     class MixMemory {
     public:
         MixMemory() = default;
@@ -53,12 +50,9 @@ namespace TRT {
         inline size_t cpu_size() const{return cpu_size_;}
         inline size_t gpu_size() const{return gpu_size_;}
 
-        // 这里的GPU、CPU内存都可以用Host、Device直接访问
-        // 这里的GPU内存，使用统一内存管理
         inline void* gpu() const { return gpu_; }
 
-        // 这里的CPU内存，使用Pinned Memory，页锁定内存
-        // 所以可以Host、Device访问
+        // Pinned Memory
         inline void* cpu() const { return cpu_; }
 
         void reference_data(void* cpu, size_t cpu_size, void* gpu, size_t gpu_size);
@@ -89,7 +83,6 @@ namespace TRT {
         inline int size(int index)  {return shape_[index];}
         inline int shape(int index) {return shape_[index];}
 
-        // 定义基于BCHW的获取方式，请自行保证shape是对应的
         inline int batch()  {return shape_[0];}
         inline int channel(){return shape_[1];}
         inline int height() {return shape_[2];}
@@ -154,10 +147,10 @@ namespace TRT {
         
         std::shared_ptr<MixMemory> get_data()                    {return data_;}
         std::shared_ptr<MixMemory> get_workspace()               {return workspace_;}
-        Tensor& set_workspace(std::shared_ptr<MixMemory> workspace) {workspace_ = workspace;}
+        Tensor& set_workspace(std::shared_ptr<MixMemory> workspace) {workspace_ = workspace; return *this;}
 
         CUStream get_stream(){return stream_;}
-        Tensor& set_stream(CUStream stream){stream_ = stream;}
+        Tensor& set_stream(CUStream stream){stream_ = stream; return *this;}
 
         Tensor& set_mat     (int n, const cv::Mat& image);
         Tensor& set_norm_mat(int n, const cv::Mat& image, float mean[3], float std[3]);

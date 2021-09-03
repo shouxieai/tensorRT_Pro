@@ -1,10 +1,4 @@
 
-#if defined(_WIN32)
-#	define U_OS_WINDOWS
-#else
-#   define U_OS_LINUX
-#endif
-
 #include "ilogger.hpp"
 #include <stdarg.h>
 #include <string.h>
@@ -21,7 +15,7 @@
 #include <stack>
 #include <functional>
 #include <signal.h>
-#include <sys/syscall.h>
+#include <algorithm>
 
 #if defined(U_OS_WINDOWS)
 #	define HAS_UUID
@@ -306,7 +300,7 @@ namespace iLogger{
 
 #ifdef U_OS_WINDOWS
         int e = path.rfind('\\');
-        p = max(p, e);
+        p = std::max(p, e);
 #endif
         p += 1;
 
@@ -330,7 +324,7 @@ namespace iLogger{
 
 #ifdef U_OS_WINDOWS
         int e = path.rfind('\\');
-        p = max(p, e);
+        p = std::max(p, e);
 #endif
         if(p == -1)
             return ".";
@@ -930,7 +924,7 @@ namespace iLogger{
 
 #ifdef U_OS_WINDOWS
             int e = (int)file.rfind('\\');
-            p = max(p, e);
+            p = std::max(p, e);
 #endif
             if (p not_eq -1){
                 if (!mkdirs(file.substr(0, p)))
@@ -969,7 +963,7 @@ namespace iLogger{
 
     int while_loop(){
         signal(SIGINT, signal_callback_handler);
-        signal(SIGQUIT, signal_callback_handler);
+        //signal(SIGQUIT, signal_callback_handler);
         while(!g_has_exit_signal){
             this_thread::yield();
         }
@@ -1051,8 +1045,6 @@ namespace iLogger{
             *dst++ = c << 6 | d;
         }
         dec_len = (dst - orig_dst);
-
-        // dec_len必定等于out_data.size()
         return out_data;
     }
 
@@ -1087,34 +1079,9 @@ namespace iLogger{
         return encode_result;
     }
 
-    string get_random_temp_file_name(){
-        auto thread_id = (unsigned int)syscall(SYS_gettid);
-        auto random_number = (unsigned int)random();
-        auto time_number = (unsigned int)chrono::duration_cast<chrono::microseconds>(chrono::system_clock::now().time_since_epoch()).count();
-        random_number = (((random_number ^ thread_id) << 1) ^ 0x31975B15) ^ time_number;
-
-        unsigned char bytes[sizeof(thread_id) + sizeof(time_number)];
-        char text[(sizeof(thread_id) + sizeof(time_number)) * 2 + 1];
-        auto pbytes = bytes;
-        memcpy(pbytes, &thread_id, sizeof(thread_id));           pbytes += sizeof(thread_id);
-        memcpy(pbytes, &time_number, sizeof(time_number));       pbytes += sizeof(time_number);
-
-        unsigned char* prandom_number = (unsigned char*)&random_number;
-        int n = sizeof(bytes);
-        unsigned char bytes2[sizeof(thread_id) + sizeof(time_number)];
-        for(int i = 0; i < n; ++i)
-            bytes2[i] = ((bytes[i]^0x33) | bytes[bytes[i] % n]) ^ prandom_number[i % sizeof(random_number)];
-        
-        auto ptext = text;
-        pbytes = bytes2;
-        for(int i = 0; i < n; ++i, ++pbytes)
-            ptext += sprintf(ptext, "%02x", *pbytes);
-        return text;
-    }
-
     bool delete_file(const string& path){
 #ifdef U_OS_WINDOWS
-		return DeleteFileA(file.c_str());
+		return DeleteFileA(path.c_str());
 #else
 		return ::remove(path.c_str()) == 0;
 #endif

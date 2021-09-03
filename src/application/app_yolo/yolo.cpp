@@ -28,7 +28,6 @@ namespace Yolo{
         int max_objects, cudaStream_t stream
     );
 
-    // 因为图像需要进行预处理，这里采用仿射变换warpAffine进行处理，因此在这里计算仿射变换的矩阵
     struct AffineMatrix{
         float i2d[6];       // image to dst(network), 2x3 matrix
         float d2i[6];       // dst to image, 2x3 matrix
@@ -40,6 +39,7 @@ namespace Yolo{
             // 这里取min的理由是
             // 1. M矩阵是 from * M = to的方式进行映射，因此scale的分母一定是from
             // 2. 取最小，即根据宽高比，算出最小的比例，如果取最大，则势必有一部分超出图像范围而被裁剪掉，这不是我们要的
+            // **
             float scale = std::min(scale_x, scale_y);
 
             /**
@@ -81,7 +81,6 @@ namespace Yolo{
             i2d[0] = scale;  i2d[1] = 0;  i2d[2] = -scale * from.width  * 0.5  + to.width * 0.5;
             i2d[3] = 0;  i2d[4] = scale;  i2d[5] = -scale * from.height * 0.5 + to.height * 0.5;
 
-            // 有了i2d矩阵，我们求其逆矩阵，即可得到d2i（用以解码时还原到原始图像分辨率上）
             cv::Mat m2x3_i2d(2, 3, CV_32F, i2d);
             cv::Mat m2x3_d2i(2, 3, CV_32F, d2i);
             cv::invertAffineTransform(m2x3_i2d, m2x3_d2i);
@@ -150,7 +149,6 @@ namespace Yolo{
             gpu_               = gpuid;
             result.set_value(true);
 
-            // 余弦分配好内存
             input->resize_single_dim(0, max_batch_size).to_gpu();
             affin_matrix_device.set_stream(stream_);
 
@@ -158,7 +156,7 @@ namespace Yolo{
             affin_matrix_device.resize(max_batch_size, 8).to_gpu();
 
             // 这里的 1 + MAX_IMAGE_BBOX结构是，counter + bboxes ...
-            output_array_device.resize(max_batch_size, 1 + MAX_IMAGE_BBOX * NUM_BOX_ELEMENT).to_gpu(); 
+            output_array_device.resize(max_batch_size, 1 + MAX_IMAGE_BBOX * NUM_BOX_ELEMENT).to_gpu();
 
             vector<Job> fetch_jobs;
             while(get_jobs_and_wait(fetch_jobs, max_batch_size)){
@@ -174,10 +172,7 @@ namespace Yolo{
                     job.mono_tensor->release();
                 }
 
-                // 模型推理
                 engine->forward(false);
-
-                // 数据转到gpu为主，不需要复制
                 output_array_device.to_gpu(false);
                 for(int ibatch = 0; ibatch < infer_batch_size; ++ibatch){
                     
@@ -189,7 +184,6 @@ namespace Yolo{
                     decode_kernel_invoker(image_based_output, output->size(1), num_classes, confidence_threshold_, nms_threshold_, affine_matrix, output_array_ptr, MAX_IMAGE_BBOX, stream_);
                 }
 
-                // 数据转到cpu上，复制过来
                 output_array_device.to_cpu();
                 for(int ibatch = 0; ibatch < infer_batch_size; ++ibatch){
                     float* parray = output_array_device.cpu<float>(ibatch);

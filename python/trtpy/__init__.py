@@ -3,6 +3,7 @@ import typing
 import numpy as np
 import requests
 import os
+import platform
 from enum import Enum
 
 List  = typing.List
@@ -275,6 +276,10 @@ class Yolo(object):
 def random_color(idd : int)->Tuple[int, int, int]: ...
 def set_log_level(level : LogLevel): ...
 
+os_name = platform.system()
+if os_name == "Windows":
+    os.environ["PATH"] = os.environ["PATH"] + ";" + os.path.dirname(os.path.abspath(__file__))
+
 from .libtrtpyc import *
 
 def onnx_hub(name):
@@ -286,9 +291,12 @@ def onnx_hub(name):
     # yolov5m           ：yolov5 m模型，目标检测coco80类
     # yolox_m           ：yolox m模型，目标检测coco80类
 
-    root = os.path.join(os.environ["HOME"], ".trtpy")
-    if not os.path.exists(root):
-        os.mkdir(root)
+    if "HOME" in os.environ:
+        root = os.path.join(os.environ["HOME"], ".trtpy")
+        if not os.path.exists(root):
+            os.mkdir(root)
+    else:
+        root = "."
 
     local_file = os.path.join(root, f"{name}.onnx")
     if not os.path.exists(local_file):

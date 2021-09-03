@@ -103,8 +103,6 @@ namespace RetinaFace{
 
             if(iou > threshold){
                 if(pitem[4] > pcurrent[4]){
-                    // 如果发现iou大，并且b > a，置信度。b是第i个框，a是当前框
-                    // 表示当前框要过滤掉，不需要保留了
                     pcurrent[5] = 0;
                     return;
                 }

@@ -3,7 +3,7 @@ import cv2
 import numpy as np
 import trtpy as tp
 
-# 把工作目录切换过去
+# change current workspace
 os.chdir("../workspace/")
 
 engine_file = "yolov5m.fp32.trtmodel"

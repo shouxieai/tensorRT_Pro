@@ -72,18 +72,14 @@ namespace FallGCN{
             vector<Job> fetch_jobs;
             while(get_jobs_and_wait(fetch_jobs, max_batch_size)){
 
-                // 一次推理越多越好
-                // 把图像批次丢引擎里边去
                 int infer_batch_size = fetch_jobs.size();
                 for(int ibatch = 0; ibatch < infer_batch_size; ++ibatch){
                     auto& job = fetch_jobs[ibatch];
                     input->copy_from_gpu(input->offset(ibatch), job.mono_tensor->data()->gpu(), input->count(1));
                     job.mono_tensor->release();
                 }
-                // 模型推理
                 engine->forward(false);
 
-                // 收取结果，output->cpu里面存在一个同步操作
                 for(int ibatch = 0; ibatch < infer_batch_size; ++ibatch){
                     
                     auto& job                   = fetch_jobs[ibatch];

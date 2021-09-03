@@ -20,7 +20,6 @@
  *   请关注B站，我们根据情况发布相关教程视频（免费）
  */
 
-// 模型编译时使用的头文件
 #include <builder/trt_builder.hpp>
 #include <infer/trt_infer.hpp>
 #include <common/ilogger.hpp>
@@ -42,17 +41,14 @@ int app_alphapose(){
 
     string onnx_file = iLogger::format("%s.onnx", name);
     string model_file = iLogger::format("%s.fp32.trtmodel", name);
-    int test_batch_size = 1;  // 当你需要修改batch大于1时，请查看yolox.cpp:260行备注
+    int test_batch_size = 16;  
     
-    // 动态batch和静态batch，如果你想要弄清楚，请打开http://www.zifuture.com:8090/
-    // 找到右边的二维码，扫码加好友后进群交流（免费哈，就是技术人员一起沟通）
     if(!iLogger::exists(model_file)){
         TRT::compile(
-            TRT::Mode::FP32,   // 编译方式有，FP32、FP16、INT8
-            test_batch_size,            // 指定编译的batch size
-            onnx_file,                  // 需要编译的onnx文件
-            model_file,                 // 储存的模型文件
-            {}                         // 指定需要重定义的输入shape，这里可以对onnx的输入shape进行重定义
+            TRT::Mode::FP32,            // FP32、FP16、INT8
+            test_batch_size,            // max_batch_size
+            onnx_file,                  // source
+            model_file                  // save to
         );
     }
    

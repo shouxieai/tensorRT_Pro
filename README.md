@@ -7,6 +7,16 @@
 6. 支持RetinaFace、Scrfd、YoloV5、YoloX、Arcface、AlphaPose、DeepSORT
 7. c++类库，对编译和推理做了封装，对tensor做了封装，支持n维的tensor管理
 
+## Windows支持
+1. 依赖请查看[lean/README.md](lean/README.md)
+2. TensorRT.vcxproj文件中，修改`<Import Project="$(VCTargetsPath)\BuildCustomizations\CUDA 10.0.props" />`为你配置的CUDA路径
+3. TensorRT.vcxproj文件中，修改`<Import Project="$(VCTargetsPath)\BuildCustomizations\CUDA 10.0.targets" />`为你配置的CUDA路径
+4. TensorRT.vcxproj文件中，修改`<CodeGeneration>compute_61,sm_61</CodeGeneration>`为你显卡配备的计算能力
+    - 根据型号参考这里：https://developer.nvidia.com/zh-cn/cuda-gpus#compute
+5. 配置依赖，或者下载依赖到lean中。配置VC++目录->包含目录和引用目录
+6. 配置环境，调试->环境，设置PATH路径
+7. 编译并运行案例
+
 ## Python支持
 - 请在Makefile中设置`use_python := true`启用python支持，并编译生成trtpyc.so，使用`make trtpyc -j64`
 - YoloV5的tensorRT推理

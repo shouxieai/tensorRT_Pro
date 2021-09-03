@@ -35,7 +35,6 @@
 
 *.trtmodel
 *.onnx
-!/workspace/plugin.onnx
 /workspace/pro
 /build
 /workspace/*.avi
@@ -48,10 +47,26 @@
 __pycache__
 /tools/process_so.sh
 /tools/proc2.sh
-/python/setup.py
 /python/trtpy.egg-info
 /python/dist
 /python/build
-/src/application/app_high_performance
 /workspace/formtest.ipynb
 /workspace/meta.json
+/.vs
+*.pyd
+*.user
+*.zip
+*.pdb
+*.ilk
+*.lib
+*.exp
+
+/lean/cuda10.1
+/lean/cudnn8.2.2.26
+/lean/opencv3.4.6
+/lean/protobuf3.11.4
+/lean/TensorRT-8.0.1.6
+
+__pycache__
+
+!/workspace/wget.exe

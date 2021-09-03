@@ -1,0 +1,278 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup Label="ProjectConfigurations">
+    <ProjectConfiguration Include="Debug|x64">
+      <Configuration>Debug</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Python|x64">
+      <Configuration>Python</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|x64">
+      <Configuration>Release</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="src\application\app_alphapose.cpp" />
+    <ClCompile Include="src\application\app_alphapose\alpha_pose.cpp" />
+    <ClCompile Include="src\application\app_arcface.cpp" />
+    <ClCompile Include="src\application\app_arcface\arcface.cpp" />
+    <ClCompile Include="src\application\app_fall_gcn\fall_gcn.cpp" />
+    <ClCompile Include="src\application\app_fall_recognize.cpp" />
+    <ClCompile Include="src\application\app_high_performance.cpp" />
+    <ClCompile Include="src\application\app_high_performance\alpha_pose_high_perf.cpp" />
+    <ClCompile Include="src\application\app_high_performance\high_performance.cpp" />
+    <ClCompile Include="src\application\app_high_performance\yolo_high_perf.cpp" />
+    <ClCompile Include="src\application\app_python\interface.cpp" />
+    <ClCompile Include="src\application\app_retinaface.cpp" />
+    <ClCompile Include="src\application\app_retinaface\retinaface.cpp" />
+    <ClCompile Include="src\application\app_scrfd.cpp" />
+    <ClCompile Include="src\application\app_scrfd\scrfd.cpp" />
+    <ClCompile Include="src\application\app_yolo.cpp" />
+    <ClCompile Include="src\application\app_yolo\yolo.cpp" />
+    <ClCompile Include="src\application\tools\auto_download.cpp" />
+    <ClCompile Include="src\application\tools\deepsort.cpp" />
+    <ClCompile Include="src\main.cpp" />
+    <ClCompile Include="src\tensorRT\builder\trt_builder.cpp" />
+    <ClCompile Include="src\tensorRT\common\cuda_tools.cpp" />
+    <ClCompile Include="src\tensorRT\common\ilogger.cpp" />
+    <ClCompile Include="src\tensorRT\common\json.cpp" />
+    <ClCompile Include="src\tensorRT\common\trt_tensor.cpp" />
+    <ClCompile Include="src\tensorRT\import_lib.cpp" />
+    <ClCompile Include="src\tensorRT\infer\trt_infer.cpp" />
+    <ClCompile Include="src\tensorRT\onnxplugin\onnxplugin.cpp" />
+    <ClCompile Include="src\tensorRT\onnxplugin\plugin_binary_io.cpp" />
+    <ClCompile Include="src\tensorRT\onnx\onnx-ml.pb.cpp" />
+    <ClCompile Include="src\tensorRT\onnx\onnx-operators-ml.pb.cpp" />
+    <ClCompile Include="src\tensorRT\onnx_parser\builtin_op_importers.cpp" />
+    <ClCompile Include="src\tensorRT\onnx_parser\LoopHelpers.cpp" />
+    <ClCompile Include="src\tensorRT\onnx_parser\ModelImporter.cpp" />
+    <ClCompile Include="src\tensorRT\onnx_parser\NvOnnxParser.cpp" />
+    <ClCompile Include="src\tensorRT\onnx_parser\onnx2trt_utils.cpp" />
+    <ClCompile Include="src\tensorRT\onnx_parser\OnnxAttrs.cpp" />
+    <ClCompile Include="src\tensorRT\onnx_parser\onnxErrorRecorder.cpp" />
+    <ClCompile Include="src\tensorRT\onnx_parser\RNNHelpers.cpp" />
+    <ClCompile Include="src\tensorRT\onnx_parser\ShapedWeights.cpp" />
+    <ClCompile Include="src\tensorRT\onnx_parser\ShapeTensor.cpp" />
+    <None Include="dll_export.def" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="src\application\app_alphapose\alpha_pose.hpp" />
+    <ClInclude Include="src\application\app_arcface\arcface.hpp" />
+    <ClInclude Include="src\application\app_fall_gcn\fall_gcn.hpp" />
+    <ClInclude Include="src\application\app_high_performance\alpha_pose_high_perf.hpp" />
+    <ClInclude Include="src\application\app_high_performance\high_performance.hpp" />
+    <ClInclude Include="src\application\app_high_performance\yolo_high_perf.hpp" />
+    <ClInclude Include="src\application\app_retinaface\retinaface.hpp" />
+    <ClInclude Include="src\application\app_scrfd\scrfd.hpp" />
+    <ClInclude Include="src\application\app_yolo\yolo.hpp" />
+    <ClInclude Include="src\application\common\face_detector.hpp" />
+    <ClInclude Include="src\application\tools\deepsort.hpp" />
+    <ClInclude Include="src\application\tools\pybind11.hpp" />
+    <ClInclude Include="src\tensorRT\builder\trt_builder.hpp" />
+    <ClInclude Include="src\tensorRT\common\cuda_tools.hpp" />
+    <ClInclude Include="src\tensorRT\common\ilogger.hpp" />
+    <ClInclude Include="src\tensorRT\common\infer_controller.hpp" />
+    <ClInclude Include="src\tensorRT\common\json.hpp" />
+    <ClInclude Include="src\tensorRT\common\monopoly_allocator.hpp" />
+    <ClInclude Include="src\tensorRT\common\preprocess_kernel.cuh" />
+    <ClInclude Include="src\tensorRT\common\trt_tensor.hpp" />
+    <ClInclude Include="src\tensorRT\infer\trt_infer.hpp" />
+    <ClInclude Include="src\tensorRT\onnxplugin\onnxplugin.hpp" />
+    <ClInclude Include="src\tensorRT\onnxplugin\plugins\HSwish.hpp" />
+    <ClInclude Include="src\tensorRT\onnxplugin\plugin_binary_io.hpp" />
+    <ClInclude Include="src\tensorRT\onnx\onnx-ml.pb.h" />
+    <ClInclude Include="src\tensorRT\onnx\onnx-operators-ml.pb.h" />
+    <ClInclude Include="src\tensorRT\onnx\onnxifi.h" />
+    <ClInclude Include="src\tensorRT\onnx\onnx_pb.h" />
+    <ClInclude Include="src\tensorRT\onnx_parser\builtin_op_importers.hpp" />
+    <ClInclude Include="src\tensorRT\onnx_parser\ImporterContext.hpp" />
+    <ClInclude Include="src\tensorRT\onnx_parser\LoopHelpers.hpp" />
+    <ClInclude Include="src\tensorRT\onnx_parser\ModelImporter.hpp" />
+    <ClInclude Include="src\tensorRT\onnx_parser\NvOnnxParser.h" />
+    <ClInclude Include="src\tensorRT\onnx_parser\onnx2trt.hpp" />
+    <ClInclude Include="src\tensorRT\onnx_parser\onnx2trt_common.hpp" />
+    <ClInclude Include="src\tensorRT\onnx_parser\onnx2trt_runtime.hpp" />
+    <ClInclude Include="src\tensorRT\onnx_parser\onnx2trt_utils.hpp" />
+    <ClInclude Include="src\tensorRT\onnx_parser\OnnxAttrs.hpp" />
+    <ClInclude Include="src\tensorRT\onnx_parser\onnxErrorRecorder.hpp" />
+    <ClInclude Include="src\tensorRT\onnx_parser\onnx_utils.hpp" />
+    <ClInclude Include="src\tensorRT\onnx_parser\RNNHelpers.hpp" />
+    <ClInclude Include="src\tensorRT\onnx_parser\ShapedWeights.hpp" />
+    <ClInclude Include="src\tensorRT\onnx_parser\ShapeTensor.hpp" />
+    <ClInclude Include="src\tensorRT\onnx_parser\Status.hpp" />
+    <ClInclude Include="src\tensorRT\onnx_parser\TensorOrWeights.hpp" />
+    <ClInclude Include="src\tensorRT\onnx_parser\toposort.hpp" />
+    <ClInclude Include="src\tensorRT\onnx_parser\trt_utils.hpp" />
+    <ClInclude Include="src\tensorRT\onnx_parser\utils.hpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <CudaCompile Include="src\application\app_retinaface\retinaface_decode.cu" />
+    <CudaCompile Include="src\application\app_scrfd\scrfd_decode.cu" />
+    <CudaCompile Include="src\application\app_yolo\yolo_decode.cu" />
+    <CudaCompile Include="src\tensorRT\common\preprocess_kernel.cu" />
+    <CudaCompile Include="src\tensorRT\onnxplugin\plugins\HSwish.cu" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="src\tensorRT\onnx_parser\readme.md" />
+  </ItemGroup>
+  <PropertyGroup Label="Globals">
+    <VCProjectVersion>15.0</VCProjectVersion>
+    <ProjectGuid>{FBF775F5-DAB4-4BC1-97A9-D36301073438}</ProjectGuid>
+    <Keyword>Win32Proj</Keyword>
+    <RootNamespace>TensorRT</RootNamespace>
+    <WindowsTargetPlatformVersion>10.0.17763.0</WindowsTargetPlatformVersion>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <UseDebugLibraries>true</UseDebugLibraries>
+    <PlatformToolset>v141</PlatformToolset>
+    <CharacterSet>Unicode</CharacterSet>
+    <UseOfMfc>Static</UseOfMfc>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <UseDebugLibraries>false</UseDebugLibraries>
+    <PlatformToolset>v141</PlatformToolset>
+    <WholeProgramOptimization>true</WholeProgramOptimization>
+    <CharacterSet>Unicode</CharacterSet>
+    <UseOfMfc>Static</UseOfMfc>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Python|x64'" Label="Configuration">
+    <ConfigurationType>DynamicLibrary</ConfigurationType>
+    <UseDebugLibraries>false</UseDebugLibraries>
+    <PlatformToolset>v141</PlatformToolset>
+    <WholeProgramOptimization>true</WholeProgramOptimization>
+    <CharacterSet>Unicode</CharacterSet>
+    <UseOfMfc>Static</UseOfMfc>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
+  <ImportGroup Label="ExtensionSettings">
+    <Import Project="$(VCTargetsPath)\BuildCustomizations\CUDA 10.0.props" />
+  </ImportGroup>
+  <ImportGroup Label="Shared">
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Python|x64'" Label="PropertySheets">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <PropertyGroup Label="UserMacros" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <LinkIncremental>true</LinkIncremental>
+    <OutDir>workspace</OutDir>
+    <IntDir>build\$(Platform)\$(Configuration)\</IntDir>
+    <IncludePath>./lean/cuda10.1/include;./lean/cudnn8.2.2.26;./lean/opencv3.4.6/include;./lean/TensorRT-8.0.1.6/include;./lean/protobuf3.11.4/include;./src;./src/tensorRT;./src/tensorRT/common;./src/application/tools/Eigen;./src/application;$(VC_IncludePath);$(WindowsSDK_IncludePath)</IncludePath>
+    <LibraryPath>./lean/TensorRT-8.0.1.6/lib;./lean/opencv3.4.6/lib;./lean/cudnn8.2.2.26;./lean/protobuf3.11.4/lib;./lean/cuda10.1/lib;$(VC_LibraryPath_x64);$(WindowsSDK_LibraryPath_x64)</LibraryPath>
+    <TargetName>$(ProjectName)d</TargetName>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <LinkIncremental>false</LinkIncremental>
+    <OutDir>workspace</OutDir>
+    <IntDir>build\$(Platform)\$(Configuration)\</IntDir>
+    <IncludePath>./lean/cuda10.1/include;./lean/cudnn8.2.2.26;./lean/opencv3.4.6/include;./lean/TensorRT-8.0.1.6/include;./lean/protobuf3.11.4/include;./src;./src/tensorRT;./src/tensorRT/common;./src/application/tools/Eigen;./src/application;$(VC_IncludePath);$(WindowsSDK_IncludePath)</IncludePath>
+    <LibraryPath>./lean/TensorRT-8.0.1.6/lib;./lean/opencv3.4.6/lib;./lean/cudnn8.2.2.26;./lean/protobuf3.11.4/lib;./lean/cuda10.1/lib;$(VC_LibraryPath_x64);$(WindowsSDK_LibraryPath_x64)</LibraryPath>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Python|x64'">
+    <LinkIncremental>false</LinkIncremental>
+    <OutDir>workspace</OutDir>
+    <IntDir>build\$(Platform)\$(Configuration)\</IntDir>
+    <IncludePath>./lean/cuda10.1/include;./lean/cudnn8.2.2.26;./lean/opencv3.4.6/include;./lean/TensorRT-8.0.1.6/include;./lean/protobuf3.11.4/include;./src;./src/tensorRT;./src/tensorRT/common;./src/application/tools/Eigen;./src/application;d:\ProgramData\Anaconda3\include;$(VC_IncludePath);$(WindowsSDK_IncludePath)</IncludePath>
+    <LibraryPath>./lean/TensorRT-8.0.1.6/lib;./lean/opencv3.4.6/lib;./lean/cudnn8.2.2.26;./lean/protobuf3.11.4/lib;./lean/cuda10.1/lib;d:\ProgramData\Anaconda3\libs;$(VC_LibraryPath_x64);$(WindowsSDK_LibraryPath_x64)</LibraryPath>
+    <TargetName>libtrtpyc</TargetName>
+    <TargetExt>.pyd</TargetExt>
+  </PropertyGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <ClCompile>
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+      <WarningLevel>Level3</WarningLevel>
+      <Optimization>Disabled</Optimization>
+      <SDLCheck>false</SDLCheck>
+      <PreprocessorDefinitions>_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <ConformanceMode>true</ConformanceMode>
+      <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
+      <OpenMPSupport>false</OpenMPSupport>
+      <MultiProcessorCompilation>false</MultiProcessorCompilation>
+      <FunctionLevelLinking>true</FunctionLevelLinking>
+    </ClCompile>
+    <Link>
+      <SubSystem>Console</SubSystem>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <AdditionalDependencies>%(AdditionalDependencies)</AdditionalDependencies>
+      <ModuleDefinitionFile>
+      </ModuleDefinitionFile>
+    </Link>
+    <CudaCompile>
+      <GPUDebugInfo>false</GPUDebugInfo>
+      <CodeGeneration>compute_61,sm_61</CodeGeneration>
+      <Defines>ONNX_ML</Defines>
+    </CudaCompile>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <ClCompile>
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+      <WarningLevel>Level3</WarningLevel>
+      <Optimization>MaxSpeed</Optimization>
+      <FunctionLevelLinking>false</FunctionLevelLinking>
+      <IntrinsicFunctions>true</IntrinsicFunctions>
+      <SDLCheck>false</SDLCheck>
+      <PreprocessorDefinitions>NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <ConformanceMode>true</ConformanceMode>
+      <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
+      <OpenMPSupport>true</OpenMPSupport>
+      <MultiProcessorCompilation>false</MultiProcessorCompilation>
+    </ClCompile>
+    <Link>
+      <SubSystem>Console</SubSystem>
+      <EnableCOMDATFolding>true</EnableCOMDATFolding>
+      <OptimizeReferences>true</OptimizeReferences>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <AdditionalDependencies>%(AdditionalDependencies)</AdditionalDependencies>
+      <ModuleDefinitionFile>
+      </ModuleDefinitionFile>
+    </Link>
+    <CudaCompile>
+      <CodeGeneration>compute_61,sm_61</CodeGeneration>
+      <Defines>ONNX_ML</Defines>
+    </CudaCompile>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Python|x64'">
+    <ClCompile>
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+      <WarningLevel>Level3</WarningLevel>
+      <Optimization>MaxSpeed</Optimization>
+      <FunctionLevelLinking>false</FunctionLevelLinking>
+      <IntrinsicFunctions>true</IntrinsicFunctions>
+      <SDLCheck>false</SDLCheck>
+      <PreprocessorDefinitions>HAS_PYTHON;NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <ConformanceMode>true</ConformanceMode>
+      <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
+      <OpenMPSupport>true</OpenMPSupport>
+      <MultiProcessorCompilation>false</MultiProcessorCompilation>
+    </ClCompile>
+    <Link>
+      <SubSystem>Console</SubSystem>
+      <EnableCOMDATFolding>true</EnableCOMDATFolding>
+      <OptimizeReferences>true</OptimizeReferences>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <AdditionalDependencies>%(AdditionalDependencies)</AdditionalDependencies>
+      <ModuleDefinitionFile>dll_export.def</ModuleDefinitionFile>
+      <OutputFile>python/trtpy/$(TargetName)$(TargetExt)</OutputFile>
+    </Link>
+    <CudaCompile>
+      <CodeGeneration>compute_61,sm_61</CodeGeneration>
+      <Defines>ONNX_ML</Defines>
+    </CudaCompile>
+  </ItemDefinitionGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
+  <ImportGroup Label="ExtensionTargets">
+    <Import Project="$(VCTargetsPath)\BuildCustomizations\CUDA 10.0.targets" />
+  </ImportGroup>
+</Project>

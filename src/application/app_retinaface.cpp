@@ -20,7 +20,6 @@
  *   请关注B站，我们根据情况发布相关教程视频（免费）
  */
 
-// 模型编译时使用的头文件
 #include <builder/trt_builder.hpp>
 #include <infer/trt_infer.hpp>
 #include <common/ilogger.hpp>
@@ -68,11 +67,11 @@ bool compile_retinaface(int input_width, int input_height, string& out_model_fil
     });
 
     return TRT::compile(
-        mode,          // 编译方式有，FP32、FP16、INT8
-        test_batch_size,            // 指定编译的batch size
-        onnx_file,                  // 需要编译的onnx文件
-        model_file,                          // 储存的模型文件
-        {TRT::InputDims({1, 3, input_height, input_width})}  // 注意请让大小能够整除32
+        mode,                       // FP32、FP16、INT8
+        test_batch_size,            // max batch size
+        onnx_file,                  // source
+        model_file,                 // save to
+        {TRT::InputDims({1, 3, input_height, input_width})}
     );
 }
 

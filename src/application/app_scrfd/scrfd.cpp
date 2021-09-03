@@ -145,7 +145,6 @@ namespace Scrfd{
             input->resize_single_dim(0, max_batch_size).to_gpu();
             output->resize(max_batch_size, prior.size(1), 15).to_gpu();
 
-            // 预先分配好内存
             affin_matrix_device.set_stream(stream_);
 
             // 这里8个值的目的是保证 8 * sizeof(float) % 32 == 0
@@ -168,10 +167,8 @@ namespace Scrfd{
                     job.mono_tensor->release();
                 }
 
-                // 模型推理
                 engine->forward(false);
 
-                // 数据转到gpu为主，不需要复制
                 output_array_device.to_gpu(false);
                 for(int ibatch = 0; ibatch < infer_batch_size; ++ibatch){
                     auto& job                 = fetch_jobs[ibatch];
@@ -187,7 +184,6 @@ namespace Scrfd{
                     );
                 }
 
-                // 数据转到cpu上，复制过来
                 output_array_device.to_cpu();
                 for(int ibatch = 0; ibatch < infer_batch_size; ++ibatch){
                     float* parray = output_array_device.cpu<float>(ibatch);

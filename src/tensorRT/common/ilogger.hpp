@@ -8,6 +8,14 @@
 #include <tuple>
 #include <time.h>
 
+
+#if defined(_WIN32)
+#	define U_OS_WINDOWS
+#else
+#   define U_OS_LINUX
+#endif
+
+
 namespace iLogger{
 
     using namespace std;
@@ -75,7 +83,6 @@ namespace iLogger{
     bool save_file(const string& file, const string& data, bool mk_dirs = true);
 	bool save_file(const string& file, const void* data, size_t length, bool mk_dirs = true);
 
-    // 循环等待，并捕获例如ctrl+c等终止信号，收到信号后循环跳出并返回信号类型
     // 捕获：SIGINT(2)、SIGQUIT(3)
     int while_loop();
 
@@ -83,7 +90,6 @@ namespace iLogger{
     const char* level_string(LogLevel level);
     void set_logger_save_directory(const string& loggerDirectory);
 
-    // 当日志的级别低于这个设置时，会打印出来，否则会直接跳过
     void set_log_level(LogLevel level);
     LogLevel get_log_level();
     void __log_func(const char* file, int line, LogLevel level, const char* fmt, ...);
@@ -91,7 +97,6 @@ namespace iLogger{
 
     string base64_decode(const string& base64);
     string base64_encode(const void* data, size_t size);
-    string get_random_temp_file_name();
 
     inline int upbound(int n, int align = 32){return (n + align - 1) / align * align;}
     string join_dims(const vector<int64_t>& dims);

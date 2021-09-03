@@ -261,9 +261,9 @@ namespace TRT{
 		}
 
 		if(head_ == DataHead::Device){
-			checkCudaRuntime(cudaMemcpyAsync(data_->gpu() + offset_location, src, copyed_bytes, cudaMemcpyHostToDevice, stream_));
+			checkCudaRuntime(cudaMemcpyAsync((char*)data_->gpu() + offset_location, src, copyed_bytes, cudaMemcpyHostToDevice, stream_));
 		}else if(head_ == DataHead::Host){
-			checkCudaRuntime(cudaMemcpyAsync(data_->cpu() + offset_location, src, copyed_bytes, cudaMemcpyHostToHost, stream_));
+			checkCudaRuntime(cudaMemcpyAsync((char*)data_->cpu() + offset_location, src, copyed_bytes, cudaMemcpyHostToHost, stream_));
 		}else{
 			INFOE("Unsupport head type %d", head_);
 		}
@@ -321,7 +321,6 @@ namespace TRT{
 		for(int i = 0; i < ndims; ++i){
 			int dim = dims[i];
 			if(dim == -1){
-				// 如果维度不同，则-1没有意义
 				Assert(ndims == shape_.size());
 				dim = shape_[i];
 			}
@@ -457,8 +456,6 @@ namespace TRT{
 
 	int Tensor::offset(const std::vector<int>& index){
 		
-		// 对于维度超出的，直接报错
-		// 对于维度比shape_少的，则后面全为0
 		Assert(index.size() <= shape_.size());
 		int value = 0;
 		for(int i = 0; i < shape_.size(); ++i){

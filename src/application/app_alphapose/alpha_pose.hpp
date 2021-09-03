@@ -20,7 +20,6 @@ namespace AlphaPose{
         virtual vector<shared_future<vector<Point3f>>> commits(const vector<Input>& inputs) = 0;
     };
 
-    // RAII，如果创建失败，返回空指针
     shared_ptr<Infer> create_infer(const string& engine_file, int gpuid);
 
 }; // namespace AlphaPose
