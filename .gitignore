@@ -54,7 +54,6 @@ __pycache__
 /workspace/meta.json
 /.vs
 *.pyd
-*.user
 *.zip
 *.pdb
 *.ilk
