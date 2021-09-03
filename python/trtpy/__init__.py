@@ -273,8 +273,14 @@ class Yolo(object):
     def commit(self, image : np.ndarray)->SharedFutureObjectBoxArray: ...
     def crop_face_and_landmark(self, image : np.ndarray, facebox : FaceBox, scale_box : float = 1.5)->np.ndarray: ...
 
+def load_infer_file(file : str)->Infer: ...
+def load_infer_data(data : bytes)->Infer: ...
+def set_compile_int8_process(func): ...
 def random_color(idd : int)->Tuple[int, int, int]: ...
 def set_log_level(level : LogLevel): ...
+def get_log_level()->LogLevel: ...
+def set_devie(device : int): ...
+def get_devie()->int: ...
 
 os_name = platform.system()
 if os_name == "Windows":
@@ -414,8 +420,14 @@ def infer__call__(self : Infer, *args):
         return infer_torch__call__(self, *args)
 
 
-Infer.__call__ = infer__call__
+def infer_save(self : Infer, file):
 
+    with open(file, "wb") as f:
+        f.write(self.serial_engine())
+
+
+Infer.__call__ = infer__call__
+Infer.save     = infer_save
 
 
 def normalize_numpy(norm : Norm, image):
@@ -537,7 +549,7 @@ def compile_onnxdata_to_memory(
     return mem.data
 
 
-def convert_torch_to_trt(torch_model, input, max_batch_size=None)->Infer:
+def from_torch(torch_model, input, max_batch_size=None)->Infer:
 
     lazy_import()
     if isinstance(input, torch.Tensor):
@@ -558,6 +570,14 @@ def convert_torch_to_trt(torch_model, input, max_batch_size=None)->Infer:
 
 def upbound(value, align=32):
     return (value + align - 1) // align * align
+
+def load(file_or_data)->Infer:
+
+    if isinstance(file_or_data, str):
+        print("Load file")
+        return load_infer_file(file_or_data)
+    else:
+        return load_infer_data(file_or_data)
 
 RETINFACE_NORM = Norm.mean_std([104, 117, 123], [1, 1, 1], 1.0, ChannelType.NONE)
 YOLOV5_NORM    = Norm.alpha_beta(1 / 255.0, 0.0, ChannelType.Invert)
