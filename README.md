@@ -303,12 +303,10 @@ auto box = engine->commit(image).get();
 ```cpp
 TRT::compile(
   TRT::Mode::FP32,   // 使用fp32模型编译
-  {},                         // caffe时指定输出节点
   3,                          // max batch size
   "plugin.onnx",              // onnx 文件
   "plugin.fp32.trtmodel",     // 保存的文件路径
-  {},                         // 重新定制输入的shape
-  false                       // 是否动态batch size
+  {}                         // 重新定制输入的shape
 );
 ```
 - 对于FP32编译，只需要提供onnx文件即可，可以允许重定义onnx输入节点的shape
@@ -333,16 +331,14 @@ auto int8process = [](int current, int count, vector<string>& images, shared_ptr
 // 编译模型指定为INT8
 auto model_file = "yolov5m.int8.trtmodel";
 TRT::compile(
-  TRT::Mode::INT8,   // 选择INT8
-  {},                         // 对于caffe的输出节点名称
+  TRT::Mode::INT8,            // 选择INT8
   3,                          // max batch size
   "yolov5m.onnx",             // onnx文件
   model_file,                 // 编译后保存的文件
   {},                         // 重定义输入的shape
-  false,                      // 是否为动态batch size
-  int8process,                // 指定标定数据的处理回调函数
-  ".",                        // 指定标定图像数据的目录
-  ""                          // 指定标定后的数据储存/读取路径
+  int8process,                // 指定int8标定数据的处理回调函数
+  ".",                        // 指定int8标定图像数据的目录
+  ""                          // 指定int8标定后的数据储存/读取路径
 );
 ```
 - 避免了官方标定流程分离的问题，复杂度太高，在这里直接集成为一个函数处理
