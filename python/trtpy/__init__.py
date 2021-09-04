@@ -587,10 +587,19 @@ def from_torch(torch_model, input,
         with torch.no_grad():
             dummys_output = torch_model(*input)
 
-        if isinstance(dummys_output, torch.Tensor):
-            dummys_output = (dummys_output,)
+        def count_output(output):
+            if isinstance(output, torch.Tensor):
+                return 1
 
-        for i in range(len(dummys_output)):
+            if isinstance(output, tuple) or isinstance(output, list):
+                count = 0
+                for item in output:
+                    count += count_output(item)
+                return count
+            return 0
+
+        num_output = count_output(dummys_output)
+        for i in range(num_output):
             output_names.append(f"output.{i}")
     
     dynamic_batch = {}
