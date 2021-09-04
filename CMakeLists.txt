@@ -6,7 +6,7 @@ option(CUDA_USE_STATIC_CUDA_RUNTIME OFF)
 set(CMAKE_CXX_STANDARD 11)
 set(CMAKE_BUILD_TYPE Debug)
 set(EXECUTABLE_OUTPUT_PATH ${PROJECT_SOURCE_DIR}/workspace)
-set(HAS_PYTHON ON)
+set(HAS_PYTHON OFF)
 
 # 取决于你的设备，这是编译cu文件的配置，一般可以不用设置，除非你调用了特定函数例如half新特性
 # 如果你是不同显卡，请设置为显卡对应的号码参考这里：https://developer.nvidia.com/zh-cn/cuda-gpus#compute
