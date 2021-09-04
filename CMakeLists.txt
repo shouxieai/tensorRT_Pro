@@ -9,8 +9,8 @@ set(EXECUTABLE_OUTPUT_PATH ${PROJECT_SOURCE_DIR}/workspace)
 set(HAS_PYTHON OFF)
 
 # 取决于你的设备，这是编译cu文件的配置，一般可以不用设置，除非你调用了特定函数例如half新特性
-# 如果你是不同显卡，请设置为显卡对应的号码
-# set(CUDA_GEN_CODE "-gencode=arch=compute_75,code=sm_75")
+# 如果你是不同显卡，请设置为显卡对应的号码参考这里：https://developer.nvidia.com/zh-cn/cuda-gpus#compute
+set(CUDA_GEN_CODE "-gencode=arch=compute_75,code=sm_75")
 
 # 如果你的opencv找不到，可以自己指定目录
 set(OpenCV_DIR   "/data/datav/expstation/lean/opencv4.2.0/lib/cmake/opencv4/")
@@ -22,7 +22,7 @@ set(CUDA_DIR     "/usr/local/cuda-10.2")
 set(CUDNN_DIR    "/data/sxai/lean/cudnn8.2.2.26")
 
 # 注意支持8.0以上，以下不见得支持
-set(TENSORRT_DIR "/data/sxai/lean/TensorRT-8.0.1.6")
+set(TENSORRT_DIR "/data/sxai/lean/TensorRT-8.0.1.6-cuda10.2-cudnn8.2")
 
 # 因为protobuf，需要用特定版本，所以这里指定路径
 set(PROTOBUF_DIR "/data/sxai/lean/protobuf3.11.4")
@@ -122,6 +122,13 @@ add_custom_target(
 )
 
 add_custom_target(
+    scrfd
+    DEPENDS pro
+    WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}/workspace
+    COMMAND ./pro scrfd
+)
+
+add_custom_target(
     pyscrfd
     DEPENDS trtpyc
     WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}/python
@@ -133,4 +140,11 @@ add_custom_target(
     DEPENDS trtpyc
     WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}/python
     COMMAND python setup.py install
+)
+
+add_custom_target(
+    pytorch
+    DEPENDS trtpyc
+    WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}/python
+    COMMAND python test_torch.py
 )

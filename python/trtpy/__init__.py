@@ -549,7 +549,16 @@ def compile_onnxdata_to_memory(
     return mem.data
 
 
-def from_torch(torch_model, input, max_batch_size=None)->Infer:
+def from_torch(torch_model, input, 
+    max_batch_size               : int         = None,
+    mode                         : Mode        = Mode.FP32,
+    inputs_dims                  : np.ndarray  = np.array([], dtype=int),
+    device_id                    : int         = 0,
+    int8_norm                    : Norm        = Norm.none(),
+    int8_preprocess_const_value  : int = 114,
+    int8_image_directory         : str = ".",
+    int8_entropy_calibrator_file : str = ""
+)->Infer:
 
     lazy_import()
     if isinstance(input, torch.Tensor):
@@ -563,7 +572,17 @@ def from_torch(torch_model, input, max_batch_size=None)->Infer:
 
     onnx_data  = MemoryData()
     torch.onnx.export(torch_model, input, onnx_data, opset_version=11, enable_onnx_checker=False)
-    model_data = compile_onnxdata_to_memory(max_batch_size, onnx_data.data)
+    model_data = compile_onnxdata_to_memory(
+        max_batch_size = max_batch_size, 
+        data           = onnx_data.data, 
+        mode           = mode, 
+        inputs_dims    = inputs_dims,
+        device_id      = device_id,
+        int8_norm      = int8_norm,
+        int8_preprocess_const_value = int8_preprocess_const_value,
+        int8_image_directory = int8_image_directory,
+        int8_entropy_calibrator_file = int8_entropy_calibrator_file
+    )
     trt_model = load_infer_data(model_data)
     trt_model.stream = torch.cuda.current_stream().cuda_stream
     return trt_model
