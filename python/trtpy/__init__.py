@@ -554,6 +554,12 @@ def from_torch(torch_model, input,
     mode                         : Mode        = Mode.FP32,
     inputs_dims                  : np.ndarray  = np.array([], dtype=int),
     device_id                    : int         = 0,
+    input_names                  : List[str]   = None,
+    output_names                 : List[str]   = None,
+    dynamic                      : bool        = True,
+    opset                        : int         = 11,
+    onnx_save_file               : str         = None,
+    engine_save_file             : str         = None,
     int8_norm                    : Norm        = Norm.none(),
     int8_preprocess_const_value  : int = 114,
     int8_image_directory         : str = ".",
@@ -566,12 +572,46 @@ def from_torch(torch_model, input,
 
     assert isinstance(input, tuple) or isinstance(input, list), "Input must tuple or list"
     input = tuple(input)
+    torch_model.eval()
 
     if max_batch_size is None:
         max_batch_size = input[0].size(0)
 
+    if input_names is None:
+        input_names = []
+        for i in range(len(input)):
+            input_names.append(f"input.{i}")
+
+    if output_names is None:
+        output_names = []
+        with torch.no_grad():
+            dummys_output = torch_model(*input)
+
+        if isinstance(dummys_output, torch.Tensor):
+            dummys_output = (dummys_output,)
+
+        for i in range(len(dummys_output)):
+            output_names.append(f"output.{i}")
+    
+    dynamic_batch = {}
+    for name in input_names + output_names:
+        dynamic_batch[name] = {0: "batch"}
+
     onnx_data  = MemoryData()
-    torch.onnx.export(torch_model, input, onnx_data, opset_version=11, enable_onnx_checker=False)
+    torch.onnx.export(torch_model, 
+        input, 
+        onnx_data, 
+        opset_version=opset, 
+        enable_onnx_checker=False, 
+        input_names=input_names, 
+        output_names=output_names,
+        dynamic_axes=dynamic_batch if dynamic else None
+    )
+
+    if onnx_save_file is not None:
+        with open(onnx_save_file, "wb") as f:
+            f.write(onnx_data.data)
+
     model_data = compile_onnxdata_to_memory(
         max_batch_size = max_batch_size, 
         data           = onnx_data.data, 
@@ -583,6 +623,11 @@ def from_torch(torch_model, input,
         int8_image_directory = int8_image_directory,
         int8_entropy_calibrator_file = int8_entropy_calibrator_file
     )
+
+    if engine_save_file is not None:
+        with open(engine_save_file, "wb") as f:
+            f.write(model_data)
+
     trt_model = load_infer_data(model_data)
     trt_model.stream = torch.cuda.current_stream().cuda_stream
     return trt_model
