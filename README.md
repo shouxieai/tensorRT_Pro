@@ -38,6 +38,20 @@ trt_out   = trt_model(input)
     - 执行编译`make pyinstall -j8`
     - 在使用时导入trtpy：`import trtpy as tp`
 
+## Python接口导出Onnx和trtmodel
+- 使用Python接口可以一句话导出Onnx和trtmodel，一次性调试发生的问题，解决问题。并储存onnx为后续部署使用
+```python
+import trtpy
+
+model = models.resnet18(True).eval()
+trtpy.from_torch(
+    model, 
+    dummy_input, 
+    max_batch_size=16, 
+    onnx_save_file="test.onnx", 
+    engine_save_file="engine.trtmodel"
+)
+```
 
 ## 建议
 - PyTorch >= 1.8，其他版本也可以用，遇到问题可以群里讨论
