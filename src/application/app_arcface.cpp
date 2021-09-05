@@ -2,6 +2,7 @@
 #include <infer/trt_infer.hpp>
 #include <common/ilogger.hpp>
 #include "app_retinaface/retinaface.hpp"
+#include "app_scrfd/scrfd.hpp"
 #include "app_arcface/arcface.hpp"
 #include "tools/deepsort.hpp"
 #include "tools/zmq_remote_show.hpp"
@@ -11,13 +12,14 @@ using namespace cv;
 
 bool requires(const char* name);
 bool compile_retinaface(int input_width, int input_height, string& out_model_file, TRT::Mode mode=TRT::Mode::FP32);
+bool compile_scrfd(int input_width, int input_height, string& out_model_file, TRT::Mode mode = TRT::Mode::FP32);
 
 static bool compile_models(){
 
     TRT::set_device(0);
     string model_file;
 
-    if(!compile_retinaface(640, 480, model_file))
+    if(!compile_scrfd(640, 480, model_file))
         return false;
 
     const char* onnx_files[]{"arcface_iresnet50"};
@@ -43,7 +45,7 @@ static bool compile_models(){
     return true;
 }
 
-tuple<Mat, vector<string>> build_library(shared_ptr<RetinaFace::Infer> detector, shared_ptr<Arcface::Infer> arcface){
+tuple<Mat, vector<string>> build_library(shared_ptr<Scrfd::Infer> detector, shared_ptr<Arcface::Infer> arcface){
     
     Mat_<float> features(0, 512);
     vector<string> names;
@@ -116,7 +118,8 @@ int app_arcface(){
     iLogger::mkdirs("face/library_draw");
     iLogger::mkdirs("face/result");
 
-    auto detector = RetinaFace::create_infer("mb_retinaface.640x480.FP32.trtmodel", 0, 0.5f);
+    auto detector = Scrfd::create_infer("scrfd_2.5g_bnkps.640x480.FP32.trtmodel", 0, 0.6f);
+    //auto detector = RetinaFace::create_infer("mb_retinaface.640x480.FP32.trtmodel", 0, 0.5f);
     auto arcface  = Arcface::create_infer("arcface_iresnet50.fp32.trtmodel", 0);
     auto library  = build_library(detector, arcface);
 
@@ -181,7 +184,8 @@ int app_arcface_video(){
     iLogger::mkdirs("face/library_draw");
     iLogger::mkdirs("face/result");
 
-    auto detector = RetinaFace::create_infer("mb_retinaface.640x480.FP32.trtmodel", 0, 0.5f);
+    auto detector = Scrfd::create_infer("scrfd_2.5g_bnkps.640x480.FP32.trtmodel", 0, 0.6f);
+    //auto detector = RetinaFace::create_infer("mb_retinaface.640x480.FP32.trtmodel", 0, 0.5f);
     auto arcface  = Arcface::create_infer("arcface_iresnet50.fp32.trtmodel", 0);
     auto library  = build_library(detector, arcface);
     //auto remote_show = create_zmq_remote_show();
@@ -239,12 +243,13 @@ int app_arcface_tracker(){
     if(!compile_models())
         return 0;
 
-    auto detector = RetinaFace::create_infer("mb_retinaface.640x480.FP32.trtmodel", 0, 0.7f);
+    auto detector = Scrfd::create_infer("scrfd_2.5g_bnkps.640x480.FP32.trtmodel", 0, 0.6f);
+    //auto detector = RetinaFace::create_infer("mb_retinaface.640x480.FP32.trtmodel", 0, 0.6f);
     auto arcface  = Arcface::create_infer("arcface_iresnet50.fp32.trtmodel", 0);
     auto library  = build_library(detector, arcface);
 
     //tools/show.py connect to remote show
-    //auto remote_show = create_zmq_remote_show();
+    auto remote_show = create_zmq_remote_show();
     INFO("Use tools/show.py to remote show");
 
     auto config = DeepSORT::TrackerConfig();
@@ -254,13 +259,23 @@ int app_arcface_tracker(){
     config.distance_threshold = 0.9f;
 
     config.set_per_frame_motion({
-        0.1, 0.1, 0.2, 0.1,
-        0.1, 0.1, 0.2, 0.1
+        0.05, 0.02, 0.1, 0.02,
+        0.08, 0.02, 0.1, 0.02
     });
     
     auto tracker     = DeepSORT::create_tracker(config);
-    VideoCapture cap("exp/WIN_20210425_14_23_24_Pro.mp4");
+    VideoCapture cap("exp/face_tracker1.mp4");
     Mat image;
+
+    VideoWriter writer("tracker.result.avi", cv::VideoWriter::fourcc('X', 'V', 'I', 'D'), 
+        cap.get(cv::CAP_PROP_FPS),
+        Size(cap.get(cv::CAP_PROP_FRAME_WIDTH), cap.get(cv::CAP_PROP_FRAME_HEIGHT))
+    );
+    if(!writer.isOpened()){
+        INFOE("Writer failed.");
+        return 0;
+    }
+
     while(cap.read(image)){
         auto faces  = detector->commit(image).get();
         vector<string> names(faces.size());
@@ -292,32 +307,35 @@ int app_arcface_tracker(){
             if(person->time_since_update() == 0 && person->state() == DeepSORT::State::Confirmed){
                 Rect box = DeepSORT::convert_box_to_rect(person->last_position());
 
+
+                // auto line = person->trace_line();
+                // for(int j = 0; j < (int)line.size() - 1; ++j){
+                //     auto& p = line[j];
+                //     auto& np = line[j + 1];
+                //     cv::line(image, p, np, Scalar(255, 128, 60), 2, 16);
+                // }
+
+                uint8_t r, g, b;
+                std::tie(r, g, b) = iLogger::random_color(person->id());
+                
                 rectangle(image, DeepSORT::convert_box_to_rect(person->predict_box()), Scalar(0, 255, 0), 2);
-                rectangle(image, box, Scalar(0, 255, 255), 3);
-
-                auto line = person->trace_line();
-                for(int j = 0; j < (int)line.size() - 1; ++j){
-                    auto& p = line[j];
-                    auto& np = line[j + 1];
-                    cv::line(image, p, np, Scalar(255, 128, 60), 2, 16);
-                }
-
-                putText(image, iLogger::format("%d", person->id()), Point(box.x, box.y-10), 0, 1, Scalar(0, 0, 255), 2, 16);
+                rectangle(image, box, Scalar(b, g, r), 3);
+                putText(image, iLogger::format("%d", person->id()), Point(box.x, box.y-10), 0, 1, Scalar(b, g, r), 2, 16);
            }
         }
 
-        for(int i = 0; i < faces.size(); ++i){
-            auto& face = faces[i];
-            auto color = Scalar(0, 255, 0);
-            if(names[i].empty()){
-                color = Scalar(0, 0, 255);
-                names[i] = "Unknow";
-            }
-            
-            rectangle(image, cv::Point(face.left, face.top), cv::Point(face.right, face.bottom), color, 3);
-            putText(image, names[i], cv::Point(face.left + 30, face.top - 10), 0, 1, color, 2, 16);
-        }
-        //remote_show->post(image);
+        // for(int i = 0; i < faces.size(); ++i){
+        //     auto& face = faces[i];
+        //     auto color = Scalar(0, 255, 0);
+        //     if(names[i].empty()){
+        //         color = Scalar(0, 0, 255);
+        //         names[i] = "Unknow";
+        //     }
+        //     rectangle(image, cv::Point(face.left, face.top), cv::Point(face.right, face.bottom), color, 3);
+        //     putText(image, names[i], cv::Point(face.left + 30, face.top - 10), 0, 1, color, 2, 16);
+        // }
+        remote_show->post(image);
+        //writer.write(image);
     }
     INFO("Done");
     return 0;

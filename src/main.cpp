@@ -13,6 +13,7 @@ int app_arcface_video();
 int app_arcface_tracker();
 int app_scrfd();
 int app_high_performance();
+int app_lesson();
 
 void test_all(){
     app_yolo();
@@ -51,9 +52,12 @@ int main(int argc, char** argv){
         app_scrfd();
     }else if(strcmp(method, "high_perf") == 0){
         app_high_performance();
+    }else if(strcmp(method, "lesson") == 0){
+        app_lesson();
     }else if(strcmp(method, "test_all") == 0){
         test_all();
     }else{
+        printf("Unknow method: %s\n", method);
         printf(
             "Help: \n"
             "    ./pro method[yolo、alphapose、fall、retinaface、arcface、arcface_video、arcface_tracker]\n"

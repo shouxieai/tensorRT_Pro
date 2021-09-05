@@ -129,6 +129,13 @@ add_custom_target(
 )
 
 add_custom_target(
+    lesson
+    DEPENDS pro
+    WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}/workspace
+    COMMAND ./pro lesson
+)
+
+add_custom_target(
     pyscrfd
     DEPENDS trtpyc
     WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}/python

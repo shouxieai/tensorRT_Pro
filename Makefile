@@ -142,6 +142,9 @@ scrfd : workspace/pro
 high_perf : workspace/pro
 	@cd workspace && ./pro high_perf
 
+lesson : workspace/pro
+	@cd workspace && ./pro lesson
+
 pytorch : trtpyc
 	@cd python && python test_torch.py
 

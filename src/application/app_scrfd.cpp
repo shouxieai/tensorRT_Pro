@@ -10,14 +10,14 @@ using namespace cv;
 
 bool requires(const char* name);
 
-bool compile_scrfd(int input_width, int input_height, string& out_model_file){
+bool compile_scrfd(int input_width, int input_height, string& out_model_file, TRT::Mode mode = TRT::Mode::FP32){
 
     const char* name = "scrfd_2.5g_bnkps";
     if(not requires(name))
         return false;
 
     string onnx_file    = iLogger::format("%s.onnx", name);
-    string model_file   = iLogger::format("%s.%dx%d.fp32.trtmodel", name, input_width, input_height);
+    string model_file   = iLogger::format("%s.%dx%d.%s.trtmodel", name, input_width, input_height, TRT::mode_string(mode));
     int test_batch_size = 6;
     out_model_file      = model_file;
     

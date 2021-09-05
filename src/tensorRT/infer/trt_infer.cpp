@@ -26,7 +26,7 @@ public:
 			INFOW("NVInfer: %s", msg);
 		}
 		else  if (severity == Severity::kINFO) {
-			INFOV("NVInfer: %s", msg);
+			INFOD("NVInfer: %s", msg);
 		}
 		else {
 			INFOD("%s", msg);

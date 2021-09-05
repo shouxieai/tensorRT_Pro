@@ -33,7 +33,7 @@ public:
 			INFOW("NVInfer: %s", msg);
 		}
 		else  if (severity == Severity::kINFO) {
-			INFOV("NVInfer: %s", msg);
+			INFOD("NVInfer: %s", msg);
 		}
 		else {
 			INFOD("%s", msg);
@@ -64,11 +64,11 @@ namespace TRT {
 		return buffer;
 	}
 
-	string dims_str(const nvinfer1::Dims& dims){
+	static string dims_str(const nvinfer1::Dims& dims){
 		return join_dims(vector<int>(dims.d, dims.d + dims.nbDims));
 	}
 
-	const char* padding_mode_name(nvinfer1::PaddingMode mode){
+	static const char* padding_mode_name(nvinfer1::PaddingMode mode){
 		switch(mode){
 			case nvinfer1::PaddingMode::kEXPLICIT_ROUND_DOWN: return "explicit round down";
 			case nvinfer1::PaddingMode::kEXPLICIT_ROUND_UP: return "explicit round up";
@@ -80,7 +80,7 @@ namespace TRT {
 		return "Unknow padding mode";
 	}
 
-	const char* pooling_type_name(nvinfer1::PoolingType type){
+	static const char* pooling_type_name(nvinfer1::PoolingType type){
 		switch(type){
 			case nvinfer1::PoolingType::kMAX: return "MaxPooling";
 			case nvinfer1::PoolingType::kAVERAGE: return "AveragePooling";
@@ -89,7 +89,7 @@ namespace TRT {
 		return "Unknow pooling type";
 	}
 
-	const char* activation_type_name(nvinfer1::ActivationType activation_type){
+	static const char* activation_type_name(nvinfer1::ActivationType activation_type){
 		switch(activation_type){
 			case nvinfer1::ActivationType::kRELU: return "ReLU";
 			case nvinfer1::ActivationType::kSIGMOID: return "Sigmoid";
@@ -107,7 +107,7 @@ namespace TRT {
 		return "Unknow activation type";
 	}
 
-	string layer_type_name(nvinfer1::ILayer* layer){
+	static string layer_type_name(nvinfer1::ILayer* layer){
 		switch(layer->getType()){
 			case nvinfer1::LayerType::kCONVOLUTION: return "Convolution";
 			case nvinfer1::LayerType::kFULLY_CONNECTED: return "Fully connected";
@@ -147,7 +147,7 @@ namespace TRT {
 		return "Unknow layer type";
 	}
 
-	string layer_descript(nvinfer1::ILayer* layer){
+	static string layer_descript(nvinfer1::ILayer* layer){
 		switch(layer->getType()){
 			case nvinfer1::LayerType::kCONVOLUTION: {
 				nvinfer1::IConvolutionLayer* conv = (nvinfer1::IConvolutionLayer*)layer;
@@ -210,7 +210,7 @@ namespace TRT {
 		return "Unknow layer type";
 	}
 
-	bool layer_has_input_tensor(nvinfer1::ILayer* layer){
+	static bool layer_has_input_tensor(nvinfer1::ILayer* layer){
 		int num_input = layer->getNbInputs();
 		for(int i = 0; i < num_input; ++i){
 			auto input = layer->getInput(i);
@@ -223,7 +223,7 @@ namespace TRT {
 		return false;
 	}
 
-	bool layer_has_output_tensor(nvinfer1::ILayer* layer){
+	static bool layer_has_output_tensor(nvinfer1::ILayer* layer){
 		int num_output = layer->getNbOutputs();
 		for(int i = 0; i < num_output; ++i){
 

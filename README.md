@@ -125,6 +125,12 @@ x[i] = x[i].view(bs, self.na, self.no, ny, nx).permute(0, 1, 3, 4, 2).contiguous
 #  z.append(y.view(bs, -1, self.no))
 # 修改为：
 z.append(y.view(bs, self.na * ny * nx, self.no))
+
+# yolov5/export.py第52行
+#torch.onnx.export(dynamic_axes={'images': {0: 'batch', 2: 'height', 3: 'width'},  # shape(1,3,640,640)
+#                                'output': {0: 'batch', 1: 'anchors'}  # shape(1,25200,85)  修改为
+torch.onnx.export(dynamic_axes={'images': {0: 'batch'},  # shape(1,3,640,640)
+                                'output': {0: 'batch'}  # shape(1,25200,85) 
 ```
 
 3. 导出onnx模型
