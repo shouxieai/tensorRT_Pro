@@ -59,7 +59,7 @@ int app_fall_recognize(){
     auto gcn_model      = FallGCN::create_infer(gcn_model_file, 0);
 
     Mat image;
-    VideoCapture cap("fall_video.mp4");
+    VideoCapture cap("exp/fall_video.mp4");
     INFO("Video fps=%d, Width=%d, Height=%d", 
         (int)cap.get(cv::CAP_PROP_FPS), 
         (int)cap.get(cv::CAP_PROP_FRAME_WIDTH), 

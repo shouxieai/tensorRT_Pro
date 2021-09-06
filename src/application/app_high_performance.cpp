@@ -84,7 +84,7 @@ int app_high_performance(){
 
     camera.startup([](vector<shared_ptr<Pipeline>>& output_pipe){
 
-        cv::VideoCapture cap("fall_video.mp4");
+        cv::VideoCapture cap("exp/fall_video.mp4");
         cv::Mat image;
         int num_frame = 0;
         while(cap.read(image)){
