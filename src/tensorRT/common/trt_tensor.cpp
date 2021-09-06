@@ -454,19 +454,23 @@ namespace TRT{
 		return *this;
 	}
 
-	int Tensor::offset(const std::vector<int>& index){
-		
-		Assert(index.size() <= shape_.size());
+	int Tensor::offset(size_t size, const int* index_array){
+
+		Assert(size <= shape_.size());
 		int value = 0;
 		for(int i = 0; i < shape_.size(); ++i){
 
-			if(i < index.size())
-				value += index[i];
+			if(i < size)
+				value += index_array[i];
 
 			if(i + 1 < shape_.size())
 				value *= shape_[i+1];
 		}
 		return value;
+	}
+
+	int Tensor::offset(const std::vector<int>& index_array){
+		return offset(index_array.size(), index_array.data());
 	}
 
 	Tensor& Tensor::set_norm_mat(int n, const cv::Mat& image, float mean[3], float std[3]) {

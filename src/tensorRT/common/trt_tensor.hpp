@@ -102,9 +102,9 @@ namespace TRT {
         bool empty();
 
         template<typename ... _Args>
-        Tensor& resize(int t, _Args&& ... args){
-            resized_dim_.clear();
-            return resize_impl(t, args...);
+        Tensor& resize(int dim_size, _Args ... dim_size_args){
+            const int dim_size_array[] = {dim_size, dim_size_args...};
+            return resize(sizeof...(dim_size_args) + 1, dim_size_array);
         }
 
         Tensor& resize(int ndims, const int* dims);
@@ -121,29 +121,30 @@ namespace TRT {
         inline void* gpu() const { ((Tensor*)this)->to_gpu(); return data_->gpu(); }
 
         template<typename ... _Args>
-        int offset(int t, _Args&& ... args){
-            offset_index_.clear();
-            return offset_impl(t, args...);
+        int offset(int index, _Args ... index_args){
+            const int index_array[] = {index, index_args...};
+            return offset(sizeof...(index_args) + 1, index_array);
         }
 
         int offset(const std::vector<int>& index);
+        int offset(size_t size, const int* index_array);
         
-        template<typename DataT> inline const DataT* cpu() const { return (DataT*)cpu(); }
-        template<typename DataT> inline DataT* cpu()             { return (DataT*)cpu(); }
+        template<typename DType> inline const DType* cpu() const { return (DType*)cpu(); }
+        template<typename DType> inline DType* cpu()             { return (DType*)cpu(); }
 
-        template<typename DataT, typename ... _Args> 
-        inline DataT* cpu(int t, _Args&& ... args) { return cpu<DataT>() + offset(t, args...); }
-
-
-        template<typename DataT> inline const DataT* gpu() const { return (DataT*)gpu(); }
-        template<typename DataT> inline DataT* gpu()             { return (DataT*)gpu(); }
-
-        template<typename DataT, typename ... _Args> 
-        inline DataT* gpu(int t, _Args&& ... args) { return gpu<DataT>() + offset(t, args...); }
+        template<typename DType, typename ... _Args> 
+        inline DType* cpu(int t, _Args&& ... args) { return cpu<DType>() + offset(t, args...); }
 
 
-        template<typename DataT, typename ... _Args> 
-        inline DataT& at(int t, _Args&& ... args) { return *(cpu<DataT>() + offset(t, args...)); }
+        template<typename DType> inline const DType* gpu() const { return (DType*)gpu(); }
+        template<typename DType> inline DType* gpu()             { return (DType*)gpu(); }
+
+        template<typename DType, typename ... _Args> 
+        inline DType* gpu(int t, _Args&& ... args) { return gpu<DType>() + offset(t, args...); }
+
+
+        template<typename DType, typename ... _Args> 
+        inline DType& at(int t, _Args&& ... args) { return *(cpu<DType>() + offset(t, args...)); }
         
         std::shared_ptr<MixMemory> get_data()                    {return data_;}
         std::shared_ptr<MixMemory> get_workspace()               {return workspace_;}
@@ -192,34 +193,11 @@ namespace TRT {
         bool save_to_file(const std::string& file);
 
     private:
-        Tensor& resize_impl(int value){
-            resized_dim_.push_back(value);
-            return resize(resized_dim_);
-        }
-
-        template<typename ... _Args>
-        Tensor& resize_impl(int t, _Args&& ... args){
-            resized_dim_.push_back(t);
-            return resize_impl(args...);
-        }
-
-        int offset_impl(int value){
-            offset_index_.push_back(value);
-            return offset(offset_index_);
-        }
-
-        template<typename ... _Args>
-        int offset_impl(int t, _Args&& ... args){
-            offset_index_.push_back(t);
-            return offset_impl(args...);
-        }
-
         Tensor& compute_shape_string();
         Tensor& adajust_memory_by_update_dims_or_type();
         void setup_data(std::shared_ptr<MixMemory> data);
 
     private:
-        std::vector<int> resized_dim_, offset_index_;
         std::vector<int> shape_;
         std::vector<size_t> strides_;
         size_t bytes_    = 0;
