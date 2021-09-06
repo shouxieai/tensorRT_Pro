@@ -653,6 +653,6 @@ def load(file_or_data)->Infer:
 
 RETINFACE_NORM = Norm.mean_std([104, 117, 123], [1, 1, 1], 1.0, ChannelType.NONE)
 YOLOV5_NORM    = Norm.alpha_beta(1 / 255.0, 0.0, ChannelType.Invert)
-YOLOX_NORM     = Norm.mean_std([0.485, 0.456, 0.406], [0.229, 0.224, 0.225], 1.0 / 255.0, ChannelType.Invert)
+YOLOX_NORM     = Norm.none()
 ALPHAPOSE_NORM = Norm.mean_std([0.406, 0.457, 0.480], [1, 1, 1], 1.0 / 255.0, ChannelType.Invert)
 ARCFACE_NORM   = Norm.mean_std([0.5, 0.5, 0.5], [0.5, 0.5, 0.5], 1.0 / 255.0, ChannelType.Invert)
