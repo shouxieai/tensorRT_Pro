@@ -30,12 +30,13 @@ namespace ONNXPlugin {
 		int count(int start_axis = 0) const;
 
 		template<typename ... _Args>
-		int offset(int t, _Args&& ... args){
-			offset_index_.clear();
-			return offsetimpl(t, args...);
+		int offset(int index, _Args&& ... index_args){
+			const int index_array[] = {index, index_args...};
+            return offset_array(sizeof...(index_args) + 1, index_array);
 		}
 
-		int offset(const std::vector<int>& index);
+		int offset_array(const std::vector<int>& index);
+		int offset_array(size_t size, const int* index_array);
 
 		template<typename _T>
 		inline _T* ptr() const { return (_T*)ptr_; }
@@ -56,21 +57,6 @@ namespace ONNXPlugin {
 		void* ptr_ = nullptr;
 		TRT::DataType dtType_ = TRT::DataType::Float;
 		std::vector<int> shape_;
-
-	private:
-		std::vector<int> offset_index_;
-
-	private:
-		int offsetimpl(int value){
-			offset_index_.push_back(value);
-			return offset(offset_index_);
-		}
-
-		template<typename ... _Args>
-		int offsetimpl(int t, _Args&& ... args){
-			offset_index_.push_back(t);
-			return offsetimpl(args...);
-		}
 	};
 
 	struct LayerConfig {

@@ -102,6 +102,15 @@ namespace TRT {
         bool empty();
 
         template<typename ... _Args>
+        int offset(int index, _Args ... index_args){
+            const int index_array[] = {index, index_args...};
+            return offset_array(sizeof...(index_args) + 1, index_array);
+        }
+
+        int offset_array(const std::vector<int>& index);
+        int offset_array(size_t size, const int* index_array);
+
+        template<typename ... _Args>
         Tensor& resize(int dim_size, _Args ... dim_size_args){
             const int dim_size_array[] = {dim_size, dim_size_args...};
             return resize(sizeof...(dim_size_args) + 1, dim_size_array);
@@ -114,20 +123,11 @@ namespace TRT {
 
         Tensor& to_gpu(bool copyedIfCPU = true);
         Tensor& to_cpu(bool copyedIfGPU = true);
-        Tensor& to_half();
 
+        Tensor& to_half();
         Tensor& to_float();
         inline void* cpu() const { ((Tensor*)this)->to_cpu(); return data_->cpu(); }
         inline void* gpu() const { ((Tensor*)this)->to_gpu(); return data_->gpu(); }
-
-        template<typename ... _Args>
-        int offset(int index, _Args ... index_args){
-            const int index_array[] = {index, index_args...};
-            return offset(sizeof...(index_args) + 1, index_array);
-        }
-
-        int offset(const std::vector<int>& index);
-        int offset(size_t size, const int* index_array);
         
         template<typename DType> inline const DType* cpu() const { return (DType*)cpu(); }
         template<typename DType> inline DType* cpu()             { return (DType*)cpu(); }

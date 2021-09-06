@@ -13,19 +13,23 @@ namespace ONNXPlugin {
 		this->dtType_ = TRT::DataType::Float;
 	}
 
-	int GTensor::offset(const std::vector<int>& index){
+	int GTensor::offset_array(size_t size, const int* index_array){
 
-		Assert(index.size() <= shape_.size());
+		Assert(size <= shape_.size());
 		int value = 0;
 		for(int i = 0; i < shape_.size(); ++i){
 
-			if(i < index.size())
-				value += index[i];
+			if(i < size)
+				value += index_array[i];
 
 			if(i + 1 < shape_.size())
 				value *= shape_[i+1];
 		}
 		return value;
+	}
+
+	int GTensor::offset_array(const std::vector<int>& index){
+		return offset_array(index.size(), index.data());
 	}
 
 	GTensor::GTensor(TRT::float16* ptr, int ndims, int* dims) {

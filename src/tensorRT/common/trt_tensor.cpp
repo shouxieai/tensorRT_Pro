@@ -454,7 +454,7 @@ namespace TRT{
 		return *this;
 	}
 
-	int Tensor::offset(size_t size, const int* index_array){
+	int Tensor::offset_array(size_t size, const int* index_array){
 
 		Assert(size <= shape_.size());
 		int value = 0;
@@ -469,8 +469,8 @@ namespace TRT{
 		return value;
 	}
 
-	int Tensor::offset(const std::vector<int>& index_array){
-		return offset(index_array.size(), index_array.data());
+	int Tensor::offset_array(const std::vector<int>& index_array){
+		return offset_array(index_array.size(), index_array.data());
 	}
 
 	Tensor& Tensor::set_norm_mat(int n, const cv::Mat& image, float mean[3], float std[3]) {

@@ -117,6 +117,7 @@ static void test_plugin(TRT::Mode mode){
     auto input1 = engine->input(1);
     auto output = engine->output(0);
 
+    INFO("offset %d", output->offset(1, 0));
     INFO("input0: %s", input0->shape_string());
     INFO("input1: %s", input1->shape_string());
     INFO("output: %s", output->shape_string());
