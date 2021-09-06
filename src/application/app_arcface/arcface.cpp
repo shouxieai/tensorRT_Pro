@@ -74,7 +74,7 @@ namespace Arcface{
 
             float mean[] = {0.5f, 0.5f, 0.5f};
             float std[]  = {0.5f, 0.5f, 0.5f};
-            normalize_   = CUDAKernel::Norm::mean_std(mean, std, 1.0f / 255.0f);
+            normalize_   = CUDAKernel::Norm::mean_std(mean, std, 1.0f / 255.0f, CUDAKernel::ChannelType::Invert);
             return ControllerImpl::startup(make_tuple(file, gpuid));
         }
 

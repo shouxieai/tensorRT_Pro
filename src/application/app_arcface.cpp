@@ -70,22 +70,14 @@ tuple<Mat, vector<string>> build_library(shared_ptr<Scrfd::Infer> detector, shar
             max_face = faces[max_face_index];
         }
 
-        auto& face = max_face;
-        auto box   = Rect(face.left, face.top, face.right-face.left, face.bottom-face.top);
-        box        = box & Rect(0, 0, image.cols, image.rows);
-
-        if(box.width < 80 or box.height < 80)
+        auto face = max_face;
+        if(face.width() < 80 or face.height() < 80)
             continue;
 
-        if(box.area() == 0){
-            INFOE("Invalid box, %d, %d, %d, %d", box.x, box.y, box.width, box.height);
-            continue;
-        }
-
-        auto crop  = image(box).clone();
+        Mat crop;
+        tie(crop, face) = detector->crop_face_and_landmark(image, face);
         Arcface::landmarks landmarks;
-        for(int j = 0; j < 10; ++j)
-            landmarks.points[j] = face.landmark[j] - (j % 2 == 0 ? face.left : face.top);
+        memcpy(landmarks.points, face.landmark, sizeof(landmarks.points));
 
         auto feature     = arcface->commit(make_tuple(crop, landmarks)).get();
         string face_name = file_name;
@@ -130,14 +122,12 @@ int app_arcface(){
         auto faces  = detector->commit(image).get();
         vector<string> names(faces.size());
         for(int i = 0; i < faces.size(); ++i){
-            auto& face = faces[i];
-            auto box   = Rect(face.left, face.top, face.right-face.left, face.bottom-face.top);
-            box        = box & Rect(0, 0, image.cols, image.rows);
-            auto crop  = image(box).clone();
+            Mat crop;
+            auto face = faces[i];
+            tie(crop, face) = detector->crop_face_and_landmark(image, face);
             
             Arcface::landmarks landmarks;
-            for(int j = 0; j < 10; ++j)
-                landmarks.points[j] = face.landmark[j] - (j % 2 == 0 ? face.left : face.top);
+            memcpy(landmarks.points, face.landmark, sizeof(landmarks.points));
 
             auto out          = arcface->commit(make_tuple(crop, landmarks)).get();
             auto scores       = Mat(get<0>(library) * out.t());
@@ -197,14 +187,12 @@ int app_arcface_video(){
         auto faces  = detector->commit(image).get();
         vector<string> names(faces.size());
         for(int i = 0; i < faces.size(); ++i){
-            auto& face = faces[i];
-            auto box   = Rect(face.left, face.top, face.right-face.left, face.bottom-face.top);
-            box        = box & Rect(0, 0, image.cols, image.rows);
-            auto crop  = image(box).clone();
+            Mat crop;
+            auto face = faces[i];
+            tie(crop, face) = detector->crop_face_and_landmark(image, face);
             
             Arcface::landmarks landmarks;
-            for(int j = 0; j < 10; ++j)
-                landmarks.points[j] = face.landmark[j] - (j % 2 == 0 ? face.left : face.top);
+            memcpy(landmarks.points, face.landmark, sizeof(landmarks.points));
 
             auto out          = arcface->commit(make_tuple(crop, landmarks)).get();
             auto scores       = Mat(get<0>(library) * out.t());
