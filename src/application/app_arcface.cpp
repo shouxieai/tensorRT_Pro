@@ -5,7 +5,7 @@
 #include "app_scrfd/scrfd.hpp"
 #include "app_arcface/arcface.hpp"
 #include "tools/deepsort.hpp"
-#include "tools/zmq_remote_show.hpp"
+//#include "tools/zmq_remote_show.hpp"
 
 using namespace std;
 using namespace cv;
@@ -249,7 +249,7 @@ int app_arcface_tracker(){
     auto library  = build_library(detector, arcface);
 
     //tools/show.py connect to remote show
-    auto remote_show = create_zmq_remote_show();
+    //auto remote_show = create_zmq_remote_show();
     INFO("Use tools/show.py to remote show");
 
     auto config = DeepSORT::TrackerConfig();
@@ -334,7 +334,7 @@ int app_arcface_tracker(){
         //     rectangle(image, cv::Point(face.left, face.top), cv::Point(face.right, face.bottom), color, 3);
         //     putText(image, names[i], cv::Point(face.left + 30, face.top - 10), 0, 1, color, 2, 16);
         // }
-        remote_show->post(image);
+        //remote_show->post(image);
         //writer.write(image);
     }
     INFO("Done");
