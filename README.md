@@ -1,3 +1,6 @@
+## B站同步视频讲解
+- https://www.bilibili.com/video/BV1Xw411f7FW
+
 ## 3行代码实现极致性能YoloV5/YoloX推理，TensorRT C++库
 1. 支持最新版tensorRT8.0，具有最新的解析器算子支持
 2. 支持静态显性batch size，和动态非显性batch size，这是官方所不支持的
