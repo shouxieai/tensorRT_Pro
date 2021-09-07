@@ -1,5 +1,6 @@
 ## B站同步视频讲解
 - https://www.bilibili.com/video/BV1Xw411f7FW
+- 相关PPTX下载：http://zifuture.com:1556/fs/sxai/tensorRT.pptx
 
 ## 3行代码实现极致性能YoloV5/YoloX推理，TensorRT C++库
 1. 支持最新版tensorRT8.0，具有最新的解析器算子支持
