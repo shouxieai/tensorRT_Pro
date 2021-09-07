@@ -212,13 +212,13 @@ static void test(Yolo::Type type, TRT::Mode mode, const string& model){
 int app_yolo(){
 
     //iLogger::set_log_level(iLogger::LogLevel::Info);
-    test(Yolo::Type::X, TRT::Mode::FP32, "yolox_s");
-    test(Yolo::Type::V5, TRT::Mode::FP32, "yolov5s");
+    test(Yolo::Type::X, TRT::Mode::FP32, "yolox_m");
+    //test(Yolo::Type::V5, TRT::Mode::FP32, "yolov5s");
     // test(Yolo::Type::X, TRT::Mode::FP16, "yolox_s");
     // test(Yolo::Type::V5, TRT::Mode::FP16, "yolov5s");
     // test_int8(Yolo::Type::X, "yolox_s");
     // test_int8(Yolo::Type::V5, "yolov5s");
-    test_plugin(TRT::Mode::FP32);
-    test_plugin(TRT::Mode::FP16);
+    //test_plugin(TRT::Mode::FP32);
+    //stest_plugin(TRT::Mode::FP16);
     return 0;
 }

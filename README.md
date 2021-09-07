@@ -145,7 +145,7 @@ python export.py --weights=yolov5s.pt --dynamic --opset=11
 ```bash
 cp yolov5/yolov5m.onnx tensorRT_cpp/workspace/
 cd tensorRT_cpp
-make run -j32
+make yolo -j32
 ```
 
 ## YoloX的支持
@@ -203,7 +203,7 @@ python tools/export_onnx.py -c yolox_m.pth -f exps/default/yolox_m.py --output-n
 ```bash
 cp YOLOX/yolox_m.onnx tensorRT_cpp/workspace/
 cd tensorRT_cpp
-make run -j32
+make yolo -j32
 ```
 
 ## RetinaFace人脸检测支持
@@ -416,7 +416,7 @@ RegisterPlugin(HSwish);
 
 ## 执行方式
 1. 配置好Makefile中的依赖项路径
-2. `make run -j64`即可
+2. `make yolo -j64`即可
 
 ## 执行结果
 ```bash

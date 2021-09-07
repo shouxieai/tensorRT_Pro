@@ -27,7 +27,7 @@ void test_all(){
     INFO("test done.");
 }
 
-int main(int argc, char** argv){
+int main11(int argc, char** argv){
 
     const char* method = "yolo";
     if(argc > 1){
