@@ -9,7 +9,7 @@
             "type": "cppdbg",
             "request": "launch",
             "program": "${workspaceFolder}/workspace/pro",
-            "args": ["high_perf"],
+            "args": ["yolo"],
             "stopAtEntry": false,
             "cwd": "${workspaceFolder}/workspace",
             "environment": [],

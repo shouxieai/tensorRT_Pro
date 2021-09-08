@@ -5,7 +5,7 @@
 #include "app_scrfd/scrfd.hpp"
 #include "app_arcface/arcface.hpp"
 #include "tools/deepsort.hpp"
-//#include "tools/zmq_remote_show.hpp"
+#include "tools/zmq_remote_show.hpp"
 
 using namespace std;
 using namespace cv;
@@ -18,6 +18,9 @@ static bool compile_models(){
 
     TRT::set_device(0);
     string model_file;
+
+    if(!compile_retinaface(640, 480, model_file))
+        return false;
 
     if(!compile_scrfd(640, 480, model_file))
         return false;
@@ -181,7 +184,7 @@ int app_arcface_video(){
     //auto remote_show = create_zmq_remote_show();
     INFO("Use tools/show.py to remote show");
 
-    VideoCapture cap("exp/WIN_20210425_14_23_24_Pro.mp4");
+    VideoCapture cap("exp/face_tracker.mp4");
     Mat image;
     while(cap.read(image)){
         auto faces  = detector->commit(image).get();
@@ -223,6 +226,46 @@ int app_arcface_video(){
     return 0;
 }
 
+class MotionFilter{
+public:
+    MotionFilter(){
+        location_.left = location_.top = location_.right = location_.bottom = 0;
+    }
+
+    void missed(){
+        init_ = false;
+    }
+
+    void update(const DeepSORT::Box& box){
+
+        const float a[] = {box.left, box.top, box.right, box.bottom};
+        const float b[] = {location_.left, location_.top, location_.right, location_.bottom};
+
+        if(!init_){
+            init_ = true;
+            location_ = box;
+            return;
+        }
+
+        float v[4];
+        for(int i = 0; i < 4; ++i)
+            v[i] = a[i] * 0.6 + b[i] * 0.4;
+
+        location_.left = v[0];
+        location_.top = v[1];
+        location_.right = v[2];
+        location_.bottom = v[3];
+    }
+
+    DeepSORT::Box predict(){
+        return location_;
+    }
+
+private:
+    DeepSORT::Box location_;
+    bool init_ = false;
+};
+
 int app_arcface_tracker(){
 
     TRT::set_device(0);
@@ -234,7 +277,7 @@ int app_arcface_tracker(){
     auto detector = Scrfd::create_infer("scrfd_2.5g_bnkps.640x480.FP32.trtmodel", 0, 0.6f);
     //auto detector = RetinaFace::create_infer("mb_retinaface.640x480.FP32.trtmodel", 0, 0.6f);
     auto arcface  = Arcface::create_infer("arcface_iresnet50.fp32.trtmodel", 0);
-    auto library  = build_library(detector, arcface);
+    //auto library  = build_library(detector, arcface);
 
     //tools/show.py connect to remote show
     //auto remote_show = create_zmq_remote_show();
@@ -252,10 +295,10 @@ int app_arcface_tracker(){
     });
     
     auto tracker     = DeepSORT::create_tracker(config);
-    VideoCapture cap("exp/face_tracker1.mp4");
+    VideoCapture cap("exp/face_tracker.mp4");
     Mat image;
 
-    VideoWriter writer("tracker.result.avi", cv::VideoWriter::fourcc('X', 'V', 'I', 'D'), 
+    VideoWriter writer("tracker.result.mp4", cv::VideoWriter::fourcc('a', 'v', 'c', '1'), 
         cap.get(cv::CAP_PROP_FPS),
         Size(cap.get(cv::CAP_PROP_FRAME_WIDTH), cap.get(cv::CAP_PROP_FRAME_HEIGHT))
     );
@@ -264,12 +307,15 @@ int app_arcface_tracker(){
         return 0;
     }
 
+    unordered_map<int, MotionFilter> MotionFilter;
     while(cap.read(image)){
         auto faces  = detector->commit(image).get();
         vector<string> names(faces.size());
         vector<DeepSORT::Box> boxes;
         for(int i = 0; i < faces.size(); ++i){
             auto& face = faces[i];
+            if(max(face.width(), face.height()) < 30) continue;
+
             auto crop  = detector->crop_face_and_landmark(image, face);
             auto track_box = DeepSORT::convert_to_box(face);
             
@@ -277,38 +323,44 @@ int app_arcface_tracker(){
             memcpy(landmarks.points, get<1>(crop).landmark, sizeof(landmarks.points));
 
             track_box.feature = arcface->commit(make_tuple(get<0>(crop), landmarks)).get();
-            Mat scores        = get<0>(library) * track_box.feature.t();
-            float* pscore     = scores.ptr<float>(0);
-            int label         = std::max_element(pscore, pscore + scores.rows) - pscore;
-            float match_score = max(0.0f, pscore[label]);
+            // Mat scores        = get<0>(library) * track_box.feature.t();
+            // float* pscore     = scores.ptr<float>(0);
+            // int label         = std::max_element(pscore, pscore + scores.rows) - pscore;
+            // float match_score = max(0.0f, pscore[label]);
             boxes.emplace_back(std::move(track_box));
 
-            if(match_score > 0.3f){
-                names[i] = iLogger::format("%s[%.3f]", get<1>(library)[label].c_str(), match_score);
-            }
+            // if(match_score > 0.3f){
+            //     names[i] = iLogger::format("%s[%.3f]", get<1>(library)[label].c_str(), match_score);
+            // }
         }
         tracker->update(boxes);
 
         auto final_objects = tracker->get_objects();
         for(int i = 0; i < final_objects.size(); ++i){
             auto& person = final_objects[i];
+            auto& filter = MotionFilter[person->id()];
+
             if(person->time_since_update() == 0 && person->state() == DeepSORT::State::Confirmed){
-                Rect box = DeepSORT::convert_box_to_rect(person->last_position());
-
-
-                // auto line = person->trace_line();
-                // for(int j = 0; j < (int)line.size() - 1; ++j){
-                //     auto& p = line[j];
-                //     auto& np = line[j + 1];
-                //     cv::line(image, p, np, Scalar(255, 128, 60), 2, 16);
-                // }
-
                 uint8_t r, g, b;
                 std::tie(r, g, b) = iLogger::random_color(person->id());
                 
-                rectangle(image, DeepSORT::convert_box_to_rect(person->predict_box()), Scalar(0, 255, 0), 2);
-                rectangle(image, box, Scalar(b, g, r), 3);
-                putText(image, iLogger::format("%d", person->id()), Point(box.x, box.y-10), 0, 1, Scalar(b, g, r), 2, 16);
+                auto loaction = person->last_position();
+                filter.update(loaction);
+                loaction = filter.predict();
+
+                const int shift = 4, shv = 1 << shift;
+                rectangle(image, 
+                    Point(loaction.left * shv, loaction.top * shv), 
+                    Point(loaction.right * shv, loaction.bottom * shv), 
+                    Scalar(b, g, r), 3, 16, shift
+                );
+
+                putText(image, iLogger::format("%d", person->id()), 
+                    Point(loaction.left, loaction.top - 10), 
+                    0, 2, Scalar(b, g, r), 3, 16
+                );
+           }else{
+               filter.missed();
            }
         }
 
@@ -323,7 +375,7 @@ int app_arcface_tracker(){
         //     putText(image, names[i], cv::Point(face.left + 30, face.top - 10), 0, 1, color, 2, 16);
         // }
         //remote_show->post(image);
-        //writer.write(image);
+        writer.write(image);
     }
     INFO("Done");
     return 0;

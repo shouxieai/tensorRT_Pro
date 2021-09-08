@@ -78,15 +78,15 @@ namespace TRT {
         explicit Tensor(const std::vector<int>& dims, DataType dtype = DataType::Float, std::shared_ptr<MixMemory> data = nullptr);
         virtual ~Tensor();
 
-        int numel();
-        int ndims(){return shape_.size();}
-        inline int size(int index)  {return shape_[index];}
-        inline int shape(int index) {return shape_[index];}
+        int numel() const;
+        int ndims() const{return shape_.size();}
+        inline int size(int index)  const{return shape_[index];}
+        inline int shape(int index) const{return shape_[index];}
 
-        inline int batch()  {return shape_[0];}
-        inline int channel(){return shape_[1];}
-        inline int height() {return shape_[2];}
-        inline int width()  {return shape_[3];}
+        inline int batch()   const{return shape_[0];}
+        inline int channel() const{return shape_[1];}
+        inline int height()  const{return shape_[2];}
+        inline int width()   const{return shape_[3];}
 
         inline DataType type()                const { return dtype_; }
         inline const std::vector<int>& dims() const { return shape_; }
@@ -96,19 +96,19 @@ namespace TRT {
         inline int element_size()             const { return data_type_size(dtype_); }
         inline DataHead head()                const { return head_; }
 
-        std::shared_ptr<Tensor> clone();
+        std::shared_ptr<Tensor> clone() const;
         Tensor& release();
         Tensor& set_to(float value);
-        bool empty();
+        bool empty() const;
 
         template<typename ... _Args>
-        int offset(int index, _Args ... index_args){
+        int offset(int index, _Args ... index_args) const{
             const int index_array[] = {index, index_args...};
             return offset_array(sizeof...(index_args) + 1, index_array);
         }
 
-        int offset_array(const std::vector<int>& index);
-        int offset_array(size_t size, const int* index_array);
+        int offset_array(const std::vector<int>& index) const;
+        int offset_array(size_t size, const int* index_array) const;
 
         template<typename ... _Args>
         Tensor& resize(int dim_size, _Args ... dim_size_args){
@@ -121,8 +121,8 @@ namespace TRT {
         Tensor& resize_single_dim(int idim, int size);
         int  count(int start_axis = 0) const;
 
-        Tensor& to_gpu(bool copyedIfCPU = true);
-        Tensor& to_cpu(bool copyedIfGPU = true);
+        Tensor& to_gpu(bool copy=true);
+        Tensor& to_cpu(bool copy=true);
 
         Tensor& to_half();
         Tensor& to_float();
@@ -133,24 +133,24 @@ namespace TRT {
         template<typename DType> inline DType* cpu()             { return (DType*)cpu(); }
 
         template<typename DType, typename ... _Args> 
-        inline DType* cpu(int t, _Args&& ... args) { return cpu<DType>() + offset(t, args...); }
+        inline DType* cpu(int i, _Args&& ... args) { return cpu<DType>() + offset(i, args...); }
 
 
         template<typename DType> inline const DType* gpu() const { return (DType*)gpu(); }
         template<typename DType> inline DType* gpu()             { return (DType*)gpu(); }
 
         template<typename DType, typename ... _Args> 
-        inline DType* gpu(int t, _Args&& ... args) { return gpu<DType>() + offset(t, args...); }
+        inline DType* gpu(int i, _Args&& ... args) { return gpu<DType>() + offset(i, args...); }
 
 
         template<typename DType, typename ... _Args> 
-        inline DType& at(int t, _Args&& ... args) { return *(cpu<DType>() + offset(t, args...)); }
+        inline DType& at(int i, _Args&& ... args) { return *(cpu<DType>() + offset(i, args...)); }
         
-        std::shared_ptr<MixMemory> get_data()                    {return data_;}
-        std::shared_ptr<MixMemory> get_workspace()               {return workspace_;}
+        std::shared_ptr<MixMemory> get_data()             const {return data_;}
+        std::shared_ptr<MixMemory> get_workspace()        const {return workspace_;}
         Tensor& set_workspace(std::shared_ptr<MixMemory> workspace) {workspace_ = workspace; return *this;}
 
-        CUStream get_stream(){return stream_;}
+        CUStream get_stream() const{return stream_;}
         Tensor& set_stream(CUStream stream){stream_ = stream; return *this;}
 
         Tensor& set_mat     (int n, const cv::Mat& image);
@@ -190,7 +190,7 @@ namespace TRT {
             return np.frombuffer(binary_data, np_dtype, offset=(ndims + 3) * 4).reshape(*dims)
 
          **/
-        bool save_to_file(const std::string& file);
+        bool save_to_file(const std::string& file) const;
 
     private:
         Tensor& compute_shape_string();

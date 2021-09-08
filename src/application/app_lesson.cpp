@@ -105,7 +105,7 @@ void lesson_cache1frame(){
 
     //////////////////基础耗时////////////////////////
     {
-        cv::VideoCapture cap("exp/face_tracker1.mp4");
+        cv::VideoCapture cap("exp/face_tracker.mp4");
         cv::Mat image;
         int iframe = 0;
         auto t0 = iLogger::timestamp_now_float();
@@ -122,7 +122,7 @@ void lesson_cache1frame(){
 
     //////////////////传统做法////////////////////////
     {
-        cv::VideoCapture cap("exp/face_tracker1.mp4");
+        cv::VideoCapture cap("exp/face_tracker.mp4");
         cv::Mat image;
         int iframe = 0;
         auto t0 = iLogger::timestamp_now_float();
@@ -147,7 +147,7 @@ void lesson_cache1frame(){
 
     //////////////////优化做法////////////////////////
     {
-        cv::VideoCapture cap("exp/face_tracker1.mp4");
+        cv::VideoCapture cap("exp/face_tracker.mp4");
         shared_future<Yolo::ObjectBoxArray> prev_future;
         cv::Mat image;
         cv::Mat prev_image;

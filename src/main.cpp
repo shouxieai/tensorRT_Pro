@@ -14,6 +14,7 @@ int app_arcface_tracker();
 int app_scrfd();
 int app_high_performance();
 int app_lesson();
+int app_plugin();
 
 void test_all(){
     app_yolo();
@@ -24,6 +25,7 @@ void test_all(){
     app_arcface_video();
     app_arcface_tracker();
     app_scrfd();
+    app_plugin();
     INFO("test done.");
 }
 
@@ -54,6 +56,8 @@ int main(int argc, char** argv){
         app_high_performance();
     }else if(strcmp(method, "lesson") == 0){
         app_lesson();
+    }else if(strcmp(method, "plugin") == 0){
+        app_plugin();
     }else if(strcmp(method, "test_all") == 0){
         test_all();
     }else{

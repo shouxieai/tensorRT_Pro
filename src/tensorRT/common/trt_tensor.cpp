@@ -201,7 +201,7 @@ namespace TRT{
 		}
 	}
 
-	shared_ptr<Tensor> Tensor::clone(){
+	shared_ptr<Tensor> Tensor::clone() const{
 		auto new_tensor = make_shared<Tensor>(shape_, dtype_);
 		if(head_ == DataHead::Init)
 			return new_tensor;
@@ -278,7 +278,7 @@ namespace TRT{
 		return *this;
 	}
 
-	bool Tensor::empty() {
+	bool Tensor::empty() const{
 		return data_->cpu() == nullptr && data_->gpu() == nullptr;
 	}
 
@@ -298,7 +298,7 @@ namespace TRT{
 		return resize(dims.size(), dims.data());
 	}
 
-	int Tensor::numel(){
+	int Tensor::numel() const{
 		int value = shape_.empty() ? 0 : 1;
 		for(int i = 0; i < shape_.size(); ++i){
 			value *= shape_[i];
@@ -361,7 +361,7 @@ namespace TRT{
 		return *this;
 	}
 
-	Tensor& Tensor::to_gpu(bool copyedIfCPU) {
+	Tensor& Tensor::to_gpu(bool copy) {
 
 		if (head_ == DataHead::Device)
 			return *this;
@@ -369,13 +369,13 @@ namespace TRT{
 		head_ = DataHead::Device;
 		data_->gpu(bytes_);
 
-		if (copyedIfCPU && data_->cpu() != nullptr) {
+		if (copy && data_->cpu() != nullptr) {
 			checkCudaRuntime(cudaMemcpyAsync(data_->gpu(), data_->cpu(), bytes_, cudaMemcpyHostToDevice, stream_));
 		}
 		return *this;
 	}
 	
-	Tensor& Tensor::to_cpu(bool copyedIfGPU) {
+	Tensor& Tensor::to_cpu(bool copy) {
 
 		if (head_ == DataHead::Host)
 			return *this;
@@ -383,7 +383,7 @@ namespace TRT{
 		head_ = DataHead::Host;
 		data_->cpu(bytes_);
 
-		if (copyedIfGPU && data_->gpu() != nullptr) {
+		if (copy && data_->gpu() != nullptr) {
 			checkCudaRuntime(cudaMemcpyAsync(data_->cpu(), data_->gpu(), bytes_, cudaMemcpyDeviceToHost, stream_));
 			checkCudaRuntime(cudaStreamSynchronize(stream_));
 		}
@@ -454,7 +454,7 @@ namespace TRT{
 		return *this;
 	}
 
-	int Tensor::offset_array(size_t size, const int* index_array){
+	int Tensor::offset_array(size_t size, const int* index_array) const{
 
 		Assert(size <= shape_.size());
 		int value = 0;
@@ -469,7 +469,7 @@ namespace TRT{
 		return value;
 	}
 
-	int Tensor::offset_array(const std::vector<int>& index_array){
+	int Tensor::offset_array(const std::vector<int>& index_array) const{
 		return offset_array(index_array.size(), index_array.data());
 	}
 
@@ -528,7 +528,7 @@ namespace TRT{
 		return *this;
 	}
 
-	bool Tensor::save_to_file(const std::string& file){
+	bool Tensor::save_to_file(const std::string& file) const{
 
 		if(empty()) return false;
 

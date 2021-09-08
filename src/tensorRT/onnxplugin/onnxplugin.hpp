@@ -30,54 +30,50 @@ namespace ONNXPlugin {
 		int count(int start_axis = 0) const;
 
 		template<typename ... _Args>
-		int offset(int index, _Args&& ... index_args){
+		int offset(int index, _Args&& ... index_args) const{
 			const int index_array[] = {index, index_args...};
             return offset_array(sizeof...(index_args) + 1, index_array);
 		}
 
-		int offset_array(const std::vector<int>& index);
-		int offset_array(size_t size, const int* index_array);
+		int offset_array(const std::vector<int>& index) const;
+		int offset_array(size_t size, const int* index_array) const;
+
+		inline int batch()   const{return shape_[0];}
+        inline int channel() const{return shape_[1];}
+        inline int height()  const{return shape_[2];}
+        inline int width()   const{return shape_[3];}
 
 		template<typename _T>
 		inline _T* ptr() const { return (_T*)ptr_; }
 
 		template<typename _T, typename ... _Args>
-		inline _T* ptr(int t, _Args&& ... args) const { return (_T*)ptr_ + offset(t, args...); }
-
-		inline float* ptr_float() const { return (float*)ptr_; }
-
-		template<typename ... _Args>
-		inline float* ptr_float(int t, _Args&& ... args) const { return (float*)ptr_ + offset(t, args...); }
-
-		inline TRT::float16* ptr_half() const { return (TRT::float16*)ptr_; }
-
-		template<typename ... _Args>
-		inline TRT::float16* ptr_half(int t, _Args&& ... args) const { return (TRT::float16*)ptr_ + offset(t, args...); }
+		inline _T* ptr(int i, _Args&& ... args) const { return (_T*)ptr_ + offset(i, args...); }
 
 		void* ptr_ = nullptr;
-		TRT::DataType dtType_ = TRT::DataType::Float;
+		TRT::DataType dtype_ = TRT::DataType::Float;
 		std::vector<int> shape_;
 	};
 
 	struct LayerConfig {
 
 		///////////////////////////////////
-		int nbOutput_ = 1;
-		int nbInput_  = 1;
-		size_t workspaceSize_ = 0;
-		std::set<nvinfer1::DataType> supportDataType_;
-		std::set<nvinfer1::PluginFormat> supportPluginFormat_;
+		int num_output_ = 1;
+		int num_input_  = 1;
+		size_t workspace_size_ = 0;
+		int max_batch_size_ = 0;
+		std::set<nvinfer1::DataType> support_dtype_set_;
+		std::set<nvinfer1::PluginFormat> support_plugin_format_set_;
 
 		std::vector<std::shared_ptr<TRT::Tensor>> weights_;
-		TRT::DataType configDataType_;
-		nvinfer1::PluginFormat configPluginFormat_;
+		TRT::DataType usage_dtype_;
+		nvinfer1::PluginFormat usage_plugin_format_;
 		std::string info_;
 
 		///////////////////////////////////
-		std::string serializeData_;
+		std::string serialize_data_;
 
 		LayerConfig();
-		void serialCopyTo(void* buffer);
+		void serialize_data_copy_to(void* buffer);
 		int serialize();
 		void deserialize(const void* ptr, size_t length);
 		void setup(const std::string& info, const std::vector<std::shared_ptr<TRT::Tensor>>& weights);
@@ -140,9 +136,9 @@ namespace ONNXPlugin {
 
 		void pluginInit(const std::string& name, const std::string& info, const std::vector<std::shared_ptr<TRT::Tensor>>& weights);
 		void pluginInit(const std::string& name, const void* serialData, size_t serialLength);
-		virtual void pluginConfigFinish() {};
+		virtual void config_finish() {};
 
-		virtual std::shared_ptr<LayerConfig> config(const std::string& layerName);
+		virtual std::shared_ptr<LayerConfig> new_config();
 		virtual bool supportsFormatCombination(
 			int32_t pos, const nvinfer1::PluginTensorDesc* inOut, int32_t nbInputs, int32_t nbOutputs) noexcept override;
 
@@ -172,7 +168,6 @@ namespace ONNXPlugin {
 		std::vector<GTensor> weightTensors_;
 	};
 
-#define ExecuteKernel(numJobs, kernel, stream)		kernel<<<gridDims(numJobs), blockDims(numJobs), 0, stream>>>
 }; //namespace Plugin
 
 #endif //ONNX_PLUGIN_HPP

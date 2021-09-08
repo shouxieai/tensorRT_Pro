@@ -145,6 +145,9 @@ high_perf : workspace/pro
 lesson : workspace/pro
 	@cd workspace && ./pro lesson
 
+plugin : workspace/pro
+	@cd workspace && ./pro plugin
+
 pytorch : trtpyc
 	@cd python && python test_torch.py
 
