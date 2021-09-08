@@ -3,13 +3,10 @@
 - 相关PPTX下载：http://zifuture.com:1556/fs/sxai/tensorRT.pptx
 
 ## 3行代码实现极致性能YoloV5/YoloX推理，TensorRT C++库
-1. 支持最新版tensorRT8.0，具有最新的解析器算子支持
-2. 支持静态显性batch size，和动态非显性batch size，这是官方所不支持的
-3. 支持自定义插件，简化插件的实现过程
-4. 支持fp32、fp16、int8的编译
-5. 优化代码结构，打印编译网络信息
-6. 支持RetinaFace、Scrfd、YoloV5、YoloX、Arcface、AlphaPose、DeepSORT
-7. c++类库，对编译和推理做了封装，对tensor做了封装，支持n维的tensor管理
+1. 基于tensorRT8.0，C++/Python高级接口
+2. 简化自定义插件的实现过程，封装序列化、反序列化
+3. 简化fp32、fp16、int8编译过程，C++/Python部署，服务器/嵌入式使用
+4. 高性能拿来就用的案例有RetinaFace、Scrfd、YoloV5、YoloX、Arcface、AlphaPose、DeepSORT(C++)
 
 ## Windows支持
 1. 依赖请查看[lean/README.md](lean/README.md)
