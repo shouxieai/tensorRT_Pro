@@ -770,5 +770,6 @@ PYBIND11_MODULE(libtrtpyc, m) {
 	m.def("set_log_level", [](iLogger::LogLevel level){iLogger::set_log_level(level);});
 	m.def("get_log_level", [](){return iLogger::get_log_level();});
 	m.def("random_color", [](int idd){return iLogger::random_color(idd);});
+	m.def("init_nv_plugins", [](){TRT::init_nv_plugins();});
 }
 #endif // HAS_PYTHON
