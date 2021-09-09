@@ -68,3 +68,4 @@ __pycache__
 __pycache__
 
 !/workspace/wget.exe
+/workspace/*.mp4
