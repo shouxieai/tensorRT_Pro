@@ -9,6 +9,7 @@
 #include <stddef.h>
 #include <vector>
 #include <functional>
+#include <string>
 
 //!
 //! \file NvOnnxParser.h
