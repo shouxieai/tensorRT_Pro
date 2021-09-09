@@ -42,7 +42,7 @@ include_paths := src        \
 library_paths := $(lean_protobuf)/lib \
 			$(lean_opencv)/lib    \
 			$(lean_tensor_rt)/lib \
-			$(lean_cuda)/lib  \
+			$(lean_cuda)/lib64  \
 			$(lean_cudnn)/lib
 
 link_librarys := opencv_core opencv_imgproc opencv_videoio opencv_imgcodecs \
