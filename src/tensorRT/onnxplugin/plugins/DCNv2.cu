@@ -337,13 +337,11 @@ public:
 	cublasHandle_t cublasHandle_ = nullptr;
 	SetupPlugin(DCNv2);
 
-	int initialize() noexcept{
-		cublasCheck(cublasCreate(&cublasHandle_));
-		return 0;
+	virtual void attachToContext(cudnnContext* /*cudnn*/, cublasContext* cublas, nvinfer1::IGpuAllocator* /*allocator*/) noexcept override{
+		cublasHandle_ = cublas;
 	}
 
-	void terminate() noexcept{
-		cublasCheck(cublasDestroy(cublasHandle_));
+	virtual void detachFromContext() noexcept override{
 		cublasHandle_ = nullptr;
 	}
 
