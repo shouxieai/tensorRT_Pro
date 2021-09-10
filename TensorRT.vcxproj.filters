@@ -154,6 +154,9 @@
     <ClCompile Include="src\application\app_arcface.cpp">
       <Filter>src\application</Filter>
     </ClCompile>
+    <ClCompile Include="src\application\app_plugin.cpp">
+      <Filter>src\application</Filter>
+    </ClCompile>
     <ClCompile Include="src\application\app_retinaface\retinaface.cpp">
       <Filter>src\application\app_retinaface</Filter>
     </ClCompile>
