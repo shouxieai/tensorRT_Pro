@@ -26,8 +26,9 @@ lean_tensor_rt := /data/sxai/lean/TensorRT-8.0.1.6-cuda10.2-cudnn8.2
 lean_cudnn     := /data/sxai/lean/cudnn8.2.2.26
 lean_opencv    := /data/sxai/lean/opencv4.2.0
 lean_cuda      := /data/sxai/lean/cuda10.2
-lean_python    := /data/datav/newbb/lean/anaconda3/envs/torch1.8
 use_python     := true
+python_root    := /data/datav/newbb/lean/anaconda3/envs/torch1.8
+python_name    := python3.9
 
 include_paths := src        \
 			src/application \
@@ -55,9 +56,9 @@ link_librarys := opencv_core opencv_imgproc opencv_videoio opencv_imgcodecs \
 support_define    := 
 
 ifeq ($(use_python), true) 
-include_paths  += $(lean_python)/include/python3.9
-library_paths  += $(lean_python)/lib
-link_librarys  += python3.9
+include_paths  += $(python_root)/include/$(python_name)
+library_paths  += $(python_root)/lib
+link_librarys  += $(python_name)
 support_define += -DHAS_PYTHON
 endif
 
@@ -67,6 +68,7 @@ library_paths := $(foreach item,$(library_paths),-L$(item))
 link_librarys := $(foreach item,$(link_librarys),-l$(item))
 
 # 如果是其他显卡，请修改-gencode=arch=compute_75,code=sm_75为对应显卡的能力
+# 显卡对应的号码参考这里：https://developer.nvidia.com/zh-cn/cuda-gpus#compute
 cpp_compile_flags := -std=c++11 -fPIC -m64 -g -fopenmp -w -O0 $(support_define)
 cu_compile_flags  := -std=c++11 -m64 -Xcompiler -fPIC -g -w -gencode=arch=compute_75,code=sm_75 -O0 $(support_define)
 link_flags        := -pthread -fopenmp -Wl,-rpath='$$ORIGIN'

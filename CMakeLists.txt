@@ -8,7 +8,10 @@ set(CMAKE_BUILD_TYPE Debug)
 set(EXECUTABLE_OUTPUT_PATH ${PROJECT_SOURCE_DIR}/workspace)
 set(HAS_PYTHON ON)
 
-# 取决于你的设备，这是编译cu文件的配置，一般可以不用设置，除非你调用了特定函数例如half新特性
+# 如果要支持python则设置python路径
+set(PythonRoot "/data/datav/newbb/lean/anaconda3/envs/torch1.8")
+set(PythonName "python3.9")
+
 # 如果你是不同显卡，请设置为显卡对应的号码参考这里：https://developer.nvidia.com/zh-cn/cuda-gpus#compute
 set(CUDA_GEN_CODE "-gencode=arch=compute_75,code=sm_75")
 
@@ -26,10 +29,6 @@ set(TENSORRT_DIR "/data/sxai/lean/TensorRT-8.0.1.6-cuda10.2-cudnn8.2")
 
 # 因为protobuf，需要用特定版本，所以这里指定路径
 set(PROTOBUF_DIR "/data/sxai/lean/protobuf3.11.4")
-
-# 如果要支持python则设置python路径
-set(PythonDIR "/data/datav/newbb/lean/anaconda3/envs/torch1.8")
-set(PythonName "python3.9")
 
 
 find_package(CUDA REQUIRED)
@@ -57,9 +56,9 @@ link_directories(
 )
 
 if("${HAS_PYTHON}" STREQUAL "ON")
-    message("Usage Python ${PythonDIR}")
-    include_directories(${PythonDIR}/include/${PythonName})
-    link_directories(${PythonDIR}/lib)
+    message("Usage Python ${PythonRoot}")
+    include_directories(${PythonRoot}/include/${PythonName})
+    link_directories(${PythonRoot}/lib)
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DHAS_PYTHON")
 endif()
 
