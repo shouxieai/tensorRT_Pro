@@ -146,6 +146,7 @@ cd tensorRT_cpp
 make yolo -j32
 ```
 
+
 ## YoloX的支持
 - https://github.com/Megvii-BaseDetection/YOLOX
 - 你可以选择直接make run，会从镜像地址下载onnx并推理运行看到效果。不需要自行导出
@@ -190,6 +191,7 @@ model.head.decode_in_inference = True
 
 3. 导出onnx模型
 ```bash
+
 # 下载模型，或许你需要翻墙
 # wget https://github.com/Megvii-BaseDetection/YOLOX/releases/download/0.1.1rc0/yolox_m.pth
 
@@ -335,6 +337,7 @@ auto int8process = [](int current, int count, vector<string>& images, shared_ptr
     }
 };
 
+
 // 编译模型指定为INT8
 auto model_file = "yolov5m.int8.trtmodel";
 TRT::compile(
@@ -367,7 +370,7 @@ auto image = imread("demo.jpg");
 auto input = engine->input(0);
 auto output = engine->output(0);
 
-// 把图像塞到input tensor中，这里是减去均值，除以标准差
+// 把图像塞到input tensor中，这里是减去均值，并除以标准差
 float mean[] = {0, 0, 0};
 float std[]  = {1, 1, 1};
 input->set_norm_mat(i, image, mean, std);
