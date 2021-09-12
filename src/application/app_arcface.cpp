@@ -6,6 +6,7 @@
 #include "app_arcface/arcface.hpp"
 #include "tools/deepsort.hpp"
 #include "tools/zmq_remote_show.hpp"
+#include <unordered_map>
 
 using namespace std;
 using namespace cv;

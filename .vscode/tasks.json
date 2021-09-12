@@ -7,6 +7,9 @@
             "label": "build",
             "type": "shell",
             "command": "make pro -j25"
+
+            // for cmake
+            //"command": "cd build && make pro -j25"
         }
     ]
 }

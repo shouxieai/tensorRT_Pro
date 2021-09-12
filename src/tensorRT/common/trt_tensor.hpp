@@ -79,7 +79,7 @@ namespace TRT {
         virtual ~Tensor();
 
         int numel() const;
-        int ndims() const{return shape_.size();}
+        inline int ndims() const{return shape_.size();}
         inline int size(int index)  const{return shape_[index];}
         inline int shape(int index) const{return shape_[index];}
 

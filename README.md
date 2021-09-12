@@ -1,3 +1,4 @@
+##
 ## B站同步视频讲解
 - https://www.bilibili.com/video/BV1Xw411f7FW
 - 相关PPTX下载：http://zifuture.com:1556/fs/sxai/tensorRT.pptx
@@ -14,7 +15,7 @@
 3. TensorRT.vcxproj文件中，修改`<Import Project="$(VCTargetsPath)\BuildCustomizations\CUDA 10.0.targets" />`为你配置的CUDA路径
 4. TensorRT.vcxproj文件中，修改`<CodeGeneration>compute_61,sm_61</CodeGeneration>`为你显卡配备的计算能力
     - 根据型号参考这里：https://developer.nvidia.com/zh-cn/cuda-gpus#compute
-5. 配置依赖，或者下载依赖到lean中。配置VC++目录->包含目录和引用目录
+5. 配置依赖或者下载依赖到lean中。配置VC++目录->包含目录和引用目录
 6. 配置环境，调试->环境，设置PATH路径
 7. 编译并运行案例
 
@@ -27,7 +28,7 @@ image  = cv2.imread("inference/car.jpg")
 bboxes = yolo.commit(image).get()
 ```
 
-- Pytorch无缝对接
+- Pytorch的无缝对接
 ```python
 model     = models.resnet18(True).eval().to(device)
 trt_model = tp.convert_torch_to_trt(model, input)
@@ -76,31 +77,7 @@ auto box = engine->commit(image).get();
 ## 效果图
 ![](workspace/yq.jpg)
 
-## YoloV5-ONNX推理支持-第一种，使用提供的onnx
-- 这个yolov5m.onnx模型使用官方最新版本直接导出得到
-- CMake
-    - 在CMakeLists.txt中配置依赖路径tensorRT、cuda、cudnn、protobuf
-    ```bash
-    git clone git@github.com:shouxieai/tensorRT_cpp.git
-    cd tensorRT_cpp
-
-    mkdir build
-    cd build
-    cmake ..
-    make yolo -j32
-
-    # 或者make alphapose -j32
-    ```
-
-- Makefile
-    - 在Makefile中配置好依赖的tensorRT、cuda、cudnn、protobuf
-    ```bash
-    git clone git@github.com:shouxieai/tensorRT_cpp.git
-    cd tensorRT_cpp
-    make yolo -j32
-    ```
-
-## YoloV5-ONNX推理支持-第二种，自行从官方导出onnx
+## YoloV5支持
 - yolov5的onnx，你的pytorch版本>=1.7时，导出的onnx模型可以直接被当前框架所使用
 - 你的pytorch版本低于1.7时，或者对于yolov5其他版本（2.0、3.0、4.0），可以对opset进行简单改动后直接被框架所支持
 - 如果你想实现低版本pytorch的tensorRT推理、动态batchsize等更多更高级的问题，请打开我们[博客地址](http://zifuture.com:8090)后找到二维码进群交流
@@ -137,7 +114,7 @@ torch.onnx.export(dynamic_axes={'images': {0: 'batch'},  # shape(1,3,640,640)
 3. 导出onnx模型
 ```bash
 cd yolov5
-python export.py --weights=yolov5s.pt --dynamic --opset=11
+python export.py --weights=yolov5s.pt --dynamic --include=onnx --opset=11
 ```
 4. 复制模型并执行
 ```bash
@@ -145,6 +122,7 @@ cp yolov5/yolov5m.onnx tensorRT_cpp/workspace/
 cd tensorRT_cpp
 make yolo -j32
 ```
+
 
 ## YoloX的支持
 - https://github.com/Megvii-BaseDetection/YOLOX
@@ -190,6 +168,7 @@ model.head.decode_in_inference = True
 
 3. 导出onnx模型
 ```bash
+
 # 下载模型，或许你需要翻墙
 # wget https://github.com/Megvii-BaseDetection/YOLOX/releases/download/0.1.1rc0/yolox_m.pth
 
@@ -335,6 +314,7 @@ auto int8process = [](int current, int count, vector<string>& images, shared_ptr
     }
 };
 
+
 // 编译模型指定为INT8
 auto model_file = "yolov5m.int8.trtmodel";
 TRT::compile(
@@ -363,11 +343,11 @@ engine->print();
 // 加载图像
 auto image = imread("demo.jpg");
 
-// 获取模型的输入和输出tensor节点，可以根据名字或者索引获取第几个
+// 获取模型的输入和输出tensor节点，可以根据名字或者索引获取具体第几个
 auto input = engine->input(0);
 auto output = engine->output(0);
 
-// 把图像塞到input tensor中，这里是减去均值，除以标准差
+// 把图像塞到input tensor中，这里是减去均值，并除以标准差
 float mean[] = {0, 0, 0};
 float std[]  = {1, 1, 1};
 input->set_norm_mat(i, image, mean, std);
@@ -408,6 +388,7 @@ int HSwish::enqueue(const std::vector<GTensor>& inputs, std::vector<GTensor>& ou
     HSwishKernel <<<grid, block, 0, stream >>> (inputs[0].ptr<float>(), outputs[0].ptr<float>(), count);
     return 0;
 }
+
 
 RegisterPlugin(HSwish);
 ```
@@ -461,9 +442,9 @@ Engine 0x23dd7780 detail
 [2021-07-22 14:37:42][info][_main.cpp:124]:outputs[0].size = 2
 [2021-07-22 14:37:42][info][_main.cpp:124]:outputs[1].size = 5
 [2021-07-22 14:37:42][info][_main.cpp:124]:outputs[2].size = 1
-```
 
+```
 
 ## 关于
 - 我们的博客地址：http://www.zifuture.com:8090/
-- 我们的B站地址：https://space.bilibili.com/1413433465
+- 我们的B站地址： https://space.bilibili.com/1413433465
