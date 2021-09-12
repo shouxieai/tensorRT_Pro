@@ -76,31 +76,7 @@ auto box = engine->commit(image).get();
 ## 效果图
 ![](workspace/yq.jpg)
 
-## YoloV5-ONNX推理支持-第一种，使用提供的onnx
-- 这个yolov5m.onnx模型使用官方最新版本直接导出得到
-- CMake
-    - 在CMakeLists.txt中配置依赖路径tensorRT、cuda、cudnn、protobuf
-    ```bash
-    git clone git@github.com:shouxieai/tensorRT_cpp.git
-    cd tensorRT_cpp
-
-    mkdir build
-    cd build
-    cmake ..
-    make yolo -j32
-
-    # 或者make alphapose -j32
-    ```
-
-- Makefile
-    - 在Makefile中配置好依赖的tensorRT、cuda、cudnn、protobuf
-    ```bash
-    git clone git@github.com:shouxieai/tensorRT_cpp.git
-    cd tensorRT_cpp
-    make yolo -j32
-    ```
-
-## YoloV5-ONNX推理支持-第二种，自行从官方导出onnx
+## YoloV5支持
 - yolov5的onnx，你的pytorch版本>=1.7时，导出的onnx模型可以直接被当前框架所使用
 - 你的pytorch版本低于1.7时，或者对于yolov5其他版本（2.0、3.0、4.0），可以对opset进行简单改动后直接被框架所支持
 - 如果你想实现低版本pytorch的tensorRT推理、动态batchsize等更多更高级的问题，请打开我们[博客地址](http://zifuture.com:8090)后找到二维码进群交流
@@ -137,7 +113,7 @@ torch.onnx.export(dynamic_axes={'images': {0: 'batch'},  # shape(1,3,640,640)
 3. 导出onnx模型
 ```bash
 cd yolov5
-python export.py --weights=yolov5s.pt --dynamic --opset=11
+python export.py --weights=yolov5s.pt --dynamic --include=onnx --opset=11
 ```
 4. 复制模型并执行
 ```bash

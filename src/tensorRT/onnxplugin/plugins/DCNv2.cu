@@ -229,8 +229,8 @@ __global__ void DCNIm2colKernel(
 	}
 }
 
-template<typename _T>
-static __global__ void biasKernel(_T* data_input, const _T* bias, const int f_area, int edge) {
+template<typename DataType>
+static __global__ void biasKernel(DataType* data_input, const DataType* bias, const int f_area, int edge) {
 
 	KernelPositionBlock;
 	int bias_index = position / f_area;
@@ -276,7 +276,7 @@ inline void segemm_native(cublasHandle_t handle,
 	cublasCheck(cublasGemmEx(handle, transa, transb, m, n, k, &halpha, A, CUDA_R_16F, lda, B, CUDA_R_16F, ldb, &hbeta, C, CUDA_R_16F, ldc, CUDA_R_16F, CUBLAS_GEMM_DFALT));
 }
 
-template<typename _T>
+template<typename DataType>
 static void enqueue_native(cublasHandle_t handle, const std::vector<GTensor>& inputs, std::vector<GTensor>& outputs, const std::vector<GTensor>& weights, void* workspace, cudaStream_t stream) {
 	auto& data = inputs[0];
 	auto& om = inputs[1];
@@ -295,16 +295,16 @@ static void enqueue_native(cublasHandle_t handle, const std::vector<GTensor>& in
 
 	cublasCheck(cublasSetStream(handle, stream));
 	for (int ibatch = 0; ibatch < data.batch(); ++ibatch) {
-		_T* maskWorkspacePtr = (_T*)workspace + (maskSize + im2colSize) * ibatch;
-		_T* im2colWorkspacePtr = (_T*)workspace + (maskSize + im2colSize) * ibatch + maskSize;
+		DataType* maskWorkspacePtr = (DataType*)workspace + (maskSize + im2colSize) * ibatch;
+		DataType* im2colWorkspacePtr = (DataType*)workspace + (maskSize + im2colSize) * ibatch + maskSize;
 
-		_T* inputMask = om.ptr<_T>(ibatch, om.channel() / 3 * 2);
+		DataType* inputMask = om.ptr<DataType>(ibatch, om.channel() / 3 * 2);
 		checkCudaKernel(
 			sigmoidKernel<<<CUDATools::grid_dims(maskSize), CUDATools::block_dims(maskSize), 0, stream>>>(inputMask, maskWorkspacePtr, maskSize);
 		);
 
-		_T* datainput = data.ptr<_T>(ibatch);
-		_T* offset = om.ptr<_T>(ibatch);
+		DataType* datainput = data.ptr<DataType>(ibatch);
+		DataType* offset = om.ptr<DataType>(ibatch);
 
 		auto jobs = (size_t)data.channel() * out.height() * out.width();
 		checkCudaKernel(
@@ -314,17 +314,17 @@ static void enqueue_native(cublasHandle_t handle, const std::vector<GTensor>& in
 			);
 		);
 
-		_T* weightKernel = weights[0].ptr<_T>();
-		segemm_native(handle, CUBLAS_OP_N, CUBLAS_OP_N, n, m, k, alpha, im2colWorkspacePtr, n, weightKernel, k, beta, out.ptr<_T>(ibatch), n);
+		DataType* weightKernel = weights[0].ptr<DataType>();
+		segemm_native(handle, CUBLAS_OP_N, CUBLAS_OP_N, n, m, k, alpha, im2colWorkspacePtr, n, weightKernel, k, beta, out.ptr<DataType>(ibatch), n);
 
 		if (weights.size() > 1) {
-			_T* weightBias = weights[1].ptr<_T>();
+			DataType* weightBias = weights[1].ptr<DataType>();
 			size_t edge = out.count(1);
 			size_t area = out.count(2);
 
 			checkCudaKernel(
 				biasKernel<<<CUDATools::grid_dims(edge), CUDATools::block_dims(edge), 0, stream>>>(
-					out.ptr<_T>(ibatch), weightBias, area, edge
+					out.ptr<DataType>(ibatch), weightBias, area, edge
 				);
 			);
 		}
