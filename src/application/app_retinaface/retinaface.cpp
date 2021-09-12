@@ -241,7 +241,9 @@ namespace RetinaFace{
             float* affine_matrix_host     = (float*)cpu_workspace;
             uint8_t* image_host           = size_matrix + cpu_workspace;
 
-            checkCudaRuntime(cudaMemcpyAsync(image_host,   image.data, size_image, cudaMemcpyHostToHost,   stream_));
+            // checkCudaRuntime(cudaMemcpyAsync(image_host,   image.data, size_image, cudaMemcpyHostToHost,   stream_));
+            // speed up
+            memcpy(image_host, image.data, size_image);
             checkCudaRuntime(cudaMemcpyAsync(image_device, image_host, size_image, cudaMemcpyHostToDevice, stream_));
             checkCudaRuntime(cudaMemcpyAsync(affine_matrix_host, job.additional.d2i, sizeof(job.additional.d2i), cudaMemcpyHostToHost, stream_));
             checkCudaRuntime(cudaMemcpyAsync(affine_matrix_device, affine_matrix_host, sizeof(job.additional.d2i), cudaMemcpyHostToDevice, stream_));

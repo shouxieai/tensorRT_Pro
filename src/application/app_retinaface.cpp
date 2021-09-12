@@ -106,7 +106,7 @@ int app_retinaface(){
     INFO("===================== test retinaface fp32 ==================================");
 
     string model_file;
-    if(!compile_retinaface(640, 480, model_file))
+    if(!compile_retinaface(1920, 1280, model_file))
         return 0;
 
     auto engine = RetinaFace::create_infer(model_file, 0, 0.7);
