@@ -14,7 +14,7 @@ int app_arcface_tracker();
 int app_scrfd();
 int app_high_performance();
 int app_lesson();
-int app_plugin();
+int app_plugin();    
 
 void test_all(){
     app_yolo();
