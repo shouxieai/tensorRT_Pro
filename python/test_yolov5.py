@@ -24,3 +24,4 @@ saveto = "single_inference/yolov5.car.jpg"
 print(f"Save to {saveto}")
 
 cv2.imwrite(saveto, image)
+

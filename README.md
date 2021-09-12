@@ -1,3 +1,4 @@
+##
 ## B站同步视频讲解
 - https://www.bilibili.com/video/BV1Xw411f7FW
 - 相关PPTX下载：http://zifuture.com:1556/fs/sxai/tensorRT.pptx
@@ -14,7 +15,7 @@
 3. TensorRT.vcxproj文件中，修改`<Import Project="$(VCTargetsPath)\BuildCustomizations\CUDA 10.0.targets" />`为你配置的CUDA路径
 4. TensorRT.vcxproj文件中，修改`<CodeGeneration>compute_61,sm_61</CodeGeneration>`为你显卡配备的计算能力
     - 根据型号参考这里：https://developer.nvidia.com/zh-cn/cuda-gpus#compute
-5. 配置依赖，或者下载依赖到lean中。配置VC++目录->包含目录和引用目录
+5. 配置依赖或者下载依赖到lean中。配置VC++目录->包含目录和引用目录
 6. 配置环境，调试->环境，设置PATH路径
 7. 编译并运行案例
 
@@ -27,7 +28,7 @@ image  = cv2.imread("inference/car.jpg")
 bboxes = yolo.commit(image).get()
 ```
 
-- Pytorch无缝对接
+- Pytorch的无缝对接
 ```python
 model     = models.resnet18(True).eval().to(device)
 trt_model = tp.convert_torch_to_trt(model, input)
@@ -122,6 +123,7 @@ cd tensorRT_cpp
 make yolo -j32
 ```
 
+
 ## YoloX的支持
 - https://github.com/Megvii-BaseDetection/YOLOX
 - 你可以选择直接make run，会从镜像地址下载onnx并推理运行看到效果。不需要自行导出
@@ -166,6 +168,7 @@ model.head.decode_in_inference = True
 
 3. 导出onnx模型
 ```bash
+
 # 下载模型，或许你需要翻墙
 # wget https://github.com/Megvii-BaseDetection/YOLOX/releases/download/0.1.1rc0/yolox_m.pth
 
@@ -311,6 +314,7 @@ auto int8process = [](int current, int count, vector<string>& images, shared_ptr
     }
 };
 
+
 // 编译模型指定为INT8
 auto model_file = "yolov5m.int8.trtmodel";
 TRT::compile(
@@ -339,11 +343,11 @@ engine->print();
 // 加载图像
 auto image = imread("demo.jpg");
 
-// 获取模型的输入和输出tensor节点，可以根据名字或者索引获取第几个
+// 获取模型的输入和输出tensor节点，可以根据名字或者索引获取具体第几个
 auto input = engine->input(0);
 auto output = engine->output(0);
 
-// 把图像塞到input tensor中，这里是减去均值，除以标准差
+// 把图像塞到input tensor中，这里是减去均值，并除以标准差
 float mean[] = {0, 0, 0};
 float std[]  = {1, 1, 1};
 input->set_norm_mat(i, image, mean, std);
@@ -384,6 +388,7 @@ int HSwish::enqueue(const std::vector<GTensor>& inputs, std::vector<GTensor>& ou
     HSwishKernel <<<grid, block, 0, stream >>> (inputs[0].ptr<float>(), outputs[0].ptr<float>(), count);
     return 0;
 }
+
 
 RegisterPlugin(HSwish);
 ```
@@ -437,8 +442,8 @@ Engine 0x23dd7780 detail
 [2021-07-22 14:37:42][info][_main.cpp:124]:outputs[0].size = 2
 [2021-07-22 14:37:42][info][_main.cpp:124]:outputs[1].size = 5
 [2021-07-22 14:37:42][info][_main.cpp:124]:outputs[2].size = 1
-```
 
+```
 
 ## 关于
 - 我们的博客地址：http://www.zifuture.com:8090/
