@@ -413,6 +413,7 @@ int HSwish::enqueue(const std::vector<GTensor>& inputs, std::vector<GTensor>& ou
     return 0;
 }
 
+
 RegisterPlugin(HSwish);
 ```
 
@@ -467,7 +468,6 @@ Engine 0x23dd7780 detail
 [2021-07-22 14:37:42][info][_main.cpp:124]:outputs[2].size = 1
 
 ```
-
 
 ## 关于
 - 我们的博客地址：http://www.zifuture.com:8090/
