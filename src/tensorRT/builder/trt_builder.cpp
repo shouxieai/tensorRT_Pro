@@ -15,9 +15,9 @@
 #include <stdarg.h>
 #include <common/cuda_tools.hpp>
 
-using namespace nvinfer1;
-using namespace std;
-//using namespace nvcaffeparser1;
+using namespace nvinfer1;   
+using namespace std;   
+//using namespace nvcaffeparser1  ;
 
 class Logger : public ILogger {
 public:
@@ -235,7 +235,7 @@ namespace TRT {
 				return true;
 		}
 		return false;
-	}
+	}  
 
 	template<typename _T>
 	static void destroy_nvidia_pointer(_T* ptr) {
