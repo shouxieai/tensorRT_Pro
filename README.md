@@ -3,7 +3,7 @@
 - https://www.bilibili.com/video/BV1Xw411f7FW
 - 相关PPTX下载：http://zifuture.com:1556/fs/sxai/tensorRT.pptx
 
-## 3行代码实现极致性能YoloV5/YoloX推理，TensorRT C++库
+## 三行代码实现极致性能YoloV5/YoloX推理，TensorRT C++库
 1. 基于tensorRT8.0，C++/Python高级接口
 2. 简化自定义插件的实现过程，封装序列化、反序列化
 3. 简化fp32、fp16、int8编译过程，C++/Python部署，服务器/嵌入式使用
@@ -60,7 +60,7 @@ trtpy.from_torch(
 - TensorRT >= 8.0，目前只对8以及以上做了适配
 - CUDA >= 10.2，因为TensorRT8最低要求10.2，再低不行了
 
-## 3行代码实现YoloV5的高性能推理
+## 三行代码实现YoloV5的高性能推理
 ```C++
 
 // 创建推理引擎在0显卡上
@@ -448,3 +448,4 @@ Engine 0x23dd7780 detail
 ## 关于
 - 我们的博客地址：http://www.zifuture.com:8090/
 - 我们的B站地址： https://space.bilibili.com/1413433465
+
