@@ -194,12 +194,11 @@ namespace TRT {
 		if (pdata == nullptr || size == 0)
 			return false;
 
-		this->context_.reset(new EngineContext());
+		context_.reset(new EngineContext());
 
 		//build model
-		EngineContext* context = (EngineContext*)this->context_.get();
-		if (!context->build_model(pdata, size)) {
-			this->context_.reset();
+		if (!context_->build_model(pdata, size)) {
+			context_.reset();
 			return false;
 		}
 
@@ -216,12 +215,11 @@ namespace TRT {
 		if (data.empty())
 			return false;
 
-		this->context_.reset(new EngineContext());
+		context_.reset(new EngineContext());
 
 		//build model
-		EngineContext* context = (EngineContext*)this->context_.get();
-		if (!context->build_model(data.data(), data.size())) {
-			this->context_.reset();
+		if (!context_->build_model(data.data(), data.size())) {
+			context_.reset();
 			return false;
 		}
 

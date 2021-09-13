@@ -100,6 +100,12 @@ namespace Yolo{
     >;
     class InferImpl : public Infer, public ControllerImpl{
     public:
+
+        /** 要求在InferImpl里面执行stop，而不是在基类执行stop **/
+        virtual ~InferImpl(){
+            stop();
+        }
+
         virtual bool startup(const string& file, Type type, int gpuid, float confidence_threshold, float nms_threshold){
 
             if(type == Type::V5){

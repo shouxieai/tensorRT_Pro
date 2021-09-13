@@ -40,6 +40,11 @@ namespace FallGCN{
     >;
     class InferImpl : public Infer, public ControllerImpl{
     public:
+        /** 要求在InferImpl里面执行stop，而不是在基类执行stop **/
+        virtual ~InferImpl(){
+            stop();
+        }
+        
         bool startup(const string& file, int gpuid){
             gpuid_ = gpuid;
             return ControllerImpl::startup(make_tuple(file, gpuid));
