@@ -624,13 +624,13 @@ namespace TRT {
 		}
 
 		for(int i = 0; i < net_num_output; ++i){
-			auto input = network->getOutput(i);
-			auto input_dims = input->getDimensions();
-			input_dims.d[0] = 1;
-			profile->setDimensions(input->getName(), nvinfer1::OptProfileSelector::kMIN, input_dims);
-			profile->setDimensions(input->getName(), nvinfer1::OptProfileSelector::kOPT, input_dims);
-			input_dims.d[0] = maxBatchSize;
-			profile->setDimensions(input->getName(), nvinfer1::OptProfileSelector::kMAX, input_dims);
+			auto output = network->getOutput(i);
+			auto output_dims = output->getDimensions();
+			output_dims.d[0] = 1;
+			profile->setDimensions(output->getName(), nvinfer1::OptProfileSelector::kMIN, output_dims);
+			profile->setDimensions(output->getName(), nvinfer1::OptProfileSelector::kOPT, output_dims);
+			output_dims.d[0] = maxBatchSize;
+			profile->setDimensions(output->getName(), nvinfer1::OptProfileSelector::kMAX, output_dims);
 		}
 		config->addOptimizationProfile(profile);
 
