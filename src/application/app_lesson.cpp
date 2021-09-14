@@ -43,7 +43,7 @@ static void test_tensor2(){
 
     float* device_ptr = tensor.gpu<float>();    /* 访问gpu时，最新数据在Host，发生复制动作并标记最新数据在Device */
     INFO("tensor.head = %s", TRT::data_head_string(tensor.head()));   /* 输出 Device */
-    INFO("device_ptr[0] = %f", device_ptr[0]);                        /* 输出 512.00000 */
+    //INFO("device_ptr[0] = %f", device_ptr[0]);                        /* 输出 512.00000，由于gpu内存修改为cudaMalloc，这里无法直接访问 */
 }
 
 static void test_tensor3(){
