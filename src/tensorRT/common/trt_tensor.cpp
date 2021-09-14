@@ -66,7 +66,7 @@ namespace TRT{
 			release_gpu();
 
 			gpu_size_ = size;
-			checkCudaRuntime(cudaMallocManaged(&gpu_, size));
+			checkCudaRuntime(cudaMalloc(&gpu_, size));
 			checkCudaRuntime(cudaMemset(gpu_, 0, size));
 		}
 		return gpu_;
