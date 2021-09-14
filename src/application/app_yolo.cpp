@@ -169,7 +169,7 @@ static void test(Yolo::Type type, TRT::Mode mode, const string& model){
     forward_engine(model_file, type);
 }
 
-void my_test(){
+static void my_yolov5_test(){
 
     TRT::compile(
         TRT::Mode::FP32,
@@ -206,7 +206,6 @@ void my_test(){
 
 int app_yolo(){
 
-    // my_test();
     //iLogger::set_log_level(iLogger::LogLevel::Info);
     test(Yolo::Type::X, TRT::Mode::FP32, "yolox_m");
     // test(Yolo::Type::V5, TRT::Mode::FP32, "yolov5s");
