@@ -32,7 +32,7 @@ static bool compile_models(){
             return false;
 
         string onnx_file = iLogger::format("%s.onnx", name);
-        string model_file = iLogger::format("%s.fp32.trtmodel", name);
+        string model_file = iLogger::format("%s.FP32.trtmodel", name);
         int test_batch_size = 1;
         
         if(not iLogger::exists(model_file)){
@@ -116,7 +116,7 @@ int app_arcface(){
 
     auto detector = Scrfd::create_infer("scrfd_2.5g_bnkps.640x480.FP32.trtmodel", 0, 0.6f);
     //auto detector = RetinaFace::create_infer("mb_retinaface.640x480.FP32.trtmodel", 0, 0.5f);
-    auto arcface  = Arcface::create_infer("arcface_iresnet50.fp32.trtmodel", 0);
+    auto arcface  = Arcface::create_infer("arcface_iresnet50.FP32.trtmodel", 0);
     auto library  = build_library(detector, arcface);
 
     auto files    = iLogger::find_files("face/recognize");
@@ -180,7 +180,7 @@ int app_arcface_video(){
 
     auto detector = Scrfd::create_infer("scrfd_2.5g_bnkps.640x480.FP32.trtmodel", 0, 0.6f);
     //auto detector = RetinaFace::create_infer("mb_retinaface.640x480.FP32.trtmodel", 0, 0.5f);
-    auto arcface  = Arcface::create_infer("arcface_iresnet50.fp32.trtmodel", 0);
+    auto arcface  = Arcface::create_infer("arcface_iresnet50.FP32.trtmodel", 0);
     auto library  = build_library(detector, arcface);
     //auto remote_show = create_zmq_remote_show();
     INFO("Use tools/show.py to remote show");
@@ -277,7 +277,7 @@ int app_arcface_tracker(){
 
     auto detector = Scrfd::create_infer("scrfd_2.5g_bnkps.640x480.FP32.trtmodel", 0, 0.6f);
     //auto detector = RetinaFace::create_infer("mb_retinaface.640x480.FP32.trtmodel", 0, 0.6f);
-    auto arcface  = Arcface::create_infer("arcface_iresnet50.fp32.trtmodel", 0);
+    auto arcface  = Arcface::create_infer("arcface_iresnet50.FP32.trtmodel", 0);
     //auto library  = build_library(detector, arcface);
 
     //tools/show.py connect to remote show

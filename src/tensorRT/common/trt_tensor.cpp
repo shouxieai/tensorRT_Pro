@@ -263,7 +263,8 @@ namespace TRT{
 		if(head_ == DataHead::Device){
 			checkCudaRuntime(cudaMemcpyAsync((char*)data_->gpu() + offset_location, src, copyed_bytes, cudaMemcpyHostToDevice, stream_));
 		}else if(head_ == DataHead::Host){
-			checkCudaRuntime(cudaMemcpyAsync((char*)data_->cpu() + offset_location, src, copyed_bytes, cudaMemcpyHostToHost, stream_));
+			//checkCudaRuntime(cudaMemcpyAsync((char*)data_->cpu() + offset_location, src, copyed_bytes, cudaMemcpyHostToHost, stream_));
+			memcpy((char*)data_->cpu() + offset_location, src, copyed_bytes);
 		}else{
 			INFOE("Unsupport head type %d", head_);
 		}

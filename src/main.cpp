@@ -25,7 +25,6 @@ void test_all(){
     app_arcface_video();
     app_arcface_tracker();
     app_scrfd();
-    app_plugin();
     INFO("test done.");
 }
 

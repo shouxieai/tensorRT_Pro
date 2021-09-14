@@ -26,7 +26,7 @@ static bool compile_models(){
             return false;
 
         string onnx_file = iLogger::format("%s.onnx", name);
-        string model_file = iLogger::format("%s.fp32.trtmodel", name);
+        string model_file = iLogger::format("%s.FP32.trtmodel", name);
         int test_batch_size = 1; 
         
         if(not iLogger::exists(model_file)){
@@ -46,13 +46,13 @@ static bool compile_models(){
 int app_fall_recognize(){
     cv::setNumThreads(0);
 
-    INFO("===================== test alphapose fp32 ==================================");
+    INFO("===================== test alphapose FP32 ==================================");
     if(!compile_models())
         return 0;
     
-    auto pose_model_file     = "sppe.fp32.trtmodel";
-    auto detector_model_file = "yolox_m.fp32.trtmodel";
-    auto gcn_model_file      = "fall_bp.fp32.trtmodel";
+    auto pose_model_file     = "sppe.FP32.trtmodel";
+    auto detector_model_file = "yolox_m.FP32.trtmodel";
+    auto gcn_model_file      = "fall_bp.FP32.trtmodel";
     
     auto pose_model     = AlphaPose::create_infer(pose_model_file, 0);
     auto detector_model = Yolo::create_infer(detector_model_file, Yolo::Type::X, 0, 0.4f);

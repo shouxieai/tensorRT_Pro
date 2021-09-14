@@ -40,7 +40,7 @@ int app_alphapose(){
         return 0;
 
     string onnx_file = iLogger::format("%s.onnx", name);
-    string model_file = iLogger::format("%s.fp32.trtmodel", name);
+    string model_file = iLogger::format("%s.FP32.trtmodel", name);
     int test_batch_size = 16;  
     
     if(!iLogger::exists(model_file)){

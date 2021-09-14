@@ -81,7 +81,7 @@ static void scrfd_performance(shared_ptr<Scrfd::Infer> infer){
 int app_scrfd(){
 
     TRT::set_device(0);
-    INFO("===================== test scrfd fp32 ==================================");
+    INFO("===================== test scrfd FP32 ==================================");
 
     string model_file;
     if(!compile_scrfd(640, 640, model_file))
