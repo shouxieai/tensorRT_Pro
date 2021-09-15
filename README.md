@@ -49,6 +49,12 @@
 6. 配置环境，调试->环境，设置PATH路径
 7. 编译并运行案例
 
+## Windows下Python编译
+1、编译trtpyc.pyd，在visual studio中选择python进行编译
+2、复制dll，执行python/copy_dll_to_trtpy.bat
+3、在python目录下执行案例，python test_yolov5.py
+- 如果需要进行安装，则在python目录下，切换到目标环境后，执行python setup.py install。（注意，执行了1、2两步后才行）
+
 ## Python支持
 - 请在Makefile中设置`use_python := true`启用python支持，并编译生成trtpyc.so，使用`make trtpyc -j64`
 - YoloV5的tensorRT推理
