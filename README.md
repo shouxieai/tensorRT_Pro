@@ -50,9 +50,9 @@
 7. 编译并运行案例
 
 ## Windows下Python编译
-1、编译trtpyc.pyd，在visual studio中选择python进行编译
-2、复制dll，执行python/copy_dll_to_trtpy.bat
-3、在python目录下执行案例，python test_yolov5.py
+1. 编译trtpyc.pyd，在visual studio中选择python进行编译
+2. 复制dll，执行python/copy_dll_to_trtpy.bat
+3. 在python目录下执行案例，python test_yolov5.py
 - 如果需要进行安装，则在python目录下，切换到目标环境后，执行python setup.py install。（注意，执行了1、2两步后才行）
 
 ## Python支持
