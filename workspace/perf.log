@@ -1,0 +1,390 @@
+(base) th@th-SYS-4029GP-TRT:/data/sxai/tensorRT$ make yolo -j64
+Compile depends CXX src/application/app_yolo.cpp
+Compile CXX src/application/app_yolo.cpp
+Link workspace/pro
+[2021-09-15 09:38:04][info][app_yolo.cpp:157]:===================== test YoloX FP32 yolox_m ==================================
+[2021-09-15 09:38:05][info][trt_infer.cpp:167]:Infer 0x1541380009e0 detail
+[2021-09-15 09:38:05][info][trt_infer.cpp:168]: Max Batch Size: 16
+[2021-09-15 09:38:05][info][trt_infer.cpp:169]: Inputs: 1
+[2021-09-15 09:38:05][info][trt_infer.cpp:173]:         0.images : shape {16 x 3 x 640 x 640}
+[2021-09-15 09:38:05][info][trt_infer.cpp:176]: Outputs: 1
+[2021-09-15 09:38:05][info][trt_infer.cpp:180]:         0.output : shape {16 x 8400 x 85}
+[2021-09-15 09:38:10][info][app_yolo.cpp:74]:yolox_m.FP32.trtmodel[YoloX] average: 6.88 ms / image, FPS: 145.34
+[2021-09-15 09:38:10][info][app_yolo.cpp:100]:Save to YoloX_result/car.jpg, 5 object, average time 6.88 ms
+[2021-09-15 09:38:10][info][app_yolo.cpp:100]:Save to YoloX_result/gril.jpg, 2 object, average time 6.88 ms
+[2021-09-15 09:38:10][info][app_yolo.cpp:100]:Save to YoloX_result/group.jpg, 19 object, average time 6.88 ms
+[2021-09-15 09:38:10][info][app_yolo.cpp:100]:Save to YoloX_result/zgjr.jpg, 3 object, average time 6.88 ms
+[2021-09-15 09:38:10][info][app_yolo.cpp:100]:Save to YoloX_result/zand.jpg, 3 object, average time 6.88 ms
+[2021-09-15 09:38:10][info][app_yolo.cpp:100]:Save to YoloX_result/yq.jpg, 1 object, average time 6.88 ms
+[2021-09-15 09:38:10][info][yolo.cpp:211]:Engine destroy.
+[2021-09-15 09:38:10][info][app_yolo.cpp:157]:===================== test YoloX FP16 yolox_m ==================================
+[2021-09-15 09:38:10][info][trt_infer.cpp:167]:Infer 0x1540ff1eab20 detail
+[2021-09-15 09:38:10][info][trt_infer.cpp:168]: Max Batch Size: 16
+[2021-09-15 09:38:10][info][trt_infer.cpp:169]: Inputs: 1
+[2021-09-15 09:38:10][info][trt_infer.cpp:173]:         0.images : shape {16 x 3 x 640 x 640}
+[2021-09-15 09:38:10][info][trt_infer.cpp:176]: Outputs: 1
+[2021-09-15 09:38:10][info][trt_infer.cpp:180]:         0.output : shape {16 x 8400 x 85}
+[2021-09-15 09:38:12][info][app_yolo.cpp:74]:yolox_m.FP16.trtmodel[YoloX] average: 2.50 ms / image, FPS: 399.98
+[2021-09-15 09:38:12][info][app_yolo.cpp:100]:Save to YoloX_result/car.jpg, 5 object, average time 2.50 ms
+[2021-09-15 09:38:12][info][app_yolo.cpp:100]:Save to YoloX_result/gril.jpg, 2 object, average time 2.50 ms
+[2021-09-15 09:38:12][info][app_yolo.cpp:100]:Save to YoloX_result/group.jpg, 19 object, average time 2.50 ms
+[2021-09-15 09:38:12][info][app_yolo.cpp:100]:Save to YoloX_result/zgjr.jpg, 3 object, average time 2.50 ms
+[2021-09-15 09:38:12][info][app_yolo.cpp:100]:Save to YoloX_result/zand.jpg, 3 object, average time 2.50 ms
+[2021-09-15 09:38:12][info][app_yolo.cpp:100]:Save to YoloX_result/yq.jpg, 1 object, average time 2.50 ms
+[2021-09-15 09:38:12][info][yolo.cpp:211]:Engine destroy.
+[2021-09-15 09:38:12][info][app_yolo.cpp:157]:===================== test YoloX FP32 yolox_s ==================================
+[2021-09-15 09:38:12][info][auto_download.cpp:11]:Auto download yolox_s.onnx
+--2021-09-15 09:38:12--  http://zifuture.com:1556/fs/25.shared/yolox_s.onnx
+Resolving zifuture.com (zifuture.com)... 115.28.26.177
+Connecting to zifuture.com (zifuture.com)|115.28.26.177|:1556... connected.
+HTTP request sent, awaiting response... 200 OK
+Length: 35986732 (34M) [application/octet-stream]
+Saving to: ‘yolox_s.onnx’
+
+yolox_s.onnx                           100%[=========================================================================>]  34.32M  4.26MB/s    in 6.4s    
+
+2021-09-15 09:38:19 (5.35 MB/s) - ‘yolox_s.onnx’ saved [35986732/35986732]
+
+[2021-09-15 09:38:19][info][trt_builder.cpp:465]:Compile FP32 Onnx Model 'yolox_s.onnx'.
+[2021-09-15 09:38:19][info][trt_builder.cpp:552]:Input shape is -1 x 3 x 640 x 640
+[2021-09-15 09:38:19][info][trt_builder.cpp:553]:Set max batch size = 16
+[2021-09-15 09:38:19][info][trt_builder.cpp:554]:Set max workspace size = 1024.00 MB
+[2021-09-15 09:38:19][info][trt_builder.cpp:557]:Network has 1 inputs:
+[2021-09-15 09:38:19][info][trt_builder.cpp:563]:      0.[images] shape is -1 x 3 x 640 x 640
+[2021-09-15 09:38:19][info][trt_builder.cpp:569]:Network has 1 outputs:
+[2021-09-15 09:38:19][info][trt_builder.cpp:574]:      0.[output] shape is -1 x 8400 x 85
+[2021-09-15 09:38:19][info][trt_builder.cpp:578]:Network has 564 layers:
+[2021-09-15 09:38:19][info][trt_builder.cpp:643]:Building engine...
+[2021-09-15 09:38:57][info][trt_builder.cpp:663]:Build done 37617 ms !
+[2021-09-15 09:38:57][info][trt_infer.cpp:167]:Infer 0x1541340009e0 detail
+[2021-09-15 09:38:57][info][trt_infer.cpp:168]: Max Batch Size: 16
+[2021-09-15 09:38:57][info][trt_infer.cpp:169]: Inputs: 1
+[2021-09-15 09:38:57][info][trt_infer.cpp:173]:         0.images : shape {16 x 3 x 640 x 640}
+[2021-09-15 09:38:57][info][trt_infer.cpp:176]: Outputs: 1
+[2021-09-15 09:38:57][info][trt_infer.cpp:180]:         0.output : shape {16 x 8400 x 85}
+[2021-09-15 09:38:59][info][app_yolo.cpp:74]:yolox_s.FP32.trtmodel[YoloX] average: 3.15 ms / image, FPS: 316.99
+[2021-09-15 09:38:59][info][app_yolo.cpp:100]:Save to YoloX_result/car.jpg, 4 object, average time 3.15 ms
+[2021-09-15 09:38:59][info][app_yolo.cpp:100]:Save to YoloX_result/gril.jpg, 3 object, average time 3.15 ms
+[2021-09-15 09:38:59][info][app_yolo.cpp:100]:Save to YoloX_result/group.jpg, 20 object, average time 3.15 ms
+[2021-09-15 09:38:59][info][app_yolo.cpp:100]:Save to YoloX_result/zgjr.jpg, 4 object, average time 3.15 ms
+[2021-09-15 09:38:59][info][app_yolo.cpp:100]:Save to YoloX_result/zand.jpg, 3 object, average time 3.15 ms
+[2021-09-15 09:38:59][info][app_yolo.cpp:100]:Save to YoloX_result/yq.jpg, 1 object, average time 3.15 ms
+[2021-09-15 09:38:59][info][yolo.cpp:211]:Engine destroy.
+[2021-09-15 09:39:00][info][app_yolo.cpp:157]:===================== test YoloX FP16 yolox_s ==================================
+[2021-09-15 09:39:00][info][trt_builder.cpp:465]:Compile FP16 Onnx Model 'yolox_s.onnx'.
+[2021-09-15 09:39:00][info][trt_builder.cpp:552]:Input shape is -1 x 3 x 640 x 640
+[2021-09-15 09:39:00][info][trt_builder.cpp:553]:Set max batch size = 16
+[2021-09-15 09:39:00][info][trt_builder.cpp:554]:Set max workspace size = 1024.00 MB
+[2021-09-15 09:39:00][info][trt_builder.cpp:557]:Network has 1 inputs:
+[2021-09-15 09:39:00][info][trt_builder.cpp:563]:      0.[images] shape is -1 x 3 x 640 x 640
+[2021-09-15 09:39:00][info][trt_builder.cpp:569]:Network has 1 outputs:
+[2021-09-15 09:39:00][info][trt_builder.cpp:574]:      0.[output] shape is -1 x 8400 x 85
+[2021-09-15 09:39:00][info][trt_builder.cpp:578]:Network has 564 layers:
+[2021-09-15 09:39:00][info][trt_builder.cpp:643]:Building engine...
+[2021-09-15 09:41:47][info][trt_builder.cpp:663]:Build done 167576 ms !
+[2021-09-15 09:41:48][info][trt_infer.cpp:167]:Infer 0x1541340009e0 detail
+[2021-09-15 09:41:48][info][trt_infer.cpp:168]: Max Batch Size: 16
+[2021-09-15 09:41:48][info][trt_infer.cpp:169]: Inputs: 1
+[2021-09-15 09:41:48][info][trt_infer.cpp:173]:         0.images : shape {16 x 3 x 640 x 640}
+[2021-09-15 09:41:48][info][trt_infer.cpp:176]: Outputs: 1
+[2021-09-15 09:41:48][info][trt_infer.cpp:180]:         0.output : shape {16 x 8400 x 85}
+[2021-09-15 09:41:49][info][app_yolo.cpp:74]:yolox_s.FP16.trtmodel[YoloX] average: 1.43 ms / image, FPS: 699.95
+[2021-09-15 09:41:49][info][app_yolo.cpp:100]:Save to YoloX_result/car.jpg, 4 object, average time 1.43 ms
+[2021-09-15 09:41:49][info][app_yolo.cpp:100]:Save to YoloX_result/gril.jpg, 3 object, average time 1.43 ms
+[2021-09-15 09:41:49][info][app_yolo.cpp:100]:Save to YoloX_result/group.jpg, 20 object, average time 1.43 ms
+[2021-09-15 09:41:49][info][app_yolo.cpp:100]:Save to YoloX_result/zgjr.jpg, 4 object, average time 1.43 ms
+[2021-09-15 09:41:49][info][app_yolo.cpp:100]:Save to YoloX_result/zand.jpg, 3 object, average time 1.43 ms
+[2021-09-15 09:41:49][info][app_yolo.cpp:100]:Save to YoloX_result/yq.jpg, 1 object, average time 1.43 ms
+[2021-09-15 09:41:49][info][yolo.cpp:211]:Engine destroy.
+(base) th@th-SYS-4029GP-TRT:/data/sxai/tensorRT$ make yolo -j64
+Compile depends CXX src/application/app_yolo.cpp
+Compile CXX src/application/app_yolo.cpp
+Link workspace/pro
+[2021-09-15 09:43:41][info][app_yolo.cpp:157]:===================== test YoloV5 FP32 yolov5m ==================================
+[2021-09-15 09:43:41][info][auto_download.cpp:11]:Auto download yolov5m.onnx
+--2021-09-15 09:43:41--  http://zifuture.com:1556/fs/25.shared/yolov5m.onnx
+Resolving zifuture.com (zifuture.com)... 115.28.26.177
+Connecting to zifuture.com (zifuture.com)|115.28.26.177|:1556... connected.
+HTTP request sent, awaiting response... 200 OK
+Length: 85532250 (82M) [application/octet-stream]
+Saving to: ‘yolov5m.onnx’
+
+yolov5m.onnx                           100%[=========================================================================>]  81.57M  3.66MB/s    in 14s     
+
+2021-09-15 09:43:55 (5.85 MB/s) - ‘yolov5m.onnx’ saved [85532250/85532250]
+
+[2021-09-15 09:43:55][info][trt_builder.cpp:465]:Compile FP32 Onnx Model 'yolov5m.onnx'.
+[2021-09-15 09:43:56][info][trt_builder.cpp:552]:Input shape is -1 x 3 x 640 x 640
+[2021-09-15 09:43:56][info][trt_builder.cpp:553]:Set max batch size = 16
+[2021-09-15 09:43:56][info][trt_builder.cpp:554]:Set max workspace size = 1024.00 MB
+[2021-09-15 09:43:56][info][trt_builder.cpp:557]:Network has 1 inputs:
+[2021-09-15 09:43:56][info][trt_builder.cpp:563]:      0.[images] shape is -1 x 3 x 640 x 640
+[2021-09-15 09:43:56][info][trt_builder.cpp:569]:Network has 4 outputs:
+[2021-09-15 09:43:56][info][trt_builder.cpp:574]:      0.[output] shape is -1 x 25200 x 85
+[2021-09-15 09:43:56][info][trt_builder.cpp:574]:      1.[508] shape is -1 x 3 x 80 x 80 x 85
+[2021-09-15 09:43:56][info][trt_builder.cpp:574]:      2.[548] shape is -1 x 3 x 40 x 40 x 85
+[2021-09-15 09:43:56][info][trt_builder.cpp:574]:      3.[588] shape is -1 x 3 x 20 x 20 x 85
+[2021-09-15 09:43:56][info][trt_builder.cpp:578]:Network has 781 layers:
+[2021-09-15 09:43:56][info][trt_builder.cpp:643]:Building engine...
+[2021-09-15 09:44:49][info][trt_builder.cpp:663]:Build done 52934 ms !
+[2021-09-15 09:44:50][info][trt_infer.cpp:167]:Infer 0x14ebdc0009e0 detail
+[2021-09-15 09:44:50][info][trt_infer.cpp:168]: Max Batch Size: 16
+[2021-09-15 09:44:50][info][trt_infer.cpp:169]: Inputs: 1
+[2021-09-15 09:44:50][info][trt_infer.cpp:173]:         0.images : shape {16 x 3 x 640 x 640}
+[2021-09-15 09:44:50][info][trt_infer.cpp:176]: Outputs: 4
+[2021-09-15 09:44:50][info][trt_infer.cpp:180]:         0.508 : shape {16 x 3 x 80 x 80 x 85}
+[2021-09-15 09:44:50][info][trt_infer.cpp:180]:         1.548 : shape {16 x 3 x 40 x 40 x 85}
+[2021-09-15 09:44:50][info][trt_infer.cpp:180]:         2.588 : shape {16 x 3 x 20 x 20 x 85}
+[2021-09-15 09:44:50][info][trt_infer.cpp:180]:         3.output : shape {16 x 25200 x 85}
+[2021-09-15 09:44:54][info][app_yolo.cpp:74]:yolov5m.FP32.trtmodel[YoloV5] average: 5.62 ms / image, FPS: 177.89
+[2021-09-15 09:44:54][info][app_yolo.cpp:100]:Save to YoloV5_result/car.jpg, 5 object, average time 5.62 ms
+[2021-09-15 09:44:54][info][app_yolo.cpp:100]:Save to YoloV5_result/gril.jpg, 1 object, average time 5.62 ms
+[2021-09-15 09:44:54][info][app_yolo.cpp:100]:Save to YoloV5_result/group.jpg, 15 object, average time 5.62 ms
+[2021-09-15 09:44:54][info][app_yolo.cpp:100]:Save to YoloV5_result/zgjr.jpg, 3 object, average time 5.62 ms
+[2021-09-15 09:44:54][info][app_yolo.cpp:100]:Save to YoloV5_result/zand.jpg, 3 object, average time 5.62 ms
+[2021-09-15 09:44:54][info][app_yolo.cpp:100]:Save to YoloV5_result/yq.jpg, 1 object, average time 5.62 ms
+[2021-09-15 09:44:54][info][yolo.cpp:211]:Engine destroy.
+[2021-09-15 09:44:54][info][app_yolo.cpp:157]:===================== test YoloV5 FP16 yolov5m ==================================
+[2021-09-15 09:44:54][info][trt_builder.cpp:465]:Compile FP16 Onnx Model 'yolov5m.onnx'.
+[2021-09-15 09:44:54][info][trt_builder.cpp:552]:Input shape is -1 x 3 x 640 x 640
+[2021-09-15 09:44:54][info][trt_builder.cpp:553]:Set max batch size = 16
+[2021-09-15 09:44:54][info][trt_builder.cpp:554]:Set max workspace size = 1024.00 MB
+[2021-09-15 09:44:54][info][trt_builder.cpp:557]:Network has 1 inputs:
+[2021-09-15 09:44:54][info][trt_builder.cpp:563]:      0.[images] shape is -1 x 3 x 640 x 640
+[2021-09-15 09:44:54][info][trt_builder.cpp:569]:Network has 4 outputs:
+[2021-09-15 09:44:54][info][trt_builder.cpp:574]:      0.[output] shape is -1 x 25200 x 85
+[2021-09-15 09:44:54][info][trt_builder.cpp:574]:      1.[508] shape is -1 x 3 x 80 x 80 x 85
+[2021-09-15 09:44:54][info][trt_builder.cpp:574]:      2.[548] shape is -1 x 3 x 40 x 40 x 85
+[2021-09-15 09:44:54][info][trt_builder.cpp:574]:      3.[588] shape is -1 x 3 x 20 x 20 x 85
+[2021-09-15 09:44:54][info][trt_builder.cpp:578]:Network has 781 layers:
+[2021-09-15 09:44:54][info][trt_builder.cpp:643]:Building engine...
+[2021-09-15 09:48:50][info][trt_builder.cpp:663]:Build done 235328 ms !
+[2021-09-15 09:48:50][info][trt_infer.cpp:167]:Infer 0x14ebdc000ca0 detail
+[2021-09-15 09:48:50][info][trt_infer.cpp:168]: Max Batch Size: 16
+[2021-09-15 09:48:50][info][trt_infer.cpp:169]: Inputs: 1
+[2021-09-15 09:48:50][info][trt_infer.cpp:173]:         0.images : shape {16 x 3 x 640 x 640}
+[2021-09-15 09:48:50][info][trt_infer.cpp:176]: Outputs: 4
+[2021-09-15 09:48:50][info][trt_infer.cpp:180]:         0.508 : shape {16 x 3 x 80 x 80 x 85}
+[2021-09-15 09:48:50][info][trt_infer.cpp:180]:         1.548 : shape {16 x 3 x 40 x 40 x 85}
+[2021-09-15 09:48:50][info][trt_infer.cpp:180]:         2.588 : shape {16 x 3 x 20 x 20 x 85}
+[2021-09-15 09:48:50][info][trt_infer.cpp:180]:         3.output : shape {16 x 25200 x 85}
+[2021-09-15 09:48:52][info][app_yolo.cpp:74]:yolov5m.FP16.trtmodel[YoloV5] average: 2.28 ms / image, FPS: 439.34
+[2021-09-15 09:48:52][info][app_yolo.cpp:100]:Save to YoloV5_result/car.jpg, 5 object, average time 2.28 ms
+[2021-09-15 09:48:52][info][app_yolo.cpp:100]:Save to YoloV5_result/gril.jpg, 1 object, average time 2.28 ms
+[2021-09-15 09:48:52][info][app_yolo.cpp:100]:Save to YoloV5_result/group.jpg, 15 object, average time 2.28 ms
+[2021-09-15 09:48:52][info][app_yolo.cpp:100]:Save to YoloV5_result/zgjr.jpg, 3 object, average time 2.28 ms
+[2021-09-15 09:48:52][info][app_yolo.cpp:100]:Save to YoloV5_result/zand.jpg, 3 object, average time 2.28 ms
+[2021-09-15 09:48:52][info][app_yolo.cpp:100]:Save to YoloV5_result/yq.jpg, 1 object, average time 2.28 ms
+[2021-09-15 09:48:52][info][yolo.cpp:211]:Engine destroy.
+[2021-09-15 09:48:52][info][app_yolo.cpp:157]:===================== test YoloV5 FP32 yolov5s ==================================
+[2021-09-15 09:48:52][info][auto_download.cpp:11]:Auto download yolov5s.onnx
+--2021-09-15 09:48:52--  http://zifuture.com:1556/fs/25.shared/yolov5s.onnx
+Resolving zifuture.com (zifuture.com)... 115.28.26.177
+Connecting to zifuture.com (zifuture.com)|115.28.26.177|:1556... connected.
+HTTP request sent, awaiting response... 200 OK
+Length: 29103602 (28M) [application/octet-stream]
+Saving to: ‘yolov5s.onnx’
+
+yolov5s.onnx                           100%[=========================================================================>]  27.75M  6.09MB/s    in 4.6s    
+
+2021-09-15 09:48:57 (6.09 MB/s) - ‘yolov5s.onnx’ saved [29103602/29103602]
+
+[2021-09-15 09:48:57][info][trt_builder.cpp:465]:Compile FP32 Onnx Model 'yolov5s.onnx'.
+[2021-09-15 09:48:57][info][trt_builder.cpp:552]:Input shape is -1 x 3 x 640 x 640
+[2021-09-15 09:48:57][info][trt_builder.cpp:553]:Set max batch size = 16
+[2021-09-15 09:48:57][info][trt_builder.cpp:554]:Set max workspace size = 1024.00 MB
+[2021-09-15 09:48:57][info][trt_builder.cpp:557]:Network has 1 inputs:
+[2021-09-15 09:48:57][info][trt_builder.cpp:563]:      0.[images] shape is -1 x 3 x 640 x 640
+[2021-09-15 09:48:57][info][trt_builder.cpp:569]:Network has 4 outputs:
+[2021-09-15 09:48:57][info][trt_builder.cpp:574]:      0.[output] shape is -1 x 25200 x 85
+[2021-09-15 09:48:57][info][trt_builder.cpp:574]:      1.[397] shape is -1 x 3 x 80 x 80 x 85
+[2021-09-15 09:48:57][info][trt_builder.cpp:574]:      2.[496] shape is -1 x 3 x 40 x 40 x 85
+[2021-09-15 09:48:57][info][trt_builder.cpp:574]:      3.[595] shape is -1 x 3 x 20 x 20 x 85
+[2021-09-15 09:48:57][info][trt_builder.cpp:578]:Network has 915 layers:
+[2021-09-15 09:48:57][info][trt_builder.cpp:643]:Building engine...
+[2021-09-15 09:49:09][info][trt_builder.cpp:663]:Build done 11816 ms !
+[2021-09-15 09:49:10][info][trt_infer.cpp:167]:Infer 0x14ebdc000ca0 detail
+[2021-09-15 09:49:10][info][trt_infer.cpp:168]: Max Batch Size: 16
+[2021-09-15 09:49:10][info][trt_infer.cpp:169]: Inputs: 1
+[2021-09-15 09:49:10][info][trt_infer.cpp:173]:         0.images : shape {16 x 3 x 640 x 640}
+[2021-09-15 09:49:10][info][trt_infer.cpp:176]: Outputs: 4
+[2021-09-15 09:49:10][info][trt_infer.cpp:180]:         0.397 : shape {16 x 3 x 80 x 80 x 85}
+[2021-09-15 09:49:10][info][trt_infer.cpp:180]:         1.496 : shape {16 x 3 x 40 x 40 x 85}
+[2021-09-15 09:49:10][info][trt_infer.cpp:180]:         2.595 : shape {16 x 3 x 20 x 20 x 85}
+[2021-09-15 09:49:10][info][trt_infer.cpp:180]:         3.output : shape {16 x 25200 x 85}
+[2021-09-15 09:49:11][info][app_yolo.cpp:74]:yolov5s.FP32.trtmodel[YoloV5] average: 2.62 ms / image, FPS: 381.92
+[2021-09-15 09:49:11][info][app_yolo.cpp:100]:Save to YoloV5_result/car.jpg, 5 object, average time 2.62 ms
+[2021-09-15 09:49:12][info][app_yolo.cpp:100]:Save to YoloV5_result/gril.jpg, 1 object, average time 2.62 ms
+[2021-09-15 09:49:12][info][app_yolo.cpp:100]:Save to YoloV5_result/group.jpg, 16 object, average time 2.62 ms
+[2021-09-15 09:49:12][info][app_yolo.cpp:100]:Save to YoloV5_result/zgjr.jpg, 3 object, average time 2.62 ms
+[2021-09-15 09:49:12][info][app_yolo.cpp:100]:Save to YoloV5_result/zand.jpg, 3 object, average time 2.62 ms
+[2021-09-15 09:49:12][info][app_yolo.cpp:100]:Save to YoloV5_result/yq.jpg, 1 object, average time 2.62 ms
+[2021-09-15 09:49:12][info][yolo.cpp:211]:Engine destroy.
+[2021-09-15 09:49:12][info][app_yolo.cpp:157]:===================== test YoloV5 FP16 yolov5s ==================================
+[2021-09-15 09:49:12][info][trt_builder.cpp:465]:Compile FP16 Onnx Model 'yolov5s.onnx'.
+[2021-09-15 09:49:12][info][trt_builder.cpp:552]:Input shape is -1 x 3 x 640 x 640
+[2021-09-15 09:49:12][info][trt_builder.cpp:553]:Set max batch size = 16
+[2021-09-15 09:49:12][info][trt_builder.cpp:554]:Set max workspace size = 1024.00 MB
+[2021-09-15 09:49:12][info][trt_builder.cpp:557]:Network has 1 inputs:
+[2021-09-15 09:49:12][info][trt_builder.cpp:563]:      0.[images] shape is -1 x 3 x 640 x 640
+[2021-09-15 09:49:12][info][trt_builder.cpp:569]:Network has 4 outputs:
+[2021-09-15 09:49:12][info][trt_builder.cpp:574]:      0.[output] shape is -1 x 25200 x 85
+[2021-09-15 09:49:12][info][trt_builder.cpp:574]:      1.[397] shape is -1 x 3 x 80 x 80 x 85
+[2021-09-15 09:49:12][info][trt_builder.cpp:574]:      2.[496] shape is -1 x 3 x 40 x 40 x 85
+[2021-09-15 09:49:12][info][trt_builder.cpp:574]:      3.[595] shape is -1 x 3 x 20 x 20 x 85
+[2021-09-15 09:49:12][info][trt_builder.cpp:578]:Network has 915 layers:
+[2021-09-15 09:49:12][info][trt_builder.cpp:643]:Building engine...
+[2021-09-15 09:49:56][info][trt_builder.cpp:663]:Build done 43987 ms !
+[2021-09-15 09:49:56][info][trt_infer.cpp:167]:Infer 0x14ebdc000ca0 detail
+[2021-09-15 09:49:56][info][trt_infer.cpp:168]: Max Batch Size: 16
+[2021-09-15 09:49:56][info][trt_infer.cpp:169]: Inputs: 1
+[2021-09-15 09:49:56][info][trt_infer.cpp:173]:         0.images : shape {16 x 3 x 640 x 640}
+[2021-09-15 09:49:56][info][trt_infer.cpp:176]: Outputs: 4
+[2021-09-15 09:49:56][info][trt_infer.cpp:180]:         0.397 : shape {16 x 3 x 80 x 80 x 85}
+[2021-09-15 09:49:56][info][trt_infer.cpp:180]:         1.496 : shape {16 x 3 x 40 x 40 x 85}
+[2021-09-15 09:49:56][info][trt_infer.cpp:180]:         2.595 : shape {16 x 3 x 20 x 20 x 85}
+[2021-09-15 09:49:56][info][trt_infer.cpp:180]:         3.output : shape {16 x 25200 x 85}
+[2021-09-15 09:49:57][info][app_yolo.cpp:74]:yolov5s.FP16.trtmodel[YoloV5] average: 1.39 ms / image, FPS: 717.52
+[2021-09-15 09:49:57][info][app_yolo.cpp:100]:Save to YoloV5_result/car.jpg, 5 object, average time 1.39 ms
+[2021-09-15 09:49:57][info][app_yolo.cpp:100]:Save to YoloV5_result/gril.jpg, 1 object, average time 1.39 ms
+[2021-09-15 09:49:57][info][app_yolo.cpp:100]:Save to YoloV5_result/group.jpg, 16 object, average time 1.39 ms
+[2021-09-15 09:49:57][info][app_yolo.cpp:100]:Save to YoloV5_result/zgjr.jpg, 3 object, average time 1.39 ms
+[2021-09-15 09:49:57][info][app_yolo.cpp:100]:Save to YoloV5_result/zand.jpg, 3 object, average time 1.39 ms
+[2021-09-15 09:49:57][info][app_yolo.cpp:100]:Save to YoloV5_result/yq.jpg, 1 object, average time 1.39 ms
+[2021-09-15 09:49:58][info][yolo.cpp:211]:Engine destroy.
+(base) th@th-SYS-4029GP-TRT:/data/sxai/tensorRT$ make yolo -j64
+Compile depends CXX src/application/app_yolo.cpp
+Compile CXX src/application/app_yolo.cpp
+Link workspace/pro
+[2021-09-15 09:52:14][info][app_yolo.cpp:108]:===================== test YoloX int8 yolox_m ==================================
+[2021-09-15 09:52:14][info][trt_builder.cpp:465]:Compile INT8 Onnx Model 'yolox_m.onnx'.
+[2021-09-15 09:52:15][info][trt_builder.cpp:543]:Using image list[6 files]: inference
+[2021-09-15 09:52:15][info][trt_builder.cpp:552]:Input shape is -1 x 3 x 640 x 640
+[2021-09-15 09:52:15][info][trt_builder.cpp:553]:Set max batch size = 6
+[2021-09-15 09:52:15][info][trt_builder.cpp:554]:Set max workspace size = 1024.00 MB
+[2021-09-15 09:52:15][info][trt_builder.cpp:557]:Network has 1 inputs:
+[2021-09-15 09:52:15][info][trt_builder.cpp:563]:      0.[images] shape is -1 x 3 x 640 x 640
+[2021-09-15 09:52:15][info][trt_builder.cpp:569]:Network has 1 outputs:
+[2021-09-15 09:52:15][info][trt_builder.cpp:574]:      0.[output] shape is -1 x 8400 x 85
+[2021-09-15 09:52:15][info][trt_builder.cpp:578]:Network has 643 layers:
+[2021-09-15 09:52:15][info][trt_builder.cpp:643]:Building engine...
+[2021-09-15 09:52:16][warn][trt_infer.cpp:26]:NVInfer: Calibration Profile is not defined. Running calibration with Profile 0
+[2021-09-15 09:52:18][info][app_yolo.cpp:111]:Int8 6 / 6
+[2021-09-15 09:55:16][info][trt_builder.cpp:658]:No set entropyCalibratorFile, and entropyCalibrator will not save.
+[2021-09-15 09:55:16][info][trt_builder.cpp:663]:Build done 180256 ms !
+[2021-09-15 09:55:16][info][trt_infer.cpp:167]:Infer 0x15449c0009e0 detail
+[2021-09-15 09:55:16][info][trt_infer.cpp:168]: Max Batch Size: 6
+[2021-09-15 09:55:16][info][trt_infer.cpp:169]: Inputs: 1
+[2021-09-15 09:55:16][info][trt_infer.cpp:173]:         0.images : shape {6 x 3 x 640 x 640}
+[2021-09-15 09:55:16][info][trt_infer.cpp:176]: Outputs: 1
+[2021-09-15 09:55:16][info][trt_infer.cpp:180]:         0.output : shape {6 x 8400 x 85}
+[2021-09-15 09:55:17][info][app_yolo.cpp:74]:yolox_m.int8.trtmodel[YoloX] average: 1.77 ms / image, FPS: 565.07
+[2021-09-15 09:55:17][info][app_yolo.cpp:100]:Save to YoloX_result/car.jpg, 4 object, average time 1.77 ms
+[2021-09-15 09:55:17][info][app_yolo.cpp:100]:Save to YoloX_result/gril.jpg, 1 object, average time 1.77 ms
+[2021-09-15 09:55:17][info][app_yolo.cpp:100]:Save to YoloX_result/group.jpg, 14 object, average time 1.77 ms
+[2021-09-15 09:55:17][info][app_yolo.cpp:100]:Save to YoloX_result/zgjr.jpg, 3 object, average time 1.77 ms
+[2021-09-15 09:55:17][info][app_yolo.cpp:100]:Save to YoloX_result/zand.jpg, 4 object, average time 1.77 ms
+[2021-09-15 09:55:17][info][app_yolo.cpp:100]:Save to YoloX_result/yq.jpg, 1 object, average time 1.77 ms
+[2021-09-15 09:55:17][info][yolo.cpp:211]:Engine destroy.
+[2021-09-15 09:55:17][info][app_yolo.cpp:108]:===================== test YoloV5 int8 yolov5m ==================================
+[2021-09-15 09:55:17][info][trt_builder.cpp:465]:Compile INT8 Onnx Model 'yolov5m.onnx'.
+[2021-09-15 09:55:18][info][trt_builder.cpp:543]:Using image list[6 files]: inference
+[2021-09-15 09:55:18][info][trt_builder.cpp:552]:Input shape is -1 x 3 x 640 x 640
+[2021-09-15 09:55:18][info][trt_builder.cpp:553]:Set max batch size = 6
+[2021-09-15 09:55:18][info][trt_builder.cpp:554]:Set max workspace size = 1024.00 MB
+[2021-09-15 09:55:18][info][trt_builder.cpp:557]:Network has 1 inputs:
+[2021-09-15 09:55:18][info][trt_builder.cpp:563]:      0.[images] shape is -1 x 3 x 640 x 640
+[2021-09-15 09:55:18][info][trt_builder.cpp:569]:Network has 4 outputs:
+[2021-09-15 09:55:18][info][trt_builder.cpp:574]:      0.[output] shape is -1 x 25200 x 85
+[2021-09-15 09:55:18][info][trt_builder.cpp:574]:      1.[508] shape is -1 x 3 x 80 x 80 x 85
+[2021-09-15 09:55:18][info][trt_builder.cpp:574]:      2.[548] shape is -1 x 3 x 40 x 40 x 85
+[2021-09-15 09:55:18][info][trt_builder.cpp:574]:      3.[588] shape is -1 x 3 x 20 x 20 x 85
+[2021-09-15 09:55:18][info][trt_builder.cpp:578]:Network has 781 layers:
+[2021-09-15 09:55:18][info][trt_builder.cpp:643]:Building engine...
+[2021-09-15 09:55:18][warn][trt_infer.cpp:26]:NVInfer: Calibration Profile is not defined. Running calibration with Profile 0
+[2021-09-15 09:55:19][info][app_yolo.cpp:111]:Int8 6 / 6
+[2021-09-15 09:57:41][info][trt_builder.cpp:658]:No set entropyCalibratorFile, and entropyCalibrator will not save.
+[2021-09-15 09:57:41][info][trt_builder.cpp:663]:Build done 142774 ms !
+[2021-09-15 09:57:41][info][trt_infer.cpp:167]:Infer 0x15449c0009e0 detail
+[2021-09-15 09:57:41][info][trt_infer.cpp:168]: Max Batch Size: 6
+[2021-09-15 09:57:41][info][trt_infer.cpp:169]: Inputs: 1
+[2021-09-15 09:57:41][info][trt_infer.cpp:173]:         0.images : shape {6 x 3 x 640 x 640}
+[2021-09-15 09:57:41][info][trt_infer.cpp:176]: Outputs: 4
+[2021-09-15 09:57:41][info][trt_infer.cpp:180]:         0.508 : shape {6 x 3 x 80 x 80 x 85}
+[2021-09-15 09:57:41][info][trt_infer.cpp:180]:         1.548 : shape {6 x 3 x 40 x 40 x 85}
+[2021-09-15 09:57:41][info][trt_infer.cpp:180]:         2.588 : shape {6 x 3 x 20 x 20 x 85}
+[2021-09-15 09:57:41][info][trt_infer.cpp:180]:         3.output : shape {6 x 25200 x 85}
+[2021-09-15 09:57:42][info][app_yolo.cpp:74]:yolov5m.int8.trtmodel[YoloV5] average: 1.69 ms / image, FPS: 589.98
+[2021-09-15 09:57:42][info][app_yolo.cpp:100]:Save to YoloV5_result/car.jpg, 5 object, average time 1.69 ms
+[2021-09-15 09:57:42][info][app_yolo.cpp:100]:Save to YoloV5_result/gril.jpg, 1 object, average time 1.69 ms
+[2021-09-15 09:57:42][info][app_yolo.cpp:100]:Save to YoloV5_result/group.jpg, 12 object, average time 1.69 ms
+[2021-09-15 09:57:42][info][app_yolo.cpp:100]:Save to YoloV5_result/zgjr.jpg, 3 object, average time 1.69 ms
+[2021-09-15 09:57:43][info][app_yolo.cpp:100]:Save to YoloV5_result/zand.jpg, 2 object, average time 1.69 ms
+[2021-09-15 09:57:43][info][app_yolo.cpp:100]:Save to YoloV5_result/yq.jpg, 1 object, average time 1.69 ms
+[2021-09-15 09:57:43][info][yolo.cpp:211]:Engine destroy.
+[2021-09-15 09:57:43][info][app_yolo.cpp:108]:===================== test YoloX int8 yolox_s ==================================
+[2021-09-15 09:57:43][info][trt_builder.cpp:465]:Compile INT8 Onnx Model 'yolox_s.onnx'.
+[2021-09-15 09:57:43][info][trt_builder.cpp:543]:Using image list[6 files]: inference
+[2021-09-15 09:57:43][info][trt_builder.cpp:552]:Input shape is -1 x 3 x 640 x 640
+[2021-09-15 09:57:43][info][trt_builder.cpp:553]:Set max batch size = 6
+[2021-09-15 09:57:43][info][trt_builder.cpp:554]:Set max workspace size = 1024.00 MB
+[2021-09-15 09:57:43][info][trt_builder.cpp:557]:Network has 1 inputs:
+[2021-09-15 09:57:43][info][trt_builder.cpp:563]:      0.[images] shape is -1 x 3 x 640 x 640
+[2021-09-15 09:57:43][info][trt_builder.cpp:569]:Network has 1 outputs:
+[2021-09-15 09:57:43][info][trt_builder.cpp:574]:      0.[output] shape is -1 x 8400 x 85
+[2021-09-15 09:57:43][info][trt_builder.cpp:578]:Network has 564 layers:
+[2021-09-15 09:57:43][info][trt_builder.cpp:643]:Building engine...
+[2021-09-15 09:57:43][warn][trt_infer.cpp:26]:NVInfer: Calibration Profile is not defined. Running calibration with Profile 0
+[2021-09-15 09:57:44][info][app_yolo.cpp:111]:Int8 6 / 6
+[2021-09-15 09:59:10][info][trt_builder.cpp:658]:No set entropyCalibratorFile, and entropyCalibrator will not save.
+[2021-09-15 09:59:10][info][trt_builder.cpp:663]:Build done 87062 ms !
+[2021-09-15 09:59:10][info][trt_infer.cpp:167]:Infer 0x15449c0009e0 detail
+[2021-09-15 09:59:10][info][trt_infer.cpp:168]: Max Batch Size: 6
+[2021-09-15 09:59:10][info][trt_infer.cpp:169]: Inputs: 1
+[2021-09-15 09:59:10][info][trt_infer.cpp:173]:         0.images : shape {6 x 3 x 640 x 640}
+[2021-09-15 09:59:10][info][trt_infer.cpp:176]: Outputs: 1
+[2021-09-15 09:59:10][info][trt_infer.cpp:180]:         0.output : shape {6 x 8400 x 85}
+[2021-09-15 09:59:11][info][app_yolo.cpp:74]:yolox_s.int8.trtmodel[YoloX] average: 1.35 ms / image, FPS: 739.54
+[2021-09-15 09:59:11][info][app_yolo.cpp:100]:Save to YoloX_result/car.jpg, 4 object, average time 1.35 ms
+[2021-09-15 09:59:11][info][app_yolo.cpp:100]:Save to YoloX_result/gril.jpg, 1 object, average time 1.35 ms
+[2021-09-15 09:59:11][info][app_yolo.cpp:100]:Save to YoloX_result/group.jpg, 12 object, average time 1.35 ms
+[2021-09-15 09:59:11][info][app_yolo.cpp:100]:Save to YoloX_result/zgjr.jpg, 3 object, average time 1.35 ms
+[2021-09-15 09:59:11][info][app_yolo.cpp:100]:Save to YoloX_result/zand.jpg, 2 object, average time 1.35 ms
+[2021-09-15 09:59:11][info][app_yolo.cpp:100]:Save to YoloX_result/yq.jpg, 1 object, average time 1.35 ms
+[2021-09-15 09:59:11][info][yolo.cpp:211]:Engine destroy.
+[2021-09-15 09:59:11][info][app_yolo.cpp:108]:===================== test YoloV5 int8 yolov5s ==================================
+[2021-09-15 09:59:11][info][trt_builder.cpp:465]:Compile INT8 Onnx Model 'yolov5s.onnx'.
+[2021-09-15 09:59:12][info][trt_builder.cpp:543]:Using image list[6 files]: inference
+[2021-09-15 09:59:12][info][trt_builder.cpp:552]:Input shape is -1 x 3 x 640 x 640
+[2021-09-15 09:59:12][info][trt_builder.cpp:553]:Set max batch size = 6
+[2021-09-15 09:59:12][info][trt_builder.cpp:554]:Set max workspace size = 1024.00 MB
+[2021-09-15 09:59:12][info][trt_builder.cpp:557]:Network has 1 inputs:
+[2021-09-15 09:59:12][info][trt_builder.cpp:563]:      0.[images] shape is -1 x 3 x 640 x 640
+[2021-09-15 09:59:12][info][trt_builder.cpp:569]:Network has 4 outputs:
+[2021-09-15 09:59:12][info][trt_builder.cpp:574]:      0.[output] shape is -1 x 25200 x 85
+[2021-09-15 09:59:12][info][trt_builder.cpp:574]:      1.[397] shape is -1 x 3 x 80 x 80 x 85
+[2021-09-15 09:59:12][info][trt_builder.cpp:574]:      2.[496] shape is -1 x 3 x 40 x 40 x 85
+[2021-09-15 09:59:12][info][trt_builder.cpp:574]:      3.[595] shape is -1 x 3 x 20 x 20 x 85
+[2021-09-15 09:59:12][info][trt_builder.cpp:578]:Network has 915 layers:
+[2021-09-15 09:59:12][info][trt_builder.cpp:643]:Building engine...
+[2021-09-15 09:59:12][warn][trt_infer.cpp:26]:NVInfer: Calibration Profile is not defined. Running calibration with Profile 0
+[2021-09-15 09:59:13][info][app_yolo.cpp:111]:Int8 6 / 6
+[2021-09-15 10:00:30][info][trt_builder.cpp:658]:No set entropyCalibratorFile, and entropyCalibrator will not save.
+[2021-09-15 10:00:30][info][trt_builder.cpp:663]:Build done 77911 ms !
+[2021-09-15 10:00:30][info][trt_infer.cpp:167]:Infer 0x15449c0009e0 detail
+[2021-09-15 10:00:30][info][trt_infer.cpp:168]: Max Batch Size: 6
+[2021-09-15 10:00:30][info][trt_infer.cpp:169]: Inputs: 1
+[2021-09-15 10:00:30][info][trt_infer.cpp:173]:         0.images : shape {6 x 3 x 640 x 640}
+[2021-09-15 10:00:30][info][trt_infer.cpp:176]: Outputs: 4
+[2021-09-15 10:00:30][info][trt_infer.cpp:180]:         0.397 : shape {6 x 3 x 80 x 80 x 85}
+[2021-09-15 10:00:30][info][trt_infer.cpp:180]:         1.496 : shape {6 x 3 x 40 x 40 x 85}
+[2021-09-15 10:00:30][info][trt_infer.cpp:180]:         2.595 : shape {6 x 3 x 20 x 20 x 85}
+[2021-09-15 10:00:30][info][trt_infer.cpp:180]:         3.output : shape {6 x 25200 x 85}
+[2021-09-15 10:00:31][info][app_yolo.cpp:74]:yolov5s.int8.trtmodel[YoloV5] average: 1.12 ms / image, FPS: 891.93
+[2021-09-15 10:00:31][info][app_yolo.cpp:100]:Save to YoloV5_result/car.jpg, 4 object, average time 1.12 ms
+[2021-09-15 10:00:31][info][app_yolo.cpp:100]:Save to YoloV5_result/gril.jpg, 1 object, average time 1.12 ms
+[2021-09-15 10:00:31][info][app_yolo.cpp:100]:Save to YoloV5_result/group.jpg, 10 object, average time 1.12 ms
+[2021-09-15 10:00:31][info][app_yolo.cpp:100]:Save to YoloV5_result/zgjr.jpg, 3 object, average time 1.12 ms
+[2021-09-15 10:00:31][info][app_yolo.cpp:100]:Save to YoloV5_result/zand.jpg, 2 object, average time 1.12 ms
+[2021-09-15 10:00:31][info][app_yolo.cpp:100]:Save to YoloV5_result/yq.jpg, 1 object, average time 1.12 ms
+[2021-09-15 10:00:31][info][yolo.cpp:211]:Engine destroy.

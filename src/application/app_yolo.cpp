@@ -50,10 +50,6 @@ static void forward_engine(const string& engine_file, Yolo::Type type){
         return;
     }
 
-    string root = iLogger::format("%s_result", Yolo::type_name(type));
-    iLogger::rmtree(root);
-    iLogger::mkdir(root);
-
     auto files = iLogger::find_files("inference", "*.jpg;*.jpeg;*.png;*.gif;*.tif");
     vector<cv::Mat> images;
     for(int i = 0; i < files.size(); ++i){
@@ -62,15 +58,25 @@ static void forward_engine(const string& engine_file, Yolo::Type type){
     }
 
     // warmup
-    engine->commit(images[0]).get();
+    engine->commits(images).back().get();
     
-    auto t0     = iLogger::timestamp_now_float();
-    auto boxes_array = engine->commits(images);
+    vector<shared_future<Yolo::ObjectBoxArray>> boxes_array;
+    const int ntest = 100;
+    auto begin_timer = iLogger::timestamp_now_float();
+
+    for(int i  = 0; i < ntest; ++i)
+        boxes_array = engine->commits(images);
     
-    // wait batch result
+    // wait all result
     boxes_array.back().get();
 
-    float inference_average_time = (iLogger::timestamp_now_float() - t0) / boxes_array.size();
+    float inference_average_time = (iLogger::timestamp_now_float() - begin_timer) / ntest / images.size();
+    INFO("%s[%s] average: %.2f ms / image, FPS: %.2f", engine_file.c_str(), Yolo::type_name(type), inference_average_time, 1000 / inference_average_time);
+
+    string root = iLogger::format("%s_result", Yolo::type_name(type));
+    iLogger::rmtree(root);
+    iLogger::mkdir(root);
+
     for(int i = 0; i < boxes_array.size(); ++i){
 
         auto& image = images[i];
@@ -169,48 +175,21 @@ static void test(Yolo::Type type, TRT::Mode mode, const string& model){
     forward_engine(model_file, type);
 }
 
-static void my_yolov5_test(){
-
-    TRT::compile(
-        TRT::Mode::FP32,
-        5,
-        "/data/sxai/temp/yolov5-5.0/yolov5s.onnx",
-        "my-yolov5-5.0s.trtmodel"
-    );
-    INFO("Done");
-
-    auto yolo = Yolo::create_infer(
-        "my-yolov5-5.0s.trtmodel", 
-        Yolo::Type::V5,
-        0, 0.25f, 0.5f
-    );
-
-    auto image = cv::imread("/data/sxai/tensorRT/workspace/inference/car.jpg");
-    auto bboxes = yolo->commits({image, image})[1].get();
-
-    for(auto& box : bboxes){
-
-        uint8_t r, g, b;
-        tie(r, g, b) = iLogger::random_color(box.class_label);
-
-        cv::rectangle(
-            image, 
-            cv::Point(box.left, box.top),
-            cv::Point(box.right, box.bottom),
-            cv::Scalar(b, g, r),
-            3
-        );
-    }
-    cv::imwrite("my-yolov5s-car.jpg", image);
-}
-
 int app_yolo(){
 
     //iLogger::set_log_level(iLogger::LogLevel::Info);
     test(Yolo::Type::X, TRT::Mode::FP32, "yolox_m");
-    // test(Yolo::Type::V5, TRT::Mode::FP32, "yolov5s");
+    // test(Yolo::Type::X, TRT::Mode::FP16, "yolox_m");
+    // test(Yolo::Type::X, TRT::Mode::FP32, "yolox_s");
     // test(Yolo::Type::X, TRT::Mode::FP16, "yolox_s");
+
+    // test(Yolo::Type::V5, TRT::Mode::FP32, "yolov5m");
+    // test(Yolo::Type::V5, TRT::Mode::FP16, "yolov5m");
+    // test(Yolo::Type::V5, TRT::Mode::FP32, "yolov5s");
     // test(Yolo::Type::V5, TRT::Mode::FP16, "yolov5s");
+
+    // test_int8(Yolo::Type::X, "yolox_m");
+    // test_int8(Yolo::Type::V5, "yolov5m");
     // test_int8(Yolo::Type::X, "yolox_s");
     // test_int8(Yolo::Type::V5, "yolov5s");
     return 0;
