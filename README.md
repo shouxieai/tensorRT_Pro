@@ -10,18 +10,17 @@
 4. 高性能拿来就用的案例有RetinaFace、Scrfd、YoloV5、YoloX、Arcface、AlphaPose、DeepSORT(C++)
 
 ## YoloX和YoloV5性能测试
-- 测试方法
-    1. 输入分辨率640x640
-    2. max batch size = 6
-    3. 图像预处理 + 推理 + 后处理
-    4. cuda10.2，cudnn8.2.2.26，TensorRT-8.0.1.6
-    5. RTX2080Ti
-    6. 测试次数，100次取平均，去掉warmup
-    7. 测试日志文件：[workspace/perf.log](workspace/perf.log)
-    8. 测试代码：[src/core/app_yolo.cpp](src/core/app_yolo.cpp)
-    9. 测试图像，6张。目录：workspace/inference
-        - 分辨率分别为：810x1080，500x806，1024x684，550x676，1280x720，800x533
-    10. 测试方式，加载6张图后，以原图不停塞进去。让模型经历完整的图像的预处理，后处理
+1. 输入分辨率640x640
+2. max batch size = 6
+3. 图像预处理 + 推理 + 后处理
+4. cuda10.2，cudnn8.2.2.26，TensorRT-8.0.1.6
+5. RTX2080Ti
+6. 测试次数，100次取平均，去掉warmup
+7. 测试日志文件：[workspace/perf.log](workspace/perf.log)
+8. 测试代码：[src/core/app_yolo.cpp](src/core/app_yolo.cpp)
+9. 测试图像，6张。目录：workspace/inference
+    - 分辨率分别为：810x1080，500x806，1024x684，550x676，1280x720，800x533
+10. 测试方式，加载6张图后，以原图不停塞进去。让模型经历完整的图像的预处理，后处理
 
 ---
 
