@@ -46,10 +46,10 @@
 |yolov5l6|1280x1280|YoloV5_P6|FP32|37.931 |26.36 |
 |yolov5m6|1280x1280|YoloV5_P6|FP32|20.127 |49.69 |
 |yolov5s6|1280x1280|YoloV5_P6|FP32|8.715 |114.75 |
-|yolov5x|1280x1280|YoloV5_P5|FP32|18.480 |54.11 |
-|yolov5l|1280x1280|YoloV5_P5|FP32|10.110 |98.91 |
-|yolov5m|1280x1280|YoloV5_P5|FP32|5.639 |177.33 |
-|yolov5s|1280x1280|YoloV5_P5|FP32|2.578 |387.92 |
+|yolov5x|640x640|YoloV5_P5|FP32|18.480 |54.11 |
+|yolov5l|640x640|YoloV5_P5|FP32|10.110 |98.91 |
+|yolov5m|640x640|YoloV5_P5|FP32|5.639 |177.33 |
+|yolov5s|640x640|YoloV5_P5|FP32|2.578 |387.92 |
 |yolov5x6|1280x1280|YoloV5_P6|FP16|20.877 |47.90 |
 |yolov5l6|1280x1280|YoloV5_P6|FP16|10.960 |91.24 |
 |yolov5m6|1280x1280|YoloV5_P6|FP16|7.236 |138.20 |
@@ -58,14 +58,15 @@
 |yolov5l|640x640|YoloV5_P5|FP16|3.450 |289.86 |
 |yolov5m|640x640|YoloV5_P5|FP16|2.184 |457.90 |
 |yolov5s|640x640|YoloV5_P5|FP16|1.307 |765.10 |
-|yolov5x6|640x640|YoloV5_P6|INT8|12.207 |81.92 |
-|yolov5l6|640x640|YoloV5_P6|INT8|7.221 |138.49 |
-|yolov5m6|640x640|YoloV5_P6|INT8|5.248 |190.55 |
-|yolov5s6|640x640|YoloV5_P6|INT8|3.149 |317.54 |
+|yolov5x6|1280x1280|YoloV5_P6|INT8|12.207 |81.92 |
+|yolov5l6|1280x1280|YoloV5_P6|INT8|7.221 |138.49 |
+|yolov5m6|1280x1280|YoloV5_P6|INT8|5.248 |190.55 |
+|yolov5s6|1280x1280|YoloV5_P6|INT8|3.149 |317.54 |
 |yolov5x|640x640|YoloV5_P5|INT8|3.704 |269.97 |
 |yolov5l|640x640|YoloV5_P5|INT8|2.255 |443.53 |
 |yolov5m|640x640|YoloV5_P5|INT8|1.674 |597.40 |
 |yolov5s|640x640|YoloV5_P5|INT8|1.143 |874.91 |
+
 
 </details>
 
@@ -99,10 +100,10 @@
 |yolov5l6_fast|1280x1280|YoloV5_P6|FP32|37.491 |26.67 |
 |yolov5m6_fast|1280x1280|YoloV5_P6|FP32|19.422 |51.49 |
 |yolov5s6_fast|1280x1280|YoloV5_P6|FP32|7.900 |126.57 |
-|yolov5x_fast|1280x1280|YoloV5_P5|FP32|18.554 |53.90 |
-|yolov5l_fast|1280x1280|YoloV5_P5|FP32|10.060 |99.41 |
-|yolov5m_fast|1280x1280|YoloV5_P5|FP32|5.500 |181.82 |
-|yolov5s_fast|1280x1280|YoloV5_P5|FP32|2.342 |427.07 |
+|yolov5x_fast|640x640|YoloV5_P5|FP32|18.554 |53.90 |
+|yolov5l_fast|640x640|YoloV5_P5|FP32|10.060 |99.41 |
+|yolov5m_fast|640x640|YoloV5_P5|FP32|5.500 |181.82 |
+|yolov5s_fast|640x640|YoloV5_P5|FP32|2.342 |427.07 |
 |yolov5x6_fast|1280x1280|YoloV5_P6|FP16|20.538 |48.69 |
 |yolov5l6_fast|1280x1280|YoloV5_P6|FP16|10.404 |96.12 |
 |yolov5m6_fast|1280x1280|YoloV5_P6|FP16|6.577 |152.06 |
@@ -111,14 +112,15 @@
 |yolov5l_fast|640x640|YoloV5_P5|FP16|3.348 |298.69 |
 |yolov5m_fast|640x640|YoloV5_P5|FP16|2.015 |496.34 |
 |yolov5s_fast|640x640|YoloV5_P5|FP16|1.087 |919.63 |
-|yolov5x6_fast|640x640|YoloV5_P6|INT8|11.236 |89.00 |
-|yolov5l6_fast|640x640|YoloV5_P6|INT8|6.235 |160.38 |
-|yolov5m6_fast|640x640|YoloV5_P6|INT8|4.311 |231.97 |
-|yolov5s6_fast|640x640|YoloV5_P6|INT8|2.139 |467.45 |
+|yolov5x6_fast|1280x1280|YoloV5_P6|INT8|11.236 |89.00 |
+|yolov5l6_fast|1280x1280|YoloV5_P6|INT8|6.235 |160.38 |
+|yolov5m6_fast|1280x1280|YoloV5_P6|INT8|4.311 |231.97 |
+|yolov5s6_fast|1280x1280|YoloV5_P6|INT8|2.139 |467.45 |
 |yolov5x_fast|640x640|YoloV5_P5|INT8|3.456 |289.37 |
 |yolov5l_fast|640x640|YoloV5_P5|INT8|2.019 |495.41 |
 |yolov5m_fast|640x640|YoloV5_P5|INT8|1.425 |701.71 |
 |yolov5s_fast|640x640|YoloV5_P5|INT8|0.844 |1185.47 |
+
 
 </details>
 
