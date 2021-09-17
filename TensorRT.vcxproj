@@ -35,7 +35,7 @@
     <ClCompile Include="src\application\app_lesson.cpp" />
     <ClCompile Include="src\application\app_yolo\yolo.cpp" />
     <ClCompile Include="src\application\app_yolo_fast.cpp" />
-    <ClCompile Include="src\application\app_yolo_fast\yolo_fast.cpp" />
+    <ClCompile Include="src\application\app_yolo_fast\yolo.cpp" />
     <ClCompile Include="src\application\tools\auto_download.cpp" />
     <ClCompile Include="src\application\tools\deepsort.cpp" />
     <ClCompile Include="src\main.cpp" />
@@ -72,7 +72,7 @@
     <ClInclude Include="src\application\app_retinaface\retinaface.hpp" />
     <ClInclude Include="src\application\app_scrfd\scrfd.hpp" />
     <ClInclude Include="src\application\app_yolo\yolo.hpp" />
-    <ClInclude Include="src\application\app_yolo_fast\yolo_fast.hpp" />
+    <ClInclude Include="src\application\app_yolo_fast\yolo.hpp" />
     <ClInclude Include="src\application\common\face_detector.hpp" />
     <ClInclude Include="src\application\tools\deepsort.hpp" />
     <ClInclude Include="src\application\tools\pybind11.hpp" />

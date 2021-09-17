@@ -196,7 +196,7 @@
     <ClCompile Include="src\application\app_yolo_fast.cpp">
       <Filter>src\application</Filter>
     </ClCompile>
-    <ClCompile Include="src\application\app_yolo_fast\yolo_fast.cpp">
+    <ClCompile Include="src\application\app_yolo_fast\yolo.cpp">
       <Filter>src\application\app_yolo_fast</Filter>
     </ClCompile>
     <ClCompile Include="src\application\app_yolo\yolo.cpp">
@@ -345,7 +345,7 @@
     <ClInclude Include="src\application\tools\pybind11.hpp">
       <Filter>src\application\tools</Filter>
     </ClInclude>
-    <ClInclude Include="src\application\app_yolo_fast\yolo_fast.hpp">
+    <ClInclude Include="src\application\app_yolo_fast\yolo.hpp">
       <Filter>src\application\app_yolo_fast</Filter>
     </ClInclude>
     <ClInclude Include="src\application\app_yolo\yolo.hpp">
