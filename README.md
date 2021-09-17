@@ -9,7 +9,11 @@
 3. 简化fp32、fp16、int8编译过程，C++/Python部署，服务器/嵌入式使用
 4. 高性能拿来就用的案例有RetinaFace、Scrfd、YoloV5、YoloX、Arcface、AlphaPose、DeepSORT(C++)
 
-## YoloX和YoloV5性能测试
+## YoloX和YoloV5系列所有模型性能测试
+
+<details>
+<summary>速度统计，性能测试表格</summary>
+
 1. 输入分辨率(YoloV5P5、YoloX)=(640x640)，(YoloV5P6)=(1280x1280)
 2. max batch size = 16
 3. 图像预处理 + 推理 + 后处理
@@ -63,6 +67,7 @@
 |yolov5m|640x640|YoloV5_P5|INT8|1.674 |597.40 |
 |yolov5s|640x640|YoloV5_P5|INT8|1.143 |874.91 |
 
+</details>
 
 ---
 
