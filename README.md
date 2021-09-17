@@ -10,34 +10,110 @@
 4. 高性能拿来就用的案例有RetinaFace、Scrfd、YoloV5、YoloX、Arcface、AlphaPose、DeepSORT(C++)
 
 ## YoloX和YoloV5性能测试
-1. 输入分辨率640x640
-2. max batch size = 6
+1. 输入分辨率(YoloV5P5、YoloX)=(640x640)，(YoloV5P6)=(1280x1280)
+2. max batch size = 16
 3. 图像预处理 + 推理 + 后处理
 4. cuda10.2，cudnn8.2.2.26，TensorRT-8.0.1.6
 5. RTX2080Ti
 6. 测试次数，100次取平均，去掉warmup
-7. 测试日志文件：[workspace/perf.log](workspace/perf.log)
+7. 测试结果：[workspace/perf.result.std.log](workspace/perf.result.std.log)
 8. 测试代码：[src/application/app_yolo.cpp](src/application/app_yolo.cpp)
 9. 测试图像，6张。目录：workspace/inference
     - 分辨率分别为：810x1080，500x806，1024x684，550x676，1280x720，800x533
-10. 测试方式，加载6张图后，以原图不停塞进去。让模型经历完整的图像的预处理，后处理
+10. 测试方式，加载6张图后，以原图重复100次不停塞进去。让模型经历完整的图像的预处理，后处理
 
 ---
 
-|  模型   | 类型  | Time ( ms ) | FPS |
-|  ---  | ---  | ---  | --- |
-| YoloV5-M  | FP32 |  5.62 | 177.89  |
-| YoloV5-M  | FP16 | 2.28  | 439.34  |
-| YoloV5-M  | INT8 | 1.69  | 589.98  |
-| YoloX-M  | FP32 | 6.88  | 145.34  |
-| YoloX-M  | FP16 | 2.50  | 399.98  |
-| YoloX-M  | INT8 | 1.77  | 565.07  |
-| YoloV5-S  | FP32 | 2.62  | 381.92  |
-| YoloV5-S  | FP16 | 1.39  | 717.52  |
-| YoloV5-S  | INT8 | 1.12  | 891.93  |
-| YoloX-S  | FP32 | 3.15  | 316.99  |
-| YoloX-S  | FP16 | 1.43  | 699.95  |
-| YoloX-S  | INT8 | 1.35  | 739.54  |
+|模型名称|分辨率|模型类型|精度|耗时|帧率|
+|yolox_x|640x640|YoloX|FP32|21.879 |45.71 |
+|yolox_l|640x640|YoloX|FP32|12.308 |81.25 |
+|yolox_m|640x640|YoloX|FP32|6.862 |145.72 |
+|yolox_s|640x640|YoloX|FP32|3.088 |323.81 |
+|yolox_x|640x640|YoloX|FP16|6.763 |147.86 |
+|yolox_l|640x640|YoloX|FP16|3.933 |254.25 |
+|yolox_m|640x640|YoloX|FP16|2.515 |397.55 |
+|yolox_s|640x640|YoloX|FP16|1.362 |734.48 |
+|yolox_x|640x640|YoloX|INT8|4.070 |245.68 |
+|yolox_l|640x640|YoloX|INT8|2.444 |409.21 |
+|yolox_m|640x640|YoloX|INT8|1.730 |577.98 |
+|yolox_s|640x640|YoloX|INT8|1.060 |943.15 |
+|yolov5x6|1280x1280|YoloV5_P6|FP32|68.022 |14.70 |
+|yolov5l6|1280x1280|YoloV5_P6|FP32|37.931 |26.36 |
+|yolov5m6|1280x1280|YoloV5_P6|FP32|20.127 |49.69 |
+|yolov5s6|1280x1280|YoloV5_P6|FP32|8.715 |114.75 |
+|yolov5x|1280x1280|YoloV5_P5|FP32|18.480 |54.11 |
+|yolov5l|1280x1280|YoloV5_P5|FP32|10.110 |98.91 |
+|yolov5m|1280x1280|YoloV5_P5|FP32|5.639 |177.33 |
+|yolov5s|1280x1280|YoloV5_P5|FP32|2.578 |387.92 |
+|yolov5x6|1280x1280|YoloV5_P6|FP16|20.877 |47.90 |
+|yolov5l6|1280x1280|YoloV5_P6|FP16|10.960 |91.24 |
+|yolov5m6|1280x1280|YoloV5_P6|FP16|7.236 |138.20 |
+|yolov5s6|1280x1280|YoloV5_P6|FP16|3.851 |259.68 |
+|yolov5x|640x640|YoloV5_P5|FP16|5.933 |168.55 |
+|yolov5l|640x640|YoloV5_P5|FP16|3.450 |289.86 |
+|yolov5m|640x640|YoloV5_P5|FP16|2.184 |457.90 |
+|yolov5s|640x640|YoloV5_P5|FP16|1.307 |765.10 |
+|yolov5x6|640x640|YoloV5_P6|INT8|12.207 |81.92 |
+|yolov5l6|640x640|YoloV5_P6|INT8|7.221 |138.49 |
+|yolov5m6|640x640|YoloV5_P6|INT8|5.248 |190.55 |
+|yolov5s6|640x640|YoloV5_P6|INT8|3.149 |317.54 |
+|yolov5x|640x640|YoloV5_P5|INT8|3.704 |269.97 |
+|yolov5l|640x640|YoloV5_P5|INT8|2.255 |443.53 |
+|yolov5m|640x640|YoloV5_P5|INT8|1.674 |597.40 |
+|yolov5s|640x640|YoloV5_P5|INT8|1.143 |874.91 |
+
+
+---
+
+<details>
+<summary>Fast系列速度统计，性能只会无止境的追求</summary>
+
+- 相比上面，模型去头去尾，去掉了Focus和尾部的多余的transpose等节点，融合到了CUDA核函数中实现。其他都是一样的
+- 测试结果：[workspace/perf.result.std.log](workspace/perf.result.std.log)
+- 测试代码：[src/application/app_yolo_fast.cpp](src/application/app_yolo_fast.cpp)
+- 可以自己参照下载后的onnx做修改，或者群里提要求讲一讲
+- 这个工作的主要目的，是优化前后处理的时间，这在任何时候都是有用的。如果你用yolox、yolov5更小的系列，都可以考虑这东西
+
+
+|模型名称|分辨率|模型类型|精度|耗时|帧率|
+|yolox_x_fast|640x640|YoloX|FP32|21.598 |46.30 |
+|yolox_l_fast|640x640|YoloX|FP32|12.199 |81.97 |
+|yolox_m_fast|640x640|YoloX|FP32|6.819 |146.65 |
+|yolox_s_fast|640x640|YoloX|FP32|2.979 |335.73 |
+|yolox_x_fast|640x640|YoloX|FP16|6.764 |147.84 |
+|yolox_l_fast|640x640|YoloX|FP16|3.866 |258.64 |
+|yolox_m_fast|640x640|YoloX|FP16|2.386 |419.16 |
+|yolox_s_fast|640x640|YoloX|FP16|1.259 |794.36 |
+|yolox_x_fast|640x640|YoloX|INT8|3.918 |255.26 |
+|yolox_l_fast|640x640|YoloX|INT8|2.292 |436.38 |
+|yolox_m_fast|640x640|YoloX|INT8|1.589 |629.49 |
+|yolox_s_fast|640x640|YoloX|INT8|0.954 |1048.47 |
+|yolov5x6_fast|1280x1280|YoloV5_P6|FP32|67.075 |14.91 |
+|yolov5l6_fast|1280x1280|YoloV5_P6|FP32|37.491 |26.67 |
+|yolov5m6_fast|1280x1280|YoloV5_P6|FP32|19.422 |51.49 |
+|yolov5s6_fast|1280x1280|YoloV5_P6|FP32|7.900 |126.57 |
+|yolov5x_fast|1280x1280|YoloV5_P5|FP32|18.554 |53.90 |
+|yolov5l_fast|1280x1280|YoloV5_P5|FP32|10.060 |99.41 |
+|yolov5m_fast|1280x1280|YoloV5_P5|FP32|5.500 |181.82 |
+|yolov5s_fast|1280x1280|YoloV5_P5|FP32|2.342 |427.07 |
+|yolov5x6_fast|1280x1280|YoloV5_P6|FP16|20.538 |48.69 |
+|yolov5l6_fast|1280x1280|YoloV5_P6|FP16|10.404 |96.12 |
+|yolov5m6_fast|1280x1280|YoloV5_P6|FP16|6.577 |152.06 |
+|yolov5s6_fast|1280x1280|YoloV5_P6|FP16|3.087 |323.99 |
+|yolov5x_fast|640x640|YoloV5_P5|FP16|5.919 |168.95 |
+|yolov5l_fast|640x640|YoloV5_P5|FP16|3.348 |298.69 |
+|yolov5m_fast|640x640|YoloV5_P5|FP16|2.015 |496.34 |
+|yolov5s_fast|640x640|YoloV5_P5|FP16|1.087 |919.63 |
+|yolov5x6_fast|640x640|YoloV5_P6|INT8|11.236 |89.00 |
+|yolov5l6_fast|640x640|YoloV5_P6|INT8|6.235 |160.38 |
+|yolov5m6_fast|640x640|YoloV5_P6|INT8|4.311 |231.97 |
+|yolov5s6_fast|640x640|YoloV5_P6|INT8|2.139 |467.45 |
+|yolov5x_fast|640x640|YoloV5_P5|INT8|3.456 |289.37 |
+|yolov5l_fast|640x640|YoloV5_P5|INT8|2.019 |495.41 |
+|yolov5m_fast|640x640|YoloV5_P5|INT8|1.425 |701.71 |
+|yolov5s_fast|640x640|YoloV5_P5|INT8|0.844 |1185.47 |
+
+</details>
 
 ## Windows支持
 1. 依赖请查看[lean/README.md](lean/README.md)
@@ -341,7 +417,7 @@ TRT::compile(
 auto int8process = [](int current, int count, vector<string>& images, shared_ptr<TRT::Tensor>& tensor){
     for(int i = 0; i < images.size(); ++i){
 
-	// 对于int8的编译需要进行标定，这里读取图像数据并通过set_norm_mat到tensor中
+    // 对于int8的编译需要进行标定，这里读取图像数据并通过set_norm_mat到tensor中
         auto image = cv::imread(images[i]);
         cv::resize(image, image, cv::Size(640, 640));
         float mean[] = {0, 0, 0};

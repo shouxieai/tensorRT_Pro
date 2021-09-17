@@ -454,6 +454,12 @@ namespace TRT {
 					INFOE("Can not find any images(jpg/png/bmp/jpeg/tiff) from directory: %s", int8ImageDirectory.c_str());
 					return false;
 				}
+
+				if(entropyCalibratorFiles.size() < maxBatchSize){
+					INFOW("Too few images provided, %d[provided] < %d[max batch size], image copy will be performed", entropyCalibratorFiles.size(), maxBatchSize);
+					for(int i = entropyCalibratorFiles.size(); i < maxBatchSize; ++i)
+						entropyCalibratorFiles.push_back(entropyCalibratorFiles[i % entropyCalibratorFiles.size()]);
+				}
 			}
 		}
 		else {

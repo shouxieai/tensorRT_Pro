@@ -2,7 +2,7 @@
 #include <builder/trt_builder.hpp>
 #include <infer/trt_infer.hpp>
 #include <common/ilogger.hpp>
-#include "app_yolo/yolo.hpp"
+#include "app_yolo_fast/yolo.hpp"
 
 using namespace std;
 
@@ -24,6 +24,15 @@ static const char* cocolabels[] = {
 
 bool requires(const char* name);
 
+YoloFast::DecodeMeta type_of_meta(YoloFast::Type type){
+    switch(type){
+        case YoloFast::Type::V5_P5: return YoloFast::DecodeMeta::v5_p5_default_meta();
+        case YoloFast::Type::V5_P6: return YoloFast::DecodeMeta::v5_p6_default_meta();
+        case YoloFast::Type::X: return YoloFast::DecodeMeta::x_default_meta();
+        default: return YoloFast::DecodeMeta::v5_p5_default_meta();
+    }
+}
+
 static void append_to_file(const string& file, const string& data){
     FILE* f = fopen(file.c_str(), "a+");
     if(f == nullptr){
@@ -35,9 +44,10 @@ static void append_to_file(const string& file, const string& data){
     fclose(f);
 }
 
-static void inference_and_performance(int deviceid, const string& engine_file, TRT::Mode mode, Yolo::Type type, const string& model_name){
+static void inference_and_performance(int deviceid, const string& engine_file, TRT::Mode mode, YoloFast::Type type, const string& model_name){
 
-    auto engine = Yolo::create_infer(engine_file, type, deviceid, 0.4f, 0.5f);
+    auto meta = type_of_meta(type);
+    auto engine = YoloFast::create_infer(engine_file, type, deviceid, 0.4f, 0.5f, meta);
     if(engine == nullptr){
         INFOE("Engine is nullptr");
         return;
@@ -51,7 +61,7 @@ static void inference_and_performance(int deviceid, const string& engine_file, T
     }
 
     // warmup
-    vector<shared_future<Yolo::ObjectBoxArray>> boxes_array;
+    vector<shared_future<YoloFast::ObjectBoxArray>> boxes_array;
     for(int i = 0; i < 10; ++i)
         boxes_array = engine->commits(images);
     boxes_array.back().get();
@@ -68,7 +78,7 @@ static void inference_and_performance(int deviceid, const string& engine_file, T
     boxes_array.back().get();
 
     float inference_average_time = (iLogger::timestamp_now_float() - begin_timer) / ntest / images.size();
-    auto type_name = Yolo::type_name(type);
+    auto type_name = YoloFast::type_name(type);
     auto mode_name = TRT::mode_string(mode);
     INFO("%s[%s] average: %.2f ms / image, FPS: %.2f", engine_file.c_str(), type_name, inference_average_time, 1000 / inference_average_time);
     append_to_file("perf.result.log", iLogger::format("%s,%s,%s,%f", model_name.c_str(), type_name, mode_name, inference_average_time));
@@ -101,7 +111,7 @@ static void inference_and_performance(int deviceid, const string& engine_file, T
     }
 }
 
-static void test(Yolo::Type type, TRT::Mode mode, const string& model){
+static void test(YoloFast::Type type, TRT::Mode mode, const string& model){
 
     int deviceid = 0;
     auto mode_name = TRT::mode_string(mode);
@@ -113,12 +123,12 @@ static void test(Yolo::Type type, TRT::Mode mode, const string& model){
 
         for(int i = 0; i < files.size(); ++i){
             auto image = cv::imread(files[i]);
-            Yolo::image_to_tensor(image, tensor, type, i);
+            YoloFast::image_to_tensor(image, tensor, type, i);
         }
     };
 
     const char* name = model.c_str();
-    INFO("===================== test %s %s %s ==================================", Yolo::type_name(type), mode_name, name);
+    INFO("===================== test %s %s %s ==================================", YoloFast::type_name(type), mode_name, name);
 
     if(not requires(name))
         return;
@@ -142,49 +152,50 @@ static void test(Yolo::Type type, TRT::Mode mode, const string& model){
     inference_and_performance(deviceid, model_file, mode, type, name);
 }
 
-int app_yolo(){
+int app_yolo_fast(){
 
-    test(Yolo::Type::X, TRT::Mode::FP32, "yolox_s");
+    test(YoloFast::Type::X, TRT::Mode::FP32, "yolox_s_fast");
+    
 
     //iLogger::set_log_level(iLogger::LogLevel::Info);
-    // test(Yolo::Type::X, TRT::Mode::FP32, "yolox_x");
-    // test(Yolo::Type::X, TRT::Mode::FP32, "yolox_l");
-    // test(Yolo::Type::X, TRT::Mode::FP32, "yolox_m");
-    // test(Yolo::Type::X, TRT::Mode::FP32, "yolox_s");
-    // test(Yolo::Type::X, TRT::Mode::FP16, "yolox_x");
-    // test(Yolo::Type::X, TRT::Mode::FP16, "yolox_l");
-    // test(Yolo::Type::X, TRT::Mode::FP16, "yolox_m");
-    // test(Yolo::Type::X, TRT::Mode::FP16, "yolox_s");
-    // test(Yolo::Type::X, TRT::Mode::INT8, "yolox_x");
-    // test(Yolo::Type::X, TRT::Mode::INT8, "yolox_l");
-    // test(Yolo::Type::X, TRT::Mode::INT8, "yolox_m");
-    // test(Yolo::Type::X, TRT::Mode::INT8, "yolox_s");
+    // test(YoloFast::Type::X, TRT::Mode::FP32, "yolox_x_fast");
+    // test(YoloFast::Type::X, TRT::Mode::FP32, "yolox_l_fast");
+    // test(YoloFast::Type::X, TRT::Mode::FP32, "yolox_m_fast");
+    // test(YoloFast::Type::X, TRT::Mode::FP32, "yolox_s_fast");
+    // test(YoloFast::Type::X, TRT::Mode::FP16, "yolox_x_fast");
+    // test(YoloFast::Type::X, TRT::Mode::FP16, "yolox_l_fast");
+    // test(YoloFast::Type::X, TRT::Mode::FP16, "yolox_m_fast");
+    // test(YoloFast::Type::X, TRT::Mode::FP16, "yolox_s_fast");
+    // test(YoloFast::Type::X, TRT::Mode::INT8, "yolox_x_fast");
+    // test(YoloFast::Type::X, TRT::Mode::INT8, "yolox_l_fast");
+    // test(YoloFast::Type::X, TRT::Mode::INT8, "yolox_m_fast");
+    // test(YoloFast::Type::X, TRT::Mode::INT8, "yolox_s_fast");
 
-    // test(Yolo::Type::V5, TRT::Mode::FP32, "yolov5x6");
-    // test(Yolo::Type::V5, TRT::Mode::FP32, "yolov5l6");
-    // test(Yolo::Type::V5, TRT::Mode::FP32, "yolov5m6");
-    // test(Yolo::Type::V5, TRT::Mode::FP32, "yolov5s6");
-    // test(Yolo::Type::V5, TRT::Mode::FP32, "yolov5x");
-    // test(Yolo::Type::V5, TRT::Mode::FP32, "yolov5l");
-    // test(Yolo::Type::V5, TRT::Mode::FP32, "yolov5m");
-    // test(Yolo::Type::V5, TRT::Mode::FP32, "yolov5s");
+    // test(YoloFast::Type::V5_P6, TRT::Mode::FP32, "yolov5x6_fast");
+    // test(YoloFast::Type::V5_P6, TRT::Mode::FP32, "yolov5l6_fast");
+    // test(YoloFast::Type::V5_P6, TRT::Mode::FP32, "yolov5m6_fast");
+    // test(YoloFast::Type::V5_P6, TRT::Mode::FP32, "yolov5s6_fast");
+    // test(YoloFast::Type::V5_P5, TRT::Mode::FP32, "yolov5x_fast");
+    // test(YoloFast::Type::V5_P5, TRT::Mode::FP32, "yolov5l_fast");
+    // test(YoloFast::Type::V5_P5, TRT::Mode::FP32, "yolov5m_fast");
+    // test(YoloFast::Type::V5_P5, TRT::Mode::FP32, "yolov5s_fast");
 
-    // test(Yolo::Type::V5, TRT::Mode::FP16, "yolov5x6");
-    // test(Yolo::Type::V5, TRT::Mode::FP16, "yolov5l6");
-    // test(Yolo::Type::V5, TRT::Mode::FP16, "yolov5m6");
-    // test(Yolo::Type::V5, TRT::Mode::FP16, "yolov5s6");
-    // test(Yolo::Type::V5, TRT::Mode::FP16, "yolov5x");
-    // test(Yolo::Type::V5, TRT::Mode::FP16, "yolov5l");
-    // test(Yolo::Type::V5, TRT::Mode::FP16, "yolov5m");
-    // test(Yolo::Type::V5, TRT::Mode::FP16, "yolov5s");
+    // test(YoloFast::Type::V5_P6, TRT::Mode::FP16, "yolov5x6_fast");
+    // test(YoloFast::Type::V5_P6, TRT::Mode::FP16, "yolov5l6_fast");
+    // test(YoloFast::Type::V5_P6, TRT::Mode::FP16, "yolov5m6_fast");
+    // test(YoloFast::Type::V5_P6, TRT::Mode::FP16, "yolov5s6_fast");
+    // test(YoloFast::Type::V5_P5, TRT::Mode::FP16, "yolov5x_fast");
+    // test(YoloFast::Type::V5_P5, TRT::Mode::FP16, "yolov5l_fast");
+    // test(YoloFast::Type::V5_P5, TRT::Mode::FP16, "yolov5m_fast");
+    // test(YoloFast::Type::V5_P5, TRT::Mode::FP16, "yolov5s_fast");
 
-    // test(Yolo::Type::V5, TRT::Mode::INT8, "yolov5x6");
-    // test(Yolo::Type::V5, TRT::Mode::INT8, "yolov5l6");
-    // test(Yolo::Type::V5, TRT::Mode::INT8, "yolov5m6");
-    // test(Yolo::Type::V5, TRT::Mode::INT8, "yolov5s6");
-    // test(Yolo::Type::V5, TRT::Mode::INT8, "yolov5x");
-    // test(Yolo::Type::V5, TRT::Mode::INT8, "yolov5l");
-    // test(Yolo::Type::V5, TRT::Mode::INT8, "yolov5m");
-    // test(Yolo::Type::V5, TRT::Mode::INT8, "yolov5s");
+    // test(YoloFast::Type::V5_P6, TRT::Mode::INT8, "yolov5x6_fast");
+    // test(YoloFast::Type::V5_P6, TRT::Mode::INT8, "yolov5l6_fast");
+    // test(YoloFast::Type::V5_P6, TRT::Mode::INT8, "yolov5m6_fast");
+    // test(YoloFast::Type::V5_P6, TRT::Mode::INT8, "yolov5s6_fast");
+    // test(YoloFast::Type::V5_P5, TRT::Mode::INT8, "yolov5x_fast");
+    // test(YoloFast::Type::V5_P5, TRT::Mode::INT8, "yolov5l_fast");
+    // test(YoloFast::Type::V5_P5, TRT::Mode::INT8, "yolov5m_fast");
+    // test(YoloFast::Type::V5_P5, TRT::Mode::INT8, "yolov5s_fast");
     return 0;
 }

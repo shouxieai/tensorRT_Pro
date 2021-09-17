@@ -15,6 +15,7 @@ int app_scrfd();
 int app_high_performance();
 int app_lesson();
 int app_plugin();    
+int app_yolo_fast();
 
 void test_all(){
     app_yolo();
@@ -37,6 +38,8 @@ int main(int argc, char** argv){
 
     if(strcmp(method, "yolo") == 0){
         app_yolo();
+    }else if(strcmp(method, "yolo_fast") == 0){
+        app_yolo_fast();
     }else if(strcmp(method, "alphapose") == 0){
         app_alphapose();
     }else if(strcmp(method, "fall_recognize") == 0){

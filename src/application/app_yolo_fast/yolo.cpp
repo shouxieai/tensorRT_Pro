@@ -10,84 +10,107 @@
 #include <common/monopoly_allocator.hpp>
 #include <common/cuda_tools.hpp>
 
-namespace Yolo{
+namespace YoloFast{
     using namespace cv;
     using namespace std;
 
+    DecodeMeta DecodeMeta::x_default_meta(){
+        DecodeMeta meta;
+        meta.num_anchor = 1;
+        meta.num_level = 3;
+
+        const int strides[] = {8, 16, 32};
+        memcpy(meta.strides, strides, sizeof(meta.strides));
+        return meta;
+    }
+
+    DecodeMeta DecodeMeta::v5_p6_default_meta(){
+        DecodeMeta meta;
+        meta.num_anchor = 3;
+        meta.num_level = 4;
+
+        float anchors[] = {
+            19, 27,   44, 40,   38, 94,
+            96, 68,   86, 152,  180,137,
+            140,301,  303,264,  238,542,
+            436,615,  739,380,  925,792
+        };  
+
+        int abs_index = 0;
+        for(int i = 0; i < meta.num_level; ++i){
+            for(int j = 0; j < meta.num_anchor; ++j){
+                int aidx = i * meta.num_anchor + j;
+                meta.w[aidx] = anchors[abs_index++];
+                meta.h[aidx] = anchors[abs_index++];
+            }
+        }
+
+        const int strides[] = {8, 16, 32, 64};
+        memcpy(meta.strides, strides, sizeof(meta.strides));
+        return meta;
+    }
+
+    DecodeMeta DecodeMeta::v5_p5_default_meta(){
+        DecodeMeta meta;
+        meta.num_anchor = 3;
+        meta.num_level = 3;
+
+        float anchors[] = {
+            10.000000, 13.000000, 16.000000, 30.000000, 33.000000, 23.000000,
+            30.000000, 61.000000, 62.000000, 45.000000, 59.000000, 119.000000,
+            116.000000, 90.000000, 156.000000, 198.000000, 373.000000, 326.000000
+        };  
+
+        int abs_index = 0;
+        for(int i = 0; i < meta.num_level; ++i){
+            for(int j = 0; j < meta.num_anchor; ++j){
+                int aidx = i * meta.num_anchor + j;
+                meta.w[aidx] = anchors[abs_index++];
+                meta.h[aidx] = anchors[abs_index++];
+            }
+        }
+
+        const int strides[] = {8, 16, 32};
+        memcpy(meta.strides, strides, sizeof(meta.strides));
+        return meta;
+    }
+
     const char* type_name(Type type){
         switch(type){
-        case Type::V5: return "YoloV5";
+        case Type::V5_P5: return "YoloV5_P5";
+        case Type::V5_P6: return "YoloV5_P6";
         case Type::X: return "YoloX";
         default: return "Unknow";
         }
     }
 
-    void decode_kernel_invoker(
-        float* predict, int num_bboxes, int num_classes, float confidence_threshold, 
-        float nms_threshold, float* invert_affine_matrix, float* parray,
+    void yolov5_decode_kernel_invoker(
+        float* predict, int num_bboxes, int fm_area, int num_classes, float confidence_threshold, 
+        float nms_threshold, float* invert_affine_matrix, float* parray, const float* prior_box,
+        int max_objects, cudaStream_t stream
+    );
+
+    void yolox_decode_kernel_invoker(
+        float* predict, int num_bboxes, int fm_area, int num_classes, float confidence_threshold, 
+        float nms_threshold, float* invert_affine_matrix, float* parray, const float* prior_box,
         int max_objects, cudaStream_t stream
     );
 
     struct AffineMatrix{
-        float i2d[6];       // image to dst(network), 2x3 matrix
-        float d2i[6];       // dst to image, 2x3 matrix
+        float i2d[3];       // image to dst(network)
+        float d2i[3];       // dst to image
 
         void compute(const cv::Size& from, const cv::Size& to){
             float scale_x = to.width / (float)from.width;
             float scale_y = to.height / (float)from.height;
-
-            // 这里取min的理由是
-            // 1. M矩阵是 from * M = to的方式进行映射，因此scale的分母一定是from
-            // 2. 取最小，即根据宽高比，算出最小的比例，如果取最大，则势必有一部分超出图像范围而被裁剪掉，这不是我们要的
-            // **
             float scale = std::min(scale_x, scale_y);
+            i2d[0] = scale;  i2d[1] = -scale * from.width  * 0.5  + to.width * 0.5;
+                             i2d[2] = -scale * from.height * 0.5 + to.height * 0.5;
 
-            /**
-            这里的仿射变换矩阵实质上是2x3的矩阵，具体实现是
-            scale, 0, -scale * from.width * 0.5 + to.width * 0.5
-            0, scale, -scale * from.height * 0.5 + to.height * 0.5
-            
-            这里可以想象成，是经历过缩放、平移、平移三次变换后的组合，M = TPS
-            例如第一个S矩阵，定义为把输入的from图像，等比缩放scale倍，到to尺度下
-            S = [
-            scale,     0,      0
-            0,     scale,      0
-            0,         0,      1
-            ]
-            
-            P矩阵定义为第一次平移变换矩阵，将图像的原点，从左上角，移动到缩放(scale)后图像的中心上
-            P = [
-            1,        0,      -scale * from.width * 0.5
-            0,        1,      -scale * from.height * 0.5
-            0,        0,                1
-            ]
-
-            T矩阵定义为第二次平移变换矩阵，将图像从原点移动到目标（to）图的中心上
-            T = [
-            1,        0,      to.width * 0.5,
-            0,        1,      to.height * 0.5,
-            0,        0,            1
-            ]
-
-            通过将3个矩阵顺序乘起来，即可得到下面的表达式：
-            M = [
-            scale,    0,     -scale * from.width * 0.5 + to.width * 0.5
-            0,     scale,    -scale * from.height * 0.5 + to.height * 0.5
-            0,        0,                     1
-            ]
-            去掉第三行就得到opencv需要的输入2x3矩阵
-            **/
-
-            i2d[0] = scale;  i2d[1] = 0;  i2d[2] = -scale * from.width  * 0.5  + to.width * 0.5;
-            i2d[3] = 0;  i2d[4] = scale;  i2d[5] = -scale * from.height * 0.5 + to.height * 0.5;
-
-            cv::Mat m2x3_i2d(2, 3, CV_32F, i2d);
-            cv::Mat m2x3_d2i(2, 3, CV_32F, d2i);
-            cv::invertAffineTransform(m2x3_i2d, m2x3_d2i);
-        }
-
-        cv::Mat i2d_mat(){
-            return cv::Mat(2, 3, CV_32F, i2d);
+            // y = kx + b
+            // x = (y-b)/k = y*1/k + (-b)/k
+            d2i[0] = 1/scale; d2i[1] = -i2d[1] / scale;
+                              d2i[2] = -i2d[2] / scale;
         }
     };
 
@@ -106,14 +129,18 @@ namespace Yolo{
             stop();
         }
 
-        virtual bool startup(const string& file, Type type, int gpuid, float confidence_threshold, float nms_threshold){
+        virtual bool startup(const string& file, Type type, int gpuid, float confidence_threshold, float nms_threshold, const DecodeMeta& meta){
 
-            if(type == Type::V5){
+            meta_ = meta;
+            type_ = type;
+
+            if(type == Type::V5_P5 || type == Type::V5_P6){
                 normalize_ = CUDAKernel::Norm::alpha_beta(1 / 255.0f, 0.0f, CUDAKernel::ChannelType::Invert);
             }else if(type == Type::X){
                 //float mean[] = {0.485, 0.456, 0.406};
                 //float std[]  = {0.229, 0.224, 0.225};
                 //normalize_ = CUDAKernel::Norm::mean_std(mean, std, 1/255.0f, CUDAKernel::ChannelType::Invert);
+                meta_.num_anchor = 1;
                 normalize_ = CUDAKernel::Norm::None();
             }else{
                 INFOE("Unsupport type %d", type);
@@ -122,6 +149,52 @@ namespace Yolo{
             confidence_threshold_ = confidence_threshold;
             nms_threshold_        = nms_threshold;
             return ControllerImpl::startup(make_tuple(file, gpuid));
+        }
+
+        void init_yolox_prior_box(TRT::Tensor& prior_box){
+            
+            // 8400(lxaxhxw) x 3
+            float* prior_ptr = prior_box.cpu<float>();
+            for(int ianchor = 0; ianchor < meta_.num_anchor; ++ianchor){
+                for(int ilevel = 0; ilevel < meta_.num_level; ++ilevel){
+                    int stride    = meta_.strides[ilevel];
+                    int fm_width  = input_width_ / stride;
+                    int fm_height = input_height_ / stride;
+                    int anchor_abs_index = ilevel * meta_.num_anchor + ianchor;
+                    for(int ih = 0; ih < fm_height; ++ih){
+                        for(int iw = 0; iw < fm_width; ++iw){
+                            *prior_ptr++ = iw;
+                            *prior_ptr++ = ih;
+                            *prior_ptr++ = stride;
+                        }
+                    }
+                }
+            }
+            prior_box.to_gpu();
+        }
+
+        void init_yolov5_prior_box(TRT::Tensor& prior_box){
+            
+            // 25200(lxaxhxw) x 5
+            float* prior_ptr = prior_box.cpu<float>();
+            for(int ianchor = 0; ianchor < meta_.num_anchor; ++ianchor){
+                for(int ilevel = 0; ilevel < meta_.num_level; ++ilevel){
+                    int stride    = meta_.strides[ilevel];
+                    int fm_width  = input_width_ / stride;
+                    int fm_height = input_height_ / stride;
+                    int anchor_abs_index = ilevel * meta_.num_anchor + ianchor;
+                    for(int ih = 0; ih < fm_height; ++ih){
+                        for(int iw = 0; iw < fm_width; ++iw){
+                            *prior_ptr++ = iw;
+                            *prior_ptr++ = ih;
+                            *prior_ptr++ = meta_.w[anchor_abs_index];
+                            *prior_ptr++ = meta_.h[anchor_abs_index];
+                            *prior_ptr++ = stride;
+                        }
+                    }
+                }
+            }
+            prior_box.to_gpu();
         }
 
         virtual void worker(promise<bool>& result) override{
@@ -143,13 +216,14 @@ namespace Yolo{
             const int NUM_BOX_ELEMENT = 7;      // left, top, right, bottom, confidence, class, keepflag
             TRT::Tensor affin_matrix_device(TRT::DataType::Float);
             TRT::Tensor output_array_device(TRT::DataType::Float);
+            TRT::Tensor prior_box(TRT::DataType::Float);
             int max_batch_size = engine->get_max_batch_size();
             auto input         = engine->tensor("images");
             auto output        = engine->tensor("output");
             int num_classes    = output->size(2) - 5;
 
-            input_width_       = input->size(3);
-            input_height_      = input->size(2);
+            input_width_       = input->size(3) * 2;  /** 移除focus后要乘以2 **/
+            input_height_      = input->size(2) * 2;  /** 移除focus后要乘以2 **/
             tensor_allocator_  = make_shared<MonopolyAllocator<TRT::Tensor>>(max_batch_size * 2);
             stream_            = engine->get_stream();
             gpu_               = gpuid;
@@ -164,6 +238,17 @@ namespace Yolo{
             // 这里的 1 + MAX_IMAGE_BBOX结构是，counter + bboxes ...
             output_array_device.resize(max_batch_size, 1 + MAX_IMAGE_BBOX * NUM_BOX_ELEMENT).to_gpu();
 
+            // 25200(axhxw) x 5
+            bool is_v5 = type_ == Type::V5_P5 || type_ == Type::V5_P6;
+            if(is_v5){
+                prior_box.resize(output->size(1) * output->size(3), 5).to_cpu();
+                init_yolov5_prior_box(prior_box);
+            }else{
+                prior_box.resize(output->size(1) * output->size(3), 3).to_cpu();
+                init_yolox_prior_box(prior_box);
+            }
+
+            auto decode_kernel_invoker = is_v5 ? yolov5_decode_kernel_invoker : yolox_decode_kernel_invoker;
             vector<Job> fetch_jobs;
             while(get_jobs_and_wait(fetch_jobs, max_batch_size)){
 
@@ -187,7 +272,19 @@ namespace Yolo{
                     float* output_array_ptr   = output_array_device.gpu<float>(ibatch);
                     auto affine_matrix        = affin_matrix_device.gpu<float>(ibatch);
                     checkCudaRuntime(cudaMemsetAsync(output_array_ptr, 0, sizeof(int), stream_));
-                    decode_kernel_invoker(image_based_output, output->size(1), num_classes, confidence_threshold_, nms_threshold_, affine_matrix, output_array_ptr, MAX_IMAGE_BBOX, stream_);
+                    decode_kernel_invoker(
+                        image_based_output, 
+                        output->size(1) * output->size(3),
+                        output->size(3), 
+                        num_classes, 
+                        confidence_threshold_, 
+                        nms_threshold_, 
+                        affine_matrix, 
+                        output_array_ptr, 
+                        prior_box.gpu<float>(),
+                        MAX_IMAGE_BBOX, 
+                        stream_
+                    );
                 }
 
                 output_array_device.to_cpu();
@@ -228,9 +325,11 @@ namespace Yolo{
 
             Size input_size(input_width_, input_height_);
             job.additional.compute(image.size(), input_size);
-            
+
             tensor->set_stream(stream_);
-            tensor->resize(1, 3, input_height_, input_width_);
+
+            /** 移除focus后，宽高是1/2 **/
+            tensor->resize(1, 12, input_height_ / 2, input_width_ / 2);
 
             size_t size_image      = image.cols * image.rows * 3;
             size_t size_matrix     = iLogger::upbound(sizeof(job.additional.d2i), 32);
@@ -250,7 +349,7 @@ namespace Yolo{
             checkCudaRuntime(cudaMemcpyAsync(image_device, image_host, size_image, cudaMemcpyHostToDevice, stream_));
             checkCudaRuntime(cudaMemcpyAsync(affine_matrix_device, affine_matrix_host, sizeof(job.additional.d2i), cudaMemcpyHostToDevice, stream_));
 
-            CUDAKernel::warp_affine_bilinear_and_normalize_plane(
+            CUDAKernel::warp_affine_bilinear_and_normalize_focus(
                 image_device,         image.cols * 3,       image.cols,       image.rows, 
                 tensor->gpu<float>(), input_width_,         input_height_, 
                 affine_matrix_device, 114, 
@@ -275,11 +374,20 @@ namespace Yolo{
         float nms_threshold_        = 0;
         TRT::CUStream stream_       = nullptr;
         CUDAKernel::Norm normalize_;
+        DecodeMeta meta_;
+        Type type_;
     };
 
-    shared_ptr<Infer> create_infer(const string& engine_file, Type type, int gpuid, float confidence_threshold, float nms_threshold){
+    shared_ptr<Infer> create_infer(
+        const string& engine_file, 
+        Type type, 
+        int gpuid, 
+        float confidence_threshold, 
+        float nms_threshold, 
+        const DecodeMeta& meta
+    ){
         shared_ptr<InferImpl> instance(new InferImpl());
-        if(!instance->startup(engine_file, type, gpuid, confidence_threshold, nms_threshold)){
+        if(!instance->startup(engine_file, type, gpuid, confidence_threshold, nms_threshold, meta)){
             instance.reset();
         }
         return instance;
@@ -288,7 +396,7 @@ namespace Yolo{
     void image_to_tensor(const cv::Mat& image, shared_ptr<TRT::Tensor>& tensor, Type type, int ibatch){
 
         CUDAKernel::Norm normalize;
-        if(type == Type::V5){
+        if(type == Type::V5_P5 || type == Type::V5_P6){
             normalize = CUDAKernel::Norm::alpha_beta(1 / 255.0f, 0.0f, CUDAKernel::ChannelType::Invert);
         }else if(type == Type::X){
             //float mean[] = {0.485, 0.456, 0.406};
@@ -299,7 +407,7 @@ namespace Yolo{
             INFOE("Unsupport type %d", type);
         }
         
-        Size input_size(tensor->size(3), tensor->size(2));
+        Size input_size(tensor->size(3) * 2, tensor->size(2) * 2);
         AffineMatrix affine;
         affine.compute(image.size(), input_size);
 
@@ -320,7 +428,7 @@ namespace Yolo{
         checkCudaRuntime(cudaMemcpyAsync(image_device, image_host, size_image, cudaMemcpyHostToDevice, stream));
         checkCudaRuntime(cudaMemcpyAsync(affine_matrix_device, affine_matrix_host, sizeof(affine.d2i), cudaMemcpyHostToDevice, stream));
 
-        CUDAKernel::warp_affine_bilinear_and_normalize_plane(
+        CUDAKernel::warp_affine_bilinear_and_normalize_focus(
             image_device,               image.cols * 3,       image.cols,       image.rows, 
             tensor->gpu<float>(ibatch), input_size.width,     input_size.height, 
             affine_matrix_device, 114, 

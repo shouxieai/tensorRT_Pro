@@ -1,5 +1,5 @@
-#ifndef YOLO_HPP
-#define YOLO_HPP
+#ifndef YOLO_FAST_HPP
+#define YOLO_FAST_HPP
 
 #include <vector>
 #include <memory>
@@ -12,14 +12,26 @@
  * @brief 发挥极致的性能体验
  * 支持YoloX和YoloV5
  */
-namespace Yolo{
+namespace YoloFast{
 
     using namespace std;
 
     enum class Type : int{
-        V5 = 0,
-        X  = 1
-    };    
+        V5_P5 = 0,
+        V5_P6 = 1,
+        X  = 2
+    };
+
+    struct DecodeMeta{
+        int num_anchor;
+        int num_level;
+        float w[16], h[16];
+        int strides[16];
+
+        static DecodeMeta v5_p5_default_meta();
+        static DecodeMeta v5_p6_default_meta();
+        static DecodeMeta x_default_meta();
+    };
 
     struct ObjectBox{
         float left, top, right, bottom, confidence;
@@ -33,17 +45,24 @@ namespace Yolo{
 
     typedef vector<ObjectBox> ObjectBoxArray;
 
-    void image_to_tensor(const cv::Mat& image, shared_ptr<TRT::Tensor>& tensor, Type type, int ibatch);
-
     class Infer{
     public:
         virtual shared_future<ObjectBoxArray> commit(const cv::Mat& image) = 0;
         virtual vector<shared_future<ObjectBoxArray>> commits(const vector<cv::Mat>& images) = 0;
     };
 
-    shared_ptr<Infer> create_infer(const string& engine_file, Type type, int gpuid, float confidence_threshold=0.25f, float nms_threshold=0.5f);
+    void image_to_tensor(const cv::Mat& image, shared_ptr<TRT::Tensor>& tensor, Type type, int ibatch);
+
+    shared_ptr<Infer> create_infer(
+        const string& engine_file, 
+        Type type, 
+        int gpuid, 
+        float confidence_threshold=0.25f, 
+        float nms_threshold=0.5f, 
+        const DecodeMeta& meta = DecodeMeta::v5_p5_default_meta()
+    );
     const char* type_name(Type type);
 
-}; // namespace Yolo
+}; // namespace YoloFast
 
-#endif // YOLO_HPP
+#endif // YOLO_FAST_HPP

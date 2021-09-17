@@ -175,7 +175,7 @@ namespace AlphaPoseHighPerf{
             checkCudaRuntime(cudaMemcpyAsync(affine_matrix_device, job.additional.d2i, sizeof(job.additional.d2i), cudaMemcpyHostToDevice, stream_));
 
             auto normalize         = CUDAKernel::Norm::mean_std(mean, std, 1/255.0f, CUDAKernel::ChannelType::Invert);
-            CUDAKernel::warp_affine_bilinear_and_normalize(
+            CUDAKernel::warp_affine_bilinear_and_normalize_plane(
                 image_device,         image.cols * 3, image.cols, image.rows, 
                 tensor->gpu<float>(), input_width_,     input_height_, 
                 affine_matrix_device, 127, 

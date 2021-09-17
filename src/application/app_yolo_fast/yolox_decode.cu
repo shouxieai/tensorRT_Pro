@@ -1,35 +1,58 @@
 
 
 #include <common/cuda_tools.hpp>
+#include <thrust/sort.h>
 
-namespace Yolo{
+namespace YoloFast{
 
-    const int NUM_BOX_ELEMENT = 7;      // left, top, right, bottom, confidence, class, keepflag
-    static __device__ void affine_project(float* matrix, float x, float y, float* ox, float* oy){
-        *ox = matrix[0] * x + matrix[1] * y + matrix[2];
-        *oy = matrix[3] * x + matrix[4] * y + matrix[5];
+    static __host__ inline float desigmoid(float y){
+        return -log(1.0f/y - 1.0f);
     }
 
-    static __global__ void decode_kernel(float* predict, int num_bboxes, int num_classes, float confidence_threshold, float* invert_affine_matrix, float* parray, int max_objects){  
+    static __device__ inline float sigmoid(float x){
+        return 1.0f / (1.0f + exp(-x));
+    }
 
+    static const int NUM_BOX_ELEMENT = 7;      // left, top, right, bottom, confidence, class, keepflag
+    static __device__ inline void affine_project(float* matrix, float x, float y, float* ox, float* oy){
+        *ox = matrix[0] * x + matrix[1];
+        *oy = matrix[0] * y + matrix[2];
+    }
+
+    static __global__ void decode_kernel(
+        float* predict, 
+        int num_bboxes, 
+        int fm_area,
+        int num_classes, 
+        float confidence_threshold, 
+        float deconfidence_threshold,  // desigmoid
+        float* invert_affine_matrix, 
+        float* parray, 
+        const float* prior_box,
+        int max_objects
+    ){  
         int position = blockDim.x * blockIdx.x + threadIdx.x;
 		if (position >= num_bboxes) return;
 
-        float* pitem     = predict + (5 + num_classes) * position;
-        float objectness = pitem[4];
-        if(objectness < confidence_threshold)
+        // prior_box is 8400(axhxw) x 3
+        // predict is 1 x 85 x 8400
+        float* pitem     = predict + position;
+        float objectness = pitem[fm_area * 4];
+        if(objectness < deconfidence_threshold)
             return;
 
-        float* class_confidence = pitem + 5;
-        float confidence        = *class_confidence++;
+        float confidence        = pitem[fm_area * 5];
         int label               = 0;
-        for(int i = 1; i < num_classes; ++i, ++class_confidence){
-            if(*class_confidence > confidence){
-                confidence = *class_confidence;
+        for(int i = 1; i < num_classes; ++i){
+            float class_confidence = pitem[fm_area * (i + 5)];
+            if(class_confidence > confidence){
+                confidence = class_confidence;
                 label      = i;
-            }
+            } 
         }
 
+        confidence = sigmoid(confidence);
+        objectness = sigmoid(objectness);
         confidence *= objectness;
         if(confidence < confidence_threshold)
             return;
@@ -38,10 +61,17 @@ namespace Yolo{
         if(index >= max_objects)
             return;
 
-        float cx         = *pitem++;
-        float cy         = *pitem++;
-        float width      = *pitem++;
-        float height     = *pitem++;
+        float predict_cx = pitem[fm_area * 0];
+        float predict_cy = pitem[fm_area * 1];
+        float predict_w  = exp(pitem[fm_area * 2]);
+        float predict_h  = exp(pitem[fm_area * 3]);
+
+        const float* prior_ptr = prior_box + position * 3;
+        float stride     = prior_ptr[2];
+        float cx         = (predict_cx + prior_ptr[0]) * stride;
+        float cy         = (predict_cy + prior_ptr[1]) * stride;
+        float width      = predict_w * stride;
+        float height     = predict_h * stride;
         float left   = cx - width * 0.5f;
         float top    = cy - height * 0.5f;
         float right  = cx + width * 0.5f;
@@ -108,11 +138,33 @@ namespace Yolo{
         }
     } 
 
-    void decode_kernel_invoker(float* predict, int num_bboxes, int num_classes, float confidence_threshold, float nms_threshold, float* invert_affine_matrix, float* parray, int max_objects, cudaStream_t stream){
-        
+    void yolox_decode_kernel_invoker(
+        float* predict, 
+        int num_bboxes, 
+        int fm_area,
+        int num_classes, 
+        float confidence_threshold, 
+        float nms_threshold, 
+        float* invert_affine_matrix, 
+        float* parray, 
+        const float* prior_box,
+        int max_objects, 
+        cudaStream_t stream
+    ){
         auto grid = CUDATools::grid_dims(num_bboxes);
         auto block = CUDATools::block_dims(num_bboxes);
-        checkCudaKernel(decode_kernel<<<grid, block, 0, stream>>>(predict, num_bboxes, num_classes, confidence_threshold, invert_affine_matrix, parray, max_objects));
+        checkCudaKernel(decode_kernel<<<grid, block, 0, stream>>>(
+            predict, 
+            num_bboxes, 
+            fm_area,
+            num_classes, 
+            confidence_threshold,
+            desigmoid(confidence_threshold), 
+            invert_affine_matrix, 
+            parray, 
+            prior_box,
+            max_objects
+        ));
 
         grid = CUDATools::grid_dims(max_objects);
         block = CUDATools::block_dims(max_objects);

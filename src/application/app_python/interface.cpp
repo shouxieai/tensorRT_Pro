@@ -343,7 +343,7 @@ static bool compileTRT(
 				stream
 			));
 
-			CUDAKernel::warp_affine_bilinear_and_normalize(
+			CUDAKernel::warp_affine_bilinear_and_normalize_plane(
 				(uint8_t*)image_device_ptr, image.cols * 3, image.cols, image.rows, 
 				(float*)tensor->gpu<float>(i), net_size.width, net_size.height, 
 				(float*)matrix_device_ptr, int8_preprocess_const_value, int8_norm, stream
@@ -415,12 +415,12 @@ template <class T, ptr_base base=ptr_base::host> class ptr_wrapper{
 
 PYBIND11_MODULE(libtrtpyc, m) {
 	py::class_<Yolo::ObjectBox>(m, "ObjectBox")
-		.def_property("left",        &Yolo::ObjectBox::get_left,        &Yolo::ObjectBox::set_left)
-		.def_property("top",         &Yolo::ObjectBox::get_top,         &Yolo::ObjectBox::set_top)
-		.def_property("right",       &Yolo::ObjectBox::get_right,       &Yolo::ObjectBox::set_right)
-		.def_property("bottom",      &Yolo::ObjectBox::get_bottom,      &Yolo::ObjectBox::set_bottom)
-		.def_property("confidence",  &Yolo::ObjectBox::get_confidence,  &Yolo::ObjectBox::set_confidence)
-		.def_property("class_label", &Yolo::ObjectBox::get_class_label, &Yolo::ObjectBox::set_class_label)
+		.def_property("left",        [](Yolo::ObjectBox& self){return self.left;}, [](Yolo::ObjectBox& self, float nv){self.left = nv;})
+		.def_property("top",         [](Yolo::ObjectBox& self){return self.top;}, [](Yolo::ObjectBox& self, float nv){self.top = nv;})
+		.def_property("right",       [](Yolo::ObjectBox& self){return self.right;}, [](Yolo::ObjectBox& self, float nv){self.right = nv;})
+		.def_property("bottom",      [](Yolo::ObjectBox& self){return self.bottom;}, [](Yolo::ObjectBox& self, float nv){self.bottom = nv;})
+		.def_property("confidence",  [](Yolo::ObjectBox& self){return self.confidence;}, [](Yolo::ObjectBox& self, float nv){self.confidence = nv;})
+		.def_property("class_label", [](Yolo::ObjectBox& self){return self.class_label;}, [](Yolo::ObjectBox& self, int nv){self.class_label = nv;})
 		.def_property_readonly("width", [](Yolo::ObjectBox& self){return self.right - self.left;})
 		.def_property_readonly("height", [](Yolo::ObjectBox& self){return self.bottom - self.top;})
 		.def_property_readonly("cx", [](Yolo::ObjectBox& self){return (self.left + self.right) / 2;})

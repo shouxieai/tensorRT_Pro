@@ -1,7 +1,7 @@
 #ifndef PREPROCESS_KERNEL_CUH
 #define PREPROCESS_KERNEL_CUH
 
-#include <common/cuda_tools.hpp>
+#include "cuda_tools.hpp"
 
 namespace CUDAKernel{
 
@@ -33,7 +33,13 @@ namespace CUDAKernel{
         static Norm None();
     };
 
-    void warp_affine_bilinear_and_normalize(
+    void warp_affine_bilinear_and_normalize_plane(
+        uint8_t* src, int src_line_size, int src_width, int src_height, 
+        float* dst  , int dst_width, int dst_height,
+        float* matrix_2_3, uint8_t const_value, const Norm& norm,
+        cudaStream_t stream);
+
+    void warp_affine_bilinear_and_normalize_focus(
         uint8_t* src, int src_line_size, int src_width, int src_height, 
         float* dst  , int dst_width, int dst_height,
         float* matrix_2_3, uint8_t const_value, const Norm& norm,

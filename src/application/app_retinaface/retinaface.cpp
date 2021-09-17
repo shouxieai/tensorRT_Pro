@@ -253,7 +253,7 @@ namespace RetinaFace{
             checkCudaRuntime(cudaMemcpyAsync(image_device, image_host, size_image, cudaMemcpyHostToDevice, stream_));
             checkCudaRuntime(cudaMemcpyAsync(affine_matrix_device, affine_matrix_host, sizeof(job.additional.d2i), cudaMemcpyHostToDevice, stream_));
 
-            CUDAKernel::warp_affine_bilinear_and_normalize(
+            CUDAKernel::warp_affine_bilinear_and_normalize_plane(
                 image_device,         image.cols * 3,       image.cols,       image.rows, 
                 tensor->gpu<float>(), input_width_,         input_height_, 
                 affine_matrix_device, 0, 

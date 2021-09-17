@@ -91,24 +91,28 @@ namespace RetinaFace{
         if (position >= count) 
             return;
         
+        // left, top, right, bottom, confidence, keepflag
         float* pcurrent = bboxes + 1 + position * NUM_BOX_ELEMENT;
         for(int i = 0; i < count; ++i){
             float* pitem = bboxes + 1 + i * NUM_BOX_ELEMENT;
             if(i == position) continue;
 
-            float iou = box_iou(
-                pcurrent[0], pcurrent[1], pcurrent[2], pcurrent[3],
-                   pitem[0],    pitem[1],    pitem[2],    pitem[3]
-            );
+            if(pitem[4] >= pcurrent[4]){
+                if(pitem[4] == pcurrent[4] && i < position)
+                    continue;
 
-            if(iou > threshold){
-                if(pitem[4] > pcurrent[4]){
-                    pcurrent[5] = 0;
+                float iou = box_iou(
+                    pcurrent[0], pcurrent[1], pcurrent[2], pcurrent[3],
+                    pitem[0],    pitem[1],    pitem[2],    pitem[3]
+                );
+
+                if(iou > threshold){
+                    pcurrent[5] = 0;  // 1=keep, 0=ignore
                     return;
                 }
             }
         }
-    }
+    } 
 
     static float desigmoid(float x){
         return -log(1.0f / x - 1.0f);

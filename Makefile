@@ -117,6 +117,9 @@ objs/%.cumk : src/%.cu
 yolo : workspace/pro
 	@cd workspace && ./pro yolo
 
+yolo_fast : workspace/pro
+	@cd workspace && ./pro yolo_fast
+
 alphapose : workspace/pro
 	@cd workspace && ./pro alphapose
 
