@@ -62,6 +62,9 @@
     <Filter Include="src\application\app_python">
       <UniqueIdentifier>{7caf9268-e35e-4d40-afef-a05f2ccfa87f}</UniqueIdentifier>
     </Filter>
+    <Filter Include="src\application\app_yolo_fast">
+      <UniqueIdentifier>{64177dec-ce04-419b-aeed-30408faacaf3}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\tensorRT\builder\trt_builder.cpp">
@@ -127,9 +130,6 @@
     <ClCompile Include="src\main.cpp">
       <Filter>src</Filter>
     </ClCompile>
-    <ClCompile Include="src\application\app_yolo\yolo.cpp">
-      <Filter>src\application\app_yolo</Filter>
-    </ClCompile>
     <ClCompile Include="src\application\app_yolo.cpp">
       <Filter>src\application</Filter>
     </ClCompile>
@@ -192,6 +192,15 @@
     </ClCompile>
     <ClCompile Include="src\tensorRT\import_lib.cpp">
       <Filter>src\tensorRT</Filter>
+    </ClCompile>
+    <ClCompile Include="src\application\app_yolo_fast.cpp">
+      <Filter>src\application</Filter>
+    </ClCompile>
+    <ClCompile Include="src\application\app_yolo_fast\yolo_fast.cpp">
+      <Filter>src\application\app_yolo_fast</Filter>
+    </ClCompile>
+    <ClCompile Include="src\application\app_yolo\yolo.cpp">
+      <Filter>src\application\app_yolo</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -303,9 +312,6 @@
     <ClInclude Include="src\tensorRT\onnx_parser\utils.hpp">
       <Filter>src\tensorRT\onnx_parser</Filter>
     </ClInclude>
-    <ClInclude Include="src\application\app_yolo\yolo.hpp">
-      <Filter>src\application\app_yolo</Filter>
-    </ClInclude>
     <ClInclude Include="src\application\common\face_detector.hpp">
       <Filter>src\application\common</Filter>
     </ClInclude>
@@ -339,6 +345,12 @@
     <ClInclude Include="src\application\tools\pybind11.hpp">
       <Filter>src\application\tools</Filter>
     </ClInclude>
+    <ClInclude Include="src\application\app_yolo_fast\yolo_fast.hpp">
+      <Filter>src\application\app_yolo_fast</Filter>
+    </ClInclude>
+    <ClInclude Include="src\application\app_yolo\yolo.hpp">
+      <Filter>src\application\app_yolo</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <CudaCompile Include="src\tensorRT\common\preprocess_kernel.cu">
@@ -347,14 +359,20 @@
     <CudaCompile Include="src\tensorRT\onnxplugin\plugins\HSwish.cu">
       <Filter>src\tensorRT\onnxplugin\plugins</Filter>
     </CudaCompile>
-    <CudaCompile Include="src\application\app_yolo\yolo_decode.cu">
-      <Filter>src\application\app_yolo</Filter>
-    </CudaCompile>
     <CudaCompile Include="src\application\app_retinaface\retinaface_decode.cu">
       <Filter>src\application\app_retinaface</Filter>
     </CudaCompile>
     <CudaCompile Include="src\application\app_scrfd\scrfd_decode.cu">
       <Filter>src\application\app_scrfd</Filter>
+    </CudaCompile>
+    <CudaCompile Include="src\application\app_yolo_fast\yolov5_decode.cu">
+      <Filter>src\application\app_yolo_fast</Filter>
+    </CudaCompile>
+    <CudaCompile Include="src\application\app_yolo_fast\yolox_decode.cu">
+      <Filter>src\application\app_yolo_fast</Filter>
+    </CudaCompile>
+    <CudaCompile Include="src\application\app_yolo\yolo_decode.cu">
+      <Filter>src\application\app_yolo</Filter>
     </CudaCompile>
   </ItemGroup>
   <ItemGroup>

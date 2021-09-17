@@ -53,8 +53,8 @@ namespace CUDAKernel{
 			c1 = const_value_st;
 			c2 = const_value_st;
 		}else{
-			int y_low = floor(src_y);
-			int x_low = floor(src_x);
+			int y_low = src_y;
+			int x_low = src_x;
 			int y_high = y_low + 1;
 			int x_high = x_low + 1;
 
@@ -142,8 +142,8 @@ namespace CUDAKernel{
 			c1 = const_value_st;
 			c2 = const_value_st;
 		}else{
-			int y_low = floor(src_y);
-			int x_low = floor(src_x);
+			int y_low = src_y;
+			int x_low = src_x;
 			int y_high = y_low + 1;
 			int x_high = x_low + 1;
 
@@ -237,8 +237,8 @@ namespace CUDAKernel{
 			c1 = const_value_st;
 			c2 = const_value_st;
 		}else{
-			int y_low = floor(src_y);
-			int x_low = floor(src_x);
+			int y_low = src_y;
+			int x_low = src_x;
 			int y_high = y_low + 1;
 			int x_high = x_low + 1;
 
