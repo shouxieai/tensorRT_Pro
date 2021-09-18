@@ -98,6 +98,8 @@ namespace AlphaPose{
             while(get_jobs_and_wait(fetch_jobs, max_batch_size)){
 
                 int infer_batch_size = fetch_jobs.size();
+                input->resize_single_dim(0, infer_batch_size);
+
                 for(int ibatch = 0; ibatch < infer_batch_size; ++ibatch){
                     auto& job = fetch_jobs[ibatch];
                     input->copy_from_gpu(input->offset(ibatch), job.mono_tensor->data()->gpu(), input->count(1));
