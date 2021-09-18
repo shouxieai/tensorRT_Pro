@@ -1,13 +1,40 @@
-##
 ## B站同步视频讲解
 - https://www.bilibili.com/video/BV1Xw411f7FW
 - 相关PPTX下载：http://zifuture.com:1556/fs/sxai/tensorRT.pptx
 
-## 三行代码实现极致性能YoloV5/YoloX推理，TensorRT C++库
+
+## 三行代码实现YoloX的高性能推理，TensorRT C++/Python库，工业级，便于使用
+
+- C++接口
+```C++
+
+// 创建推理引擎在0显卡上
+//auto engine = Yolo::create_infer("yolov5m.fp32.trtmodel", Yolo::Type::V5, 0);
+auto engine = Yolo::create_infer("yolox_m.fp32.trtmodel", Yolo::Type::X, 0);
+
+// 加载图像
+auto image = cv::imread("1.jpg");
+
+// 推理并获取结果
+auto box = engine->commit(image).get();  // 得到的是vector<Box>
+```
+
+- Python接口
+```python
+import trtpy
+
+model     = models.resnet18(True).eval().to(device)
+trt_model = tp.from_torch(model, input)
+trt_out   = trt_model(input)
+```
+
+
+## 简介
 1. 基于tensorRT8.0，C++/Python高级接口
 2. 简化自定义插件的实现过程，封装序列化、反序列化
 3. 简化fp32、fp16、int8编译过程，C++/Python部署，服务器/嵌入式使用
 4. 高性能拿来就用的案例有RetinaFace、Scrfd、YoloV5、YoloX、Arcface、AlphaPose、DeepSORT(C++)
+
 
 ## YoloX和YoloV5系列所有模型性能测试
 
@@ -207,6 +234,8 @@ trtpy.from_torch(
 
 - YoloX的tensorRT推理
 ```python
+import trtpy
+
 yolo   = tp.Yolo(engine_file, type=tp.YoloType.X)
 image  = cv2.imread("inference/car.jpg")
 bboxes = yolo.commit(image).get()
@@ -214,30 +243,14 @@ bboxes = yolo.commit(image).get()
 
 - Pytorch的无缝对接
 ```python
+import trtpy
+
 model     = models.resnet18(True).eval().to(device)
 trt_model = tp.from_torch(model, input)
 trt_out   = trt_model(input)
 ```
 
 </details>
-
-
-## 三行代码实现YoloV5的高性能推理
-```C++
-
-// 创建推理引擎在0显卡上
-//auto engine = Yolo::create_infer("yolox_m.fp32.trtmodel", Yolo::Type::X, 0);
-auto engine = Yolo::create_infer("yolov5m.fp32.trtmodel", Yolo::Type::V5, 0);
-
-// 加载图像
-auto image = cv::imread("1.jpg");
-
-// 推理并获取结果
-auto box = engine->commit(image).get();
-```
-
-## 效果图
-![](workspace/yq.jpg)
 
 
 ## 各项任务支持
