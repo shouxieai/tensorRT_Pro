@@ -118,24 +118,37 @@
 
 </details>
 
-## Windows支持
-1. 依赖请查看[lean/README.md](lean/README.md)
-2. TensorRT.vcxproj文件中，修改`<Import Project="$(VCTargetsPath)\BuildCustomizations\CUDA 10.0.props" />`为你配置的CUDA路径
-3. TensorRT.vcxproj文件中，修改`<Import Project="$(VCTargetsPath)\BuildCustomizations\CUDA 10.0.targets" />`为你配置的CUDA路径
-4. TensorRT.vcxproj文件中，修改`<CodeGeneration>compute_61,sm_61</CodeGeneration>`为你显卡配备的计算能力
-    - 根据型号参考这里：https://developer.nvidia.com/zh-cn/cuda-gpus#compute
-5. 配置依赖或者下载依赖到lean中。配置VC++目录->包含目录和引用目录
-6. 配置环境，调试->环境，设置PATH路径
-7. 编译并运行案例
+## 环境配置
 
-## Windows下Python编译
-1. 编译trtpyc.pyd，在visual studio中选择python进行编译
-2. 复制dll，执行python/copy_dll_to_trtpy.bat
-3. 在python目录下执行案例，python test_yolov5.py
-- 如果需要进行安装，则在python目录下，切换到目标环境后，执行python setup.py install。（注意，执行了1、2两步后才行）
+<details>
+<summary>Linux下配置</summary>
 
-## Python支持
-- 请在Makefile中设置`use_python := true`启用python支持，并编译生成trtpyc.so，使用`make trtpyc -j64`
+- 考虑方便，这里有编译好的依赖项
+    - 下载地址：[lean-tensorRT8.0.1.6-protobuf3.11.4-cudnn8.2.2.tar.gz](http://zifuture.com:1556/fs/25.shared/lean-tensorRT8.0.1.6-protobuf3.11.4-cudnn8.2.2.tar.gz)
+1. 推荐使用VSCode
+2. 在Makefile中配置你的cudnn、cuda、tensorRT8.0、protobuf路径
+3. 在.vscode/c_cpp_properties.json中配置你的库路径
+3. CUDA版本：CUDA10.2
+4. CUDNN版本：cudnn8.2.2.26，注意下载dev（h文件）和runtime（so文件）
+5. tensorRT版本：tensorRT-8.0.1.6-cuda10.2
+6. protobuf版本（用于onnx解析器）：这里使用的是protobufv3.11.4
+    - 下载地址：https://github.com/protocolbuffers/protobuf/tree/v3.11.4
+    - 下载并编译，然后修改Makefile或者CMakeLists.txt的路径指向protobuf3.11.4
+7. 执行编译并测试`make yolo -j8`
+
+</details>
+
+<details>
+<summary>Linux下Python支持</summary>
+
+- 编译并安装:
+    - Makefile方式：
+        - 在Makefile中设置`use_python := true`启用python支持
+    - CMakeLists.txt方式:
+        - 在CMakeLists.txt中修改`set(HAS_PYTHON ON)`
+    - 执行编译`make pyinstall -j8`
+    - 在使用时导入trtpy即可`import trtpy as tp`
+
 - YoloV5的tensorRT推理
 ```python
 yolo   = tp.Yolo(engine_file, type=tp.YoloType.X)
@@ -150,10 +163,33 @@ trt_model = tp.convert_torch_to_trt(model, input)
 trt_out   = trt_model(input)
 ```
 
-- 编译并安装:
-    - 在CMakeLists.txt中修改`set(HAS_PYTHON ON)`
-    - 执行编译`make pyinstall -j8`
-    - 在使用时导入trtpy：`import trtpy as tp`
+</details>
+
+
+<details>
+<summary>Windows下配置</summary>
+
+1. 依赖请查看[lean/README.md](lean/README.md)
+2. TensorRT.vcxproj文件中，修改`<Import Project="$(VCTargetsPath)\BuildCustomizations\CUDA 10.0.props" />`为你配置的CUDA路径
+3. TensorRT.vcxproj文件中，修改`<Import Project="$(VCTargetsPath)\BuildCustomizations\CUDA 10.0.targets" />`为你配置的CUDA路径
+4. TensorRT.vcxproj文件中，修改`<CodeGeneration>compute_61,sm_61</CodeGeneration>`为你显卡配备的计算能力
+    - 根据型号参考这里：https://developer.nvidia.com/zh-cn/cuda-gpus#compute
+5. 配置依赖或者下载依赖到lean中。配置VC++目录->包含目录和引用目录
+6. 配置环境，调试->环境，设置PATH路径
+7. 编译并运行案例，其中Debug为调试，Release为发布，Python为trtpyc模块
+
+</details>
+
+<details>
+<summary>Windows下Python编译</summary>
+
+1. 编译trtpyc.pyd，在visual studio中选择python进行编译
+2. 复制dll，执行python/copy_dll_to_trtpy.bat
+3. 在python目录下执行案例，python test_yolov5.py
+- 如果需要进行安装，则在python目录下，切换到目标环境后，执行python setup.py install。（注意，执行了1、2两步后才行）
+
+</details>
+
 
 ## Python接口导出Onnx和trtmodel
 - 使用Python接口可以一句话导出Onnx和trtmodel，一次性调试发生的问题，解决问题。并储存onnx为后续部署使用
@@ -169,11 +205,6 @@ trtpy.from_torch(
     engine_save_file="engine.trtmodel"
 )
 ```
-
-## 建议
-- PyTorch >= 1.8，其他版本也可以用，遇到问题可以群里讨论
-- TensorRT >= 8.0，目前只对8以及以上做了适配
-- CUDA >= 10.2，因为TensorRT8最低要求10.2，再低不行了
 
 ## 三行代码实现YoloV5的高性能推理
 ```C++
@@ -387,19 +418,6 @@ auto image = cv::imread("1.jpg");
 auto box = engine->commit(image).get();
 ```
 
-## 项目依赖的配置
-- 考虑方便，这里有打包好的依赖项
-    - 下载地址：[lean-tensorRT8.0.1.6-protobuf3.11.4-cudnn8.2.2.tar.gz](http://zifuture.com:1556/fs/25.shared/lean-tensorRT8.0.1.6-protobuf3.11.4-cudnn8.2.2.tar.gz)
-1. 推荐使用Linux、VSCode，当然也可以支持windows
-2. 在Makefile中配置你的cudnn、cuda、tensorRT8.0、protobuf路径
-3. 在.vscode/c_cpp_properties.json中配置你的库路径
-3. CUDA版本：CUDA10.2
-4. CUDNN版本：cudnn8.2.2.26，注意下载dev（h文件）和runtime（so文件）
-5. tensorRT版本：tensorRT-8.0.1.6-cuda10.2
-6. protobuf版本（用于onnx解析器）：这里使用的是protobufv3.11.4
-    - 下载地址：https://github.com/protocolbuffers/protobuf/tree/v3.11.4
-
-
 ## 模型编译-FP32/16
 ```cpp
 TRT::compile(
@@ -508,9 +526,6 @@ int HSwish::enqueue(const std::vector<GTensor>& inputs, std::vector<GTensor>& ou
 RegisterPlugin(HSwish);
 ```
 
-## 执行方式
-1. 配置好Makefile中的依赖项路径
-2. `make yolo -j64`即可
 
 ## 执行结果
 ```bash
