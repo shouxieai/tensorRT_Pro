@@ -3,9 +3,9 @@
 - 相关PPTX下载：http://zifuture.com:1556/fs/sxai/tensorRT.pptx
 
 
-## 三行代码实现YoloX的高性能推理，TensorRT C++/Python库，工业级，便于使用
+## 高性能推理，TensorRT C++/Python库，工业级，便于使用
 
-- C++接口
+- C++接口，YoloX三行代码
 ```C++
 
 // 创建推理引擎在0显卡上
@@ -154,11 +154,14 @@ trt_out   = trt_model(input)
     - 下载地址：[lean-tensorRT8.0.1.6-protobuf3.11.4-cudnn8.2.2.tar.gz](http://zifuture.com:1556/fs/25.shared/lean-tensorRT8.0.1.6-protobuf3.11.4-cudnn8.2.2.tar.gz)
 1. 推荐使用VSCode
 2. 在Makefile/CMakeLists.txt中配置你的cudnn、cuda、tensorRT8.0、protobuf路径
-3. 在.vscode/c_cpp_properties.json中配置你的库路径
-3. CUDA版本：CUDA10.2
-4. CUDNN版本：cudnn8.2.2.26，注意下载dev（h文件）和runtime（so文件）
-5. tensorRT版本：tensorRT-8.0.1.6-cuda10.2
-6. protobuf版本（用于onnx解析器）：这里使用的是protobufv3.11.4
+3. 配置Makefile或者CMakeLists中的计算能力为你的显卡对应值
+    - 例如`-gencode=arch=compute_75,code=sm_75`，例如3080Ti是86，则是：`-gencode=arch=compute_86,code=sm_86`
+    - 计算能力根据型号参考这里查看：https://developer.nvidia.com/zh-cn/cuda-gpus#compute
+4. 在.vscode/c_cpp_properties.json中配置你的库路径
+5. CUDA版本：CUDA10.2
+6. CUDNN版本：cudnn8.2.2.26，注意下载dev（h文件）和runtime（so文件）
+7. tensorRT版本：tensorRT-8.0.1.6-cuda10.2
+8. protobuf版本（用于onnx解析器）：这里使用的是protobufv3.11.4
     - 下载地址：https://github.com/protocolbuffers/protobuf/tree/v3.11.4
     - 下载并编译，然后修改Makefile或者CMakeLists.txt的路径指向protobuf3.11.4
 - CMake:
@@ -204,51 +207,6 @@ trt_out   = trt_model(input)
 2. 复制dll，执行python/copy_dll_to_trtpy.bat
 3. 在python目录下执行案例，python test_yolov5.py
 - 如果需要进行安装，则在python目录下，切换到目标环境后，执行`python setup.py install`。（注意，执行了1、2两步后才行）
-
-</details>
-
-
-## Python接口使用
-
-<details>
-<summary>从Pytorch模型导出Onnx和trtmodel</summary>
-
-- 使用Python接口可以一句话导出Onnx和trtmodel，一次性调试发生的问题，解决问题。并储存onnx为后续部署使用
-```python
-import trtpy
-
-model = models.resnet18(True).eval()
-trtpy.from_torch(
-    model, 
-    dummy_input, 
-    max_batch_size=16, 
-    onnx_save_file="test.onnx", 
-    engine_save_file="engine.trtmodel"
-)
-```
-
-</details>
-
-<details>
-<summary>Python TensorRT的推理</summary>
-
-- YoloX的tensorRT推理
-```python
-import trtpy
-
-yolo   = tp.Yolo(engine_file, type=tp.YoloType.X)
-image  = cv2.imread("inference/car.jpg")
-bboxes = yolo.commit(image).get()
-```
-
-- Pytorch的无缝对接
-```python
-import trtpy
-
-model     = models.resnet18(True).eval().to(device)
-trt_model = tp.from_torch(model, input)
-trt_out   = trt_model(input)
-```
 
 </details>
 
@@ -462,7 +420,54 @@ cout << feature << endl;  // 1x512
 </details>
 
 
-## 推理
+## 接口介绍
+
+<details>
+<summary>Python接口：从Pytorch模型导出Onnx和trtmodel</summary>
+
+- 使用Python接口可以一句话导出Onnx和trtmodel，一次性调试发生的问题，解决问题。并储存onnx为后续部署使用
+```python
+import trtpy
+
+model = models.resnet18(True).eval()
+trtpy.from_torch(
+    model, 
+    dummy_input, 
+    max_batch_size=16, 
+    onnx_save_file="test.onnx", 
+    engine_save_file="engine.trtmodel"
+)
+```
+
+</details>
+
+<details>
+<summary>Python接口：TensorRT的推理</summary>
+
+- YoloX的tensorRT推理
+```python
+import trtpy
+
+yolo   = tp.Yolo(engine_file, type=tp.YoloType.X)
+image  = cv2.imread("inference/car.jpg")
+bboxes = yolo.commit(image).get()
+```
+
+- Pytorch的无缝对接
+```python
+import trtpy
+
+model     = models.resnet18(True).eval().to(device)
+trt_model = tp.from_torch(model, input)
+trt_out   = trt_model(input)
+```
+
+</details>
+
+
+<details>
+<summary>C++接口：YoloX推理</summary>
+
 ```C++
 
 // 创建推理引擎在0显卡上
@@ -475,7 +480,12 @@ auto image = cv::imread("1.jpg");
 auto box = engine->commit(image).get();
 ```
 
-## 模型编译-FP32/16
+</details>
+
+
+<details>
+<summary>C++接口：编译模型FP32/FP16</summary>
+
 ```cpp
 TRT::compile(
   TRT::Mode::FP32,   // 使用fp32模型编译
@@ -488,7 +498,11 @@ TRT::compile(
 - 对于FP32编译，只需要提供onnx文件即可，可以允许重定义onnx输入节点的shape
 - 对于动态或者静态batch的支持，仅仅只需要一个选项，这对于官方发布的解析器是不支持的
 
-## 模型编译-INT8
+</details>
+
+<details>
+<summary>C++接口：编译INT8模型</summary>
+
 - 众所周知，int8的推理效果比fp32稍微差一点（预计-5%的损失），但是速度确快很多很多，这里通过集成的编译方式，很容易实现int8的编译工作
 ```cpp
 // 定义int8的标定数据处理函数，读取数据并交给tensor的函数
@@ -520,7 +534,12 @@ TRT::compile(
 ```
 - 避免了官方标定流程分离的问题，复杂度太高，在这里直接集成为一个函数处理
 
-## 模型推理 
+</details>
+
+
+<details>
+<summary>C++接口：推理</summary>
+
 - 对于模型推理，封装了Tensor类，实现推理的维护和数据交互，对于数据从GPU到CPU过程完全隐藏细节
 - 封装了Engine类，实现模型推理和管理
 ```cpp
@@ -550,13 +569,12 @@ float* output_ptr = output->cpu<float>();
 // 这里对output_ptr进行处理即可得到结果
 ```
 
-## 关于3080或者其他显卡
-- 请调用tensorRT/common/cuda_tools.hpp中的device_capability函数，查询这个显卡的计算能力，然后配置Makefile或者CMakeLists中的计算能力为对应即可
-- 例如`-gencode=arch=compute_75,code=sm_75`，例如3080Ti是86，则是：`-gencode=arch=compute_86,code=sm_86`
-- 否则你可能能正常编译，但是结果却是随机的，错误的。或者直接报错
-    - 根据型号参考这里：https://developer.nvidia.com/zh-cn/cuda-gpus#compute
+</details>
 
-## 一个插件的例子
+
+<details>
+<summary>C++接口：插件</summary>
+
 - 只需要定义必要的核函数和推理过程，完全隐藏细节，隐藏插件的序列化、反序列化、注入
 - 可以简洁的实现FP32、FP16两种格式支持的插件。具体参见代码HSwish cu/hpp
 ```cpp
@@ -583,56 +601,9 @@ int HSwish::enqueue(const std::vector<GTensor>& inputs, std::vector<GTensor>& ou
 RegisterPlugin(HSwish);
 ```
 
+</details>
 
-## 执行结果
-```bash
-[2021-07-22 14:37:11][info][_main.cpp:160]:===================== test fp32 ==================================
-[2021-07-22 14:37:11][info][trt_builder.cpp:430]:Compile FP32 Onnx Model 'yolov5m.onnx'.
-[2021-07-22 14:37:18][warn][trt_infer.cpp:27]:NVInfer WARNING: src/tensorRT/onnx_parser/ModelImporter.cpp:257: Change input batch size: images, final dimensions: (1, 3, 640, 640), origin dimensions: (5, 3, 640, 640)
-[2021-07-22 14:37:18][info][trt_builder.cpp:548]:Input shape is 1 x 3 x 640 x 640
-[2021-07-22 14:37:18][info][trt_builder.cpp:549]:Set max batch size = 3
-[2021-07-22 14:37:18][info][trt_builder.cpp:550]:Set max workspace size = 1024.00 MB
-[2021-07-22 14:37:18][info][trt_builder.cpp:551]:Dynamic batch dimension is true
-[2021-07-22 14:37:18][info][trt_builder.cpp:554]:Network has 1 inputs:
-[2021-07-22 14:37:18][info][trt_builder.cpp:560]:      0.[images] shape is 1 x 3 x 640 x 640
-[2021-07-22 14:37:18][info][trt_builder.cpp:566]:Network has 3 outputs:
-[2021-07-22 14:37:18][info][trt_builder.cpp:571]:      0.[470] shape is 1 x 255 x 80 x 80
-[2021-07-22 14:37:18][info][trt_builder.cpp:571]:      1.[471] shape is 1 x 255 x 40 x 40
-[2021-07-22 14:37:18][info][trt_builder.cpp:571]:      2.[472] shape is 1 x 255 x 20 x 20
-[2021-07-22 14:37:18][verbo][trt_builder.cpp:575]:Network has 226 layers:
-[2021-07-22 14:37:18][verbo][trt_builder.cpp:606]:  >>> 0.  Slice              1 x 3 x 640 x 640 -> 1 x 3 x 320 x 640 
-[2021-07-22 14:37:18][verbo][trt_builder.cpp:606]:      1.  Slice              1 x 3 x 320 x 640 -> 1 x 3 x 320 x 320 
-[2021-07-22 14:37:18][verbo][trt_builder.cpp:606]:  >>> 2.  Slice              1 x 3 x 640 x 640 -> 1 x 3 x 320 x 640 
-[2021-07-22 14:37:18][verbo][trt_builder.cpp:606]:      3.  Slice              1 x 3 x 320 x 640 -> 1 x 3 x 320 x 320 
-[2021-07-22 14:37:18][verbo][trt_builder.cpp:606]:  >>> 4.  Slice              1 x 3 x 640 x 640 -> 1 x 3 x 320 x 640 
-[2021-07-22 14:37:18][verbo][trt_builder.cpp:606]:      5.  Slice              1 x 3 x 320 x 640 -> 1 x 3 x 320 x 320 
-[2021-07-22 14:37:18][verbo][trt_builder.cpp:606]:  >>> 6.  Slice              1 x 3 x 640 x 640 -> 1 x 3 x 320 x 640 
-[2021-07-22 14:37:18][verbo][trt_builder.cpp:606]:      7.  Slice              1 x 3 x 320 x 640 -> 1 x 3 x 320 x 320
-[2021-07-22 14:37:18][verbo][trt_builder.cpp:606]:      222.LeakyRelu          1 x 768 x 20 x 20 -> 1 x 768 x 20 x 20 
-[2021-07-22 14:37:18][verbo][trt_builder.cpp:606]:  *** 223.Convolution        1 x 192 x 80 x 80 -> 1 x 255 x 80 x 80 channel: 255, kernel: 1 x 1, padding: 0 x 0, stride: 1 x 1, dilation: 1 x 1, group: 1
-[2021-07-22 14:37:18][verbo][trt_builder.cpp:606]:  *** 224.Convolution        1 x 384 x 40 x 40 -> 1 x 255 x 40 x 40 channel: 255, kernel: 1 x 1, padding: 0 x 0, stride: 1 x 1, dilation: 1 x 1, group: 1
-[2021-07-22 14:37:18][verbo][trt_builder.cpp:606]:  *** 225.Convolution        1 x 768 x 20 x 20 -> 1 x 255 x 20 x 20 channel: 255, kernel: 1 x 1, padding: 0 x 0, stride: 1 x 1, dilation: 1 x 1, group: 1
-[2021-07-22 14:37:18][info][trt_builder.cpp:615]:Building engine...
-[2021-07-22 14:37:19][warn][trt_infer.cpp:27]:NVInfer WARNING: Detected invalid timing cache, setup a local cache instead
-[2021-07-22 14:37:40][info][trt_builder.cpp:635]:Build done 22344 ms !
-Engine 0x23dd7780 detail
-        Max Batch Size: 3
-        Dynamic Batch Dimension: true
-        Inputs: 1
-                0.images : shape {1 x 3 x 640 x 640}
-        Outputs: 3
-                0.470 : shape {1 x 255 x 80 x 80}
-                1.471 : shape {1 x 255 x 40 x 40}
-                2.472 : shape {1 x 255 x 20 x 20}
-[2021-07-22 14:37:42][info][_main.cpp:77]:input.shape = 3 x 3 x 640 x 640
-[2021-07-22 14:37:42][info][_main.cpp:96]:input->shape_string() = 3 x 3 x 640 x 640
-[2021-07-22 14:37:42][info][_main.cpp:124]:outputs[0].size = 2
-[2021-07-22 14:37:42][info][_main.cpp:124]:outputs[1].size = 5
-[2021-07-22 14:37:42][info][_main.cpp:124]:outputs[2].size = 1
-
-```
 
 ## 关于
-- 我们的博客地址：http://www.zifuture.com:8090/
+- 我们的博客地址：http://www.zifuture.com/
 - 我们的B站地址： https://space.bilibili.com/1413433465
-
