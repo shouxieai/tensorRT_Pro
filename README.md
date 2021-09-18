@@ -220,7 +220,7 @@ trt_out   = trt_model(input)
 <details>
 <summary>适配Protobuf版本</summary>
 
-- 修改onnx/make_pb.sh文件中protoc程序的路径，指向你自己版本的protoc
+- 修改onnx/make_pb.sh文件中protoc程序的路径`protoc=/data/sxai/lean/protobuf3.11.4/bin/protoc`，指向你自己版本的protoc
 
 ```bash
 #切换终端目录到onnx下
