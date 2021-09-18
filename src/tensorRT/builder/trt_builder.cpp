@@ -640,8 +640,9 @@ namespace TRT {
 		}
 		config->addOptimizationProfile(profile);
 
-		auto timing_cache = shared_ptr<nvinfer1::ITimingCache>(config->createTimingCache(nullptr, 0), [](nvinfer1::ITimingCache* ptr){ptr->reset();});
-		config->setTimingCache(*timing_cache, false);
+		// error on jetson
+		// auto timing_cache = shared_ptr<nvinfer1::ITimingCache>(config->createTimingCache(nullptr, 0), [](nvinfer1::ITimingCache* ptr){ptr->reset();});
+		// config->setTimingCache(*timing_cache, false);
 		// config->setFlag(BuilderFlag::kGPU_FALLBACK);
 		// config->setDefaultDeviceType(DeviceType::kDLA);
 		// config->setDLACore(0);
