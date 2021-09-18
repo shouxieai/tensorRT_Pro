@@ -37,7 +37,7 @@ ShapeTensor::ShapeTensor(IImporterContext* ctx, TensorOrWeights& t)
     {
         const nvinfer1::Dims d = t.shape();
          const auto& weights = t.weights();
-        if (gTolerateTRT_12408 && weights.type == ::ONNX_NAMESPACE::TensorProto::FLOAT && d.nbDims == 0 && weights.count() == 0)
+        if (gTolerateTRT_12408 && weights.type == ::onnx::TensorProto::FLOAT && d.nbDims == 0 && weights.count() == 0)
         {
             LOG_WARNING("Scalar constant of type FLOAT with no value encountered where ONNX specification requires tensor describing a shape. Assuming it's an INT64 empty vector.");
             mRank = 1;

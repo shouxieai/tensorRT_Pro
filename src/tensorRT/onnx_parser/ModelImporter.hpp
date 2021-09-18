@@ -13,17 +13,17 @@
 namespace onnx2trt
 {
 
-Status parseGraph(IImporterContext* ctx, const ::ONNX_NAMESPACE::GraphProto& graph, bool deserializingINetwork = false, int* currentNode = nullptr);
+Status parseGraph(IImporterContext* ctx, const ::onnx::GraphProto& graph, bool deserializingINetwork = false, int* currentNode = nullptr);
 
 class ModelImporter : public nvonnxparser::IParser
 {
 protected:
     string_map<NodeImporter> _op_importers;
-    virtual Status importModel(::ONNX_NAMESPACE::ModelProto const& model);
+    virtual Status importModel(::onnx::ModelProto const& model);
 
 private:
     ImporterContext _importer_ctx;
-    std::list<::ONNX_NAMESPACE::ModelProto> _onnx_models; // Needed for ownership of weights
+    std::list<::onnx::ModelProto> _onnx_models; // Needed for ownership of weights
     int _current_node;
     std::vector<Status> _errors;
     std::vector<nvinfer1::Dims> _input_dims;

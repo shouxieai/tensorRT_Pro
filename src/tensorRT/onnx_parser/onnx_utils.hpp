@@ -89,13 +89,13 @@ inline std::string pretty_print_onnx_to_string(::google::protobuf::Message const
     return s;
 }
 
-inline std::ostream& operator<<(std::ostream& stream, ::ONNX_NAMESPACE::ModelProto const& message)
+inline std::ostream& operator<<(std::ostream& stream, ::onnx::ModelProto const& message)
 {
     stream << pretty_print_onnx_to_string(message);
     return stream;
 }
 
-inline std::ostream& operator<<(std::ostream& stream, ::ONNX_NAMESPACE::NodeProto const& message)
+inline std::ostream& operator<<(std::ostream& stream, ::onnx::NodeProto const& message)
 {
     stream << pretty_print_onnx_to_string(message);
     return stream;
@@ -118,7 +118,7 @@ inline bool ParseFromFile_WAR(google::protobuf::Message* msg, const char* filena
 
     google::protobuf::io::CodedInputStream coded_input(&rawInput);
     // Note: This WARs the very low default size limit (64MB)
-    coded_input.SetTotalBytesLimit(std::numeric_limits<int>::max(), std::numeric_limits<int>::max() / 4);
+    coded_input.SetTotalBytesLimit(std::numeric_limits<int>::max());
     return msg->ParseFromCodedStream(&coded_input);
 }
 
@@ -136,7 +136,7 @@ inline bool ParseFromTextFile(google::protobuf::Message* msg, const char* filena
     return google::protobuf::TextFormat::Parse(&rawInput, msg);
 }
 
-inline std::string onnx_ir_version_string(int64_t ir_version = ::ONNX_NAMESPACE::IR_VERSION)
+inline std::string onnx_ir_version_string(int64_t ir_version = ::onnx::IR_VERSION)
 {
     int onnx_ir_major = ir_version / 1000000;
     int onnx_ir_minor = ir_version % 1000000 / 10000;

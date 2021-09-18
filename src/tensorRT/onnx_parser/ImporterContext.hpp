@@ -92,7 +92,7 @@ public:
         : mNetwork(network)
         , mLogger(logger)
         // Disable ErrorRecorder for now due to incompatibilities with ONNXRT.
-        // , mErrorWrapper(ONNX_NAMESPACE::make_unique<ErrorRecorderWrapper>(mNetwork, logger))
+        // , mErrorWrapper(onnx::make_unique<ErrorRecorderWrapper>(mNetwork, logger))
         , mErrorWrapper(nullptr)
     {
     }
@@ -154,9 +154,9 @@ public:
             else if (tensor.is_weights())
             {
                 const auto& weights = tensor.weights();
-                if (tensor.weights().type == ::ONNX_NAMESPACE::TensorProto::INT64)
+                if (tensor.weights().type == ::onnx::TensorProto::INT64)
                 {
-                    tensor = ShapedWeights{::ONNX_NAMESPACE::TensorProto::INT32,
+                    tensor = ShapedWeights{::onnx::TensorProto::INT32,
                         convertINT64(reinterpret_cast<int64_t*>(weights.values), weights.shape, ctx), weights.shape};
                 }
                 tensor.weights().setName(basename.c_str());

@@ -165,6 +165,7 @@ trt_out   = trt_model(input)
 6. CUDNN版本：cudnn8.2.2.26，注意下载dev（h文件）和runtime（so文件）
 7. tensorRT版本：tensorRT-8.0.1.6-cuda10.2
 8. protobuf版本（用于onnx解析器）：这里使用的是protobufv3.11.4
+    - 如果采用其他版本，请参考该章节下面《适配Protobuf版本》
     - 下载地址：https://github.com/protocolbuffers/protobuf/tree/v3.11.4
     - 下载并编译，然后修改Makefile或者CMakeLists.txt的路径指向protobuf3.11.4
 - CMake:
@@ -215,6 +216,36 @@ trt_out   = trt_model(input)
 
 </details>
 
+
+<details>
+<summary>适配Protobuf版本</summary>
+
+- 修改onnx/make_pb.sh文件中protoc程序的路径，指向你自己版本的protoc
+
+```bash
+#切换终端目录到onnx下
+cd onnx
+
+#执行生成pb文件，并自动复制。使用make_pb.sh脚本
+bash make_pb.sh
+```
+
+- CMake:
+    - 修改CMakeLists.txt中`set(PROTOBUF_DIR "/data/sxai/lean/protobuf3.11.4")`为protoc相同的路径
+```bash
+mkdir build && cd build
+cmake ..
+make yolo -j64
+```
+
+- Makefile:
+    - 修改Makefile中`lean_protobuf  := /data/sxai/lean/protobuf3.11.4`为protoc的相同路径
+```bash
+make yolo -j64
+```
+
+
+</details>
 
 ## 各项任务支持
 

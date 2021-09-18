@@ -61,15 +61,15 @@ namespace
 
 #define DECLARE_BUILTIN_OP_IMPORTER(op)                                                                                \
     NodeImportResult import##op(                                                                                       \
-        IImporterContext* ctx, ::ONNX_NAMESPACE::NodeProto const& node, std::vector<TensorOrWeights>& inputs)
+        IImporterContext* ctx, ::onnx::NodeProto const& node, std::vector<TensorOrWeights>& inputs)
 
 #define DEFINE_BUILTIN_OP_IMPORTER(op)                                                                                 \
     NodeImportResult import##op(                                                                                       \
-        IImporterContext* ctx, ::ONNX_NAMESPACE::NodeProto const& node, std::vector<TensorOrWeights>& inputs);         \
+        IImporterContext* ctx, ::onnx::NodeProto const& node, std::vector<TensorOrWeights>& inputs);         \
     static const bool op##_registered_builtin_op = registerBuiltinOpImporter(#op, import##op);                         \
     IGNORE_UNUSED_GLOBAL(op##_registered_builtin_op);                                                                  \
     NodeImportResult import##op(                                                                                       \
-        IImporterContext* ctx, ::ONNX_NAMESPACE::NodeProto const& node, std::vector<TensorOrWeights>& inputs)
+        IImporterContext* ctx, ::onnx::NodeProto const& node, std::vector<TensorOrWeights>& inputs)
 
 #define RETURN_FIRST_OUTPUT(layer)                                                                                     \
     do                                                                                                                 \
@@ -206,7 +206,7 @@ DEFINE_BUILTIN_OP_IMPORTER(Plugin)
         std::vector<int> dims(weight.shape.d, weight.shape.d + weight.shape.nbDims);
         std::shared_ptr<TRT::Tensor> dweight(new TRT::Tensor(dims));
         
-        if(weight.type != ::ONNX_NAMESPACE::TensorProto::FLOAT){
+        if(weight.type != ::onnx::TensorProto::FLOAT){
             LOG_ERROR("unsupport weight type: " << weight.type);
         }
         
@@ -223,7 +223,7 @@ DEFINE_BUILTIN_OP_IMPORTER(Plugin)
 }
 
 NodeImportResult batchnormFallback(
-    IImporterContext* ctx, ::ONNX_NAMESPACE::NodeProto const& node, std::vector<TensorOrWeights>& inputs)
+    IImporterContext* ctx, ::onnx::NodeProto const& node, std::vector<TensorOrWeights>& inputs)
 {
     using eOp = nvinfer1::ElementWiseOperation;
     using uOp = nvinfer1::UnaryOperation;
@@ -256,7 +256,7 @@ NodeImportResult batchnormFallback(
     nvinfer1::Dims scalarShape{rank};
     std::fill(scalarShape.d, scalarShape.d + scalarShape.nbDims, 1);
     nvinfer1::ITensor* epsilon
-        = addConstantScalar(ctx, eps, ::ONNX_NAMESPACE::TensorProto::FLOAT, scalarShape)->getOutput(0);
+        = addConstantScalar(ctx, eps, ::onnx::TensorProto::FLOAT, scalarShape)->getOutput(0);
 
     // batchnorm = scale * (input - mean) / sqrt(variance + epsilon) + bias
     nvinfer1::IElementWiseLayer* layer = ctx->network()->addElementWise(
@@ -300,9 +300,9 @@ DEFINE_BUILTIN_OP_IMPORTER(BatchNormalization)
     const auto mean = inputs.at(3).weights();
     const auto variance = inputs.at(4).weights();
 
-    const bool allWeightsFloat = scale.type == ::ONNX_NAMESPACE::TensorProto::FLOAT
-        && bias.type == ::ONNX_NAMESPACE::TensorProto::FLOAT && mean.type == ::ONNX_NAMESPACE::TensorProto::FLOAT
-        && variance.type == ::ONNX_NAMESPACE::TensorProto::FLOAT;
+    const bool allWeightsFloat = scale.type == ::onnx::TensorProto::FLOAT
+        && bias.type == ::onnx::TensorProto::FLOAT && mean.type == ::onnx::TensorProto::FLOAT
+        && variance.type == ::onnx::TensorProto::FLOAT;
 
     if (!allWeightsFloat)
     {
@@ -362,11 +362,11 @@ DEFINE_BUILTIN_OP_IMPORTER(Celu)
     TensorOrWeights input = inputs.at(0);
     float alpha = attrs.get<float>("alpha", 1.0);
 
-    TensorOrWeights weightsOfZero = ctx->createTempWeights(::ONNX_NAMESPACE::TensorProto::FLOAT, {0,{}});
-    ShapedWeights weightsOfOnes = ctx->createTempWeights(::ONNX_NAMESPACE::TensorProto::FLOAT, {0,{}});
+    TensorOrWeights weightsOfZero = ctx->createTempWeights(::onnx::TensorProto::FLOAT, {0,{}});
+    ShapedWeights weightsOfOnes = ctx->createTempWeights(::onnx::TensorProto::FLOAT, {0,{}});
     std::vector<float> ones{1};
     std::memcpy(weightsOfOnes.values, ones.data(), weightsOfOnes.count() * sizeof(float));
-    ShapedWeights weightsOfAlpha = ctx->createTempWeights(::ONNX_NAMESPACE::TensorProto::FLOAT, {0,{}});
+    ShapedWeights weightsOfAlpha = ctx->createTempWeights(::onnx::TensorProto::FLOAT, {0,{}});
     std::vector<float> alphas{alpha};
     std::memcpy(weightsOfAlpha.values, alphas.data(), weightsOfAlpha.count() * sizeof(float));
 
@@ -532,7 +532,7 @@ DEFINE_BUILTIN_OP_IMPORTER(Constant)
     {
         if (attrs.count("value_float"))
         {
-            ShapedWeights convertedWeights = ctx->createTempWeights(::ONNX_NAMESPACE::TensorProto::FLOAT, {0,{}});
+            ShapedWeights convertedWeights = ctx->createTempWeights(::onnx::TensorProto::FLOAT, {0,{}});
             float value = attrs.get<float>("value_float");
             std::memcpy(convertedWeights.values, &value, convertedWeights.count() * sizeof(float));
             return {{convertedWeights}};
@@ -542,14 +542,14 @@ DEFINE_BUILTIN_OP_IMPORTER(Constant)
         {
             std::vector<float> values = attrs.get<std::vector<float>>("value_floats");
             int valueSize = values.size();
-            ShapedWeights convertedWeights = ctx->createTempWeights(::ONNX_NAMESPACE::TensorProto::FLOAT, {1,{valueSize}});
+            ShapedWeights convertedWeights = ctx->createTempWeights(::onnx::TensorProto::FLOAT, {1,{valueSize}});
             std::memcpy(convertedWeights.values, values.data(), convertedWeights.count() * sizeof(float));
             return {{convertedWeights}};
         }
 
         if (attrs.count("value_int"))
         {
-            ShapedWeights convertedWeights = ctx->createTempWeights(::ONNX_NAMESPACE::TensorProto::INT32, {0,{}});
+            ShapedWeights convertedWeights = ctx->createTempWeights(::onnx::TensorProto::INT32, {0,{}});
             float value = attrs.get<float>("value_int");
             std::memcpy(convertedWeights.values, &value, convertedWeights.count() * sizeof(int));
             return {{convertedWeights}};
@@ -559,7 +559,7 @@ DEFINE_BUILTIN_OP_IMPORTER(Constant)
         {
             std::vector<float> values = attrs.get<std::vector<float>>("value_ints");
             int valueSize = values.size();
-            ShapedWeights convertedWeights = ctx->createTempWeights(::ONNX_NAMESPACE::TensorProto::INT32, {1,{valueSize}});
+            ShapedWeights convertedWeights = ctx->createTempWeights(::onnx::TensorProto::INT32, {1,{valueSize}});
             std::memcpy(convertedWeights.values, values.data(), convertedWeights.count() * sizeof(float));
             return {{convertedWeights}};
         }
@@ -574,7 +574,7 @@ DEFINE_BUILTIN_OP_IMPORTER(ConstantOfShape)
     nvinfer1::ITensor* shape = &convertToTensor(inputs.at(0), ctx);
 
     ShapedWeights zeroWeights
-        = ctx->createTempWeights(::ONNX_NAMESPACE::TensorProto_DataType_FLOAT, nvinfer1::Dims{1, 1});
+        = ctx->createTempWeights(::onnx::TensorProto_DataType_FLOAT, nvinfer1::Dims{1, 1});
     static_cast<float*>(zeroWeights.values)[0] = 0.f;
     auto valueWeights = TensorOrWeights{attrs.get("value", zeroWeights)};
 
@@ -1076,7 +1076,7 @@ DEFINE_BUILTIN_OP_IMPORTER(DepthToSpace)
 
 // This is a helper function for QuantizeLinear/DequantizeLinear
 NodeImportResult QuantDequantLinearHelper(
-    IImporterContext* ctx, ::ONNX_NAMESPACE::NodeProto const& node, std::vector<TensorOrWeights>& inputs, bool isDQ)
+    IImporterContext* ctx, ::onnx::NodeProto const& node, std::vector<TensorOrWeights>& inputs, bool isDQ)
 {
     auto addConstantLayer
         = [](nvinfer1::INetworkDefinition& network, const ShapedWeights& weights) -> nvinfer1::ITensor* {
@@ -1124,7 +1124,7 @@ NodeImportResult QuantDequantLinearHelper(
         ASSERT(shiftIsAllZeros(zeroPoint) && "TRT only supports symmetric quantization - zeroPt must be all zeros",
             nvonnxparser::ErrorCode::kINVALID_NODE);
         // Convert the zero-point to Float because that's TRT uses float for zero-point.
-        auto fpZeroPoint = createZeroShifts(zeroPoint, ::ONNX_NAMESPACE::TensorProto::FLOAT, ctx);
+        auto fpZeroPoint = createZeroShifts(zeroPoint, ::onnx::TensorProto::FLOAT, ctx);
         fpZeroPoint.setName(zeroPoint.getName());
         zeroPointInput = addConstantLayer(*ctx->network(), fpZeroPoint);
     }
@@ -1346,7 +1346,7 @@ DEFINE_BUILTIN_OP_IMPORTER(EyeLike)
         }
     }
 
-    ShapedWeights tempWeights = ctx->createTempWeights(::ONNX_NAMESPACE::TensorProto::INT32, dims);
+    ShapedWeights tempWeights = ctx->createTempWeights(::onnx::TensorProto::INT32, dims);
     std::memcpy(tempWeights.values, values.data(), values.size() * sizeof(int));
     auto* layer = ctx->network()->addConstant(dims, tempWeights);
     layer->setOutputType(0, nvinfer1::DataType::kINT32);
@@ -1466,8 +1466,8 @@ DEFINE_BUILTIN_OP_IMPORTER(GatherElements)
     std::vector<int32_t> biasVector = calculateBias(daDims, idxDims, pitches, axis);
 
     // Perform idx` = idx * pitch[axis] + bias calculation.
-    auto* axisPitchTensor = addConstant(ctx, axisPitch, ::ONNX_NAMESPACE::TensorProto::INT32, idxDims)->getOutput(0);
-    auto* biasTensor = addConstant(ctx, biasVector, ::ONNX_NAMESPACE::TensorProto::INT32, idxDims)->getOutput(0);
+    auto* axisPitchTensor = addConstant(ctx, axisPitch, ::onnx::TensorProto::INT32, idxDims)->getOutput(0);
+    auto* biasTensor = addConstant(ctx, biasVector, ::onnx::TensorProto::INT32, idxDims)->getOutput(0);
 
     auto* mul
         = ctx->network()->addElementWise(*index, *axisPitchTensor, nvinfer1::ElementWiseOperation::kPROD)->getOutput(0);
@@ -1601,7 +1601,7 @@ DEFINE_BUILTIN_OP_IMPORTER(Gemm)
     if (alpha != 1.f)
     {
         nvinfer1::IConstantLayer* alphaConstant
-            = addConstantScalar(ctx, alpha, ::ONNX_NAMESPACE::TensorProto_DataType_FLOAT);
+            = addConstantScalar(ctx, alpha, ::onnx::TensorProto_DataType_FLOAT);
         nvinfer1::ITensor* alphaConstantTensor = alphaConstant->getOutput(0);
         CHECK(broadcastTensors(ctx, alphaConstantTensor, matmulTensor));
         nvinfer1::IElementWiseLayer* scaledMatmul = ctx->network()->addElementWise(
@@ -1618,7 +1618,7 @@ DEFINE_BUILTIN_OP_IMPORTER(Gemm)
         if (beta != 1.f)
         {
             nvinfer1::IConstantLayer* betaConstant
-                = addConstantScalar(ctx, beta, ::ONNX_NAMESPACE::TensorProto_DataType_FLOAT);
+                = addConstantScalar(ctx, beta, ::onnx::TensorProto_DataType_FLOAT);
             nvinfer1::ITensor* betaConstantTensor = betaConstant->getOutput(0);
             CHECK(broadcastTensors(ctx, betaConstantTensor, biasTensor));
             nvinfer1::IElementWiseLayer* scaledBias = ctx->network()->addElementWise(
@@ -1657,8 +1657,8 @@ DEFINE_BUILTIN_OP_IMPORTER(GlobalLpPool)
     // Add constants for p and 1/p
     nvinfer1::Dims scalarDims{dims.nbDims};
     std::fill(scalarDims.d, scalarDims.d + scalarDims.nbDims, 1);
-    auto& pTensor = *addConstantScalar(ctx, p, ::ONNX_NAMESPACE::TensorProto::FLOAT, scalarDims)->getOutput(0);
-    auto& pInvTensor = *addConstantScalar(ctx, 1.f / p, ::ONNX_NAMESPACE::TensorProto::FLOAT, scalarDims)->getOutput(0);
+    auto& pTensor = *addConstantScalar(ctx, p, ::onnx::TensorProto::FLOAT, scalarDims)->getOutput(0);
+    auto& pInvTensor = *addConstantScalar(ctx, 1.f / p, ::onnx::TensorProto::FLOAT, scalarDims)->getOutput(0);
 
     // firstPow = pow(x, p)
     auto* firstPow = ctx->network()->addElementWise(tensor, pTensor, nvinfer1::ElementWiseOperation::kPOW)->getOutput(0);
@@ -1689,7 +1689,7 @@ DEFINE_BUILTIN_OP_IMPORTER(GreaterOrEqual)
 }
 
 // singlePassShape is the shape of the output from a single pass.
-nvinfer1::ITensor* concatenateRNNOutputs(IImporterContext* ctx, const ::ONNX_NAMESPACE::NodeProto& node, nvinfer1::ILoop* loop,
+nvinfer1::ITensor* concatenateRNNOutputs(IImporterContext* ctx, const ::onnx::NodeProto& node, nvinfer1::ILoop* loop,
     nvinfer1::ITensor* singlePassShape, nvinfer1::ITensor* sequenceLength, nvinfer1::ITensor* concatenatedOutput,
     int numDirections, std::vector<TensorOrWeights>& inputs, bool reverse = false)
 {
@@ -1697,10 +1697,10 @@ nvinfer1::ITensor* concatenateRNNOutputs(IImporterContext* ctx, const ::ONNX_NAM
     if (numDirections == 2)
     {
         nvinfer1::ITensor* forwardStart = addConstant(ctx, std::vector<int32_t>{0, 0, 0},
-                                              ::ONNX_NAMESPACE::TensorProto::INT32, nvinfer1::Dims{1, 3})
+                                              ::onnx::TensorProto::INT32, nvinfer1::Dims{1, 3})
                                               ->getOutput(0);
         nvinfer1::ITensor* reverseStart = addConstant(ctx, std::vector<int32_t>{1, 0, 0},
-                                              ::ONNX_NAMESPACE::TensorProto::INT32, nvinfer1::Dims{1, 3})
+                                              ::onnx::TensorProto::INT32, nvinfer1::Dims{1, 3})
                                               ->getOutput(0);
 
         LOG_VERBOSE("Concatenated output shape: " << concatenatedOutput->getDimensions());
@@ -1804,15 +1804,15 @@ DEFINE_BUILTIN_OP_IMPORTER(GRU)
 
     // Need to split weights/biases into ZR gates and H gate, because h(t) computations depend on z(t) and r(t).
     nvinfer1::ITensor* numDirectionsTensor
-        = addConstantScalar(ctx, numDirections, ::ONNX_NAMESPACE::TensorProto::INT32, Dims{1, 1})->getOutput(0);
+        = addConstantScalar(ctx, numDirections, ::onnx::TensorProto::INT32, Dims{1, 1})->getOutput(0);
     nvinfer1::ITensor* hiddenSizeTensor
-        = addConstantScalar(ctx, hiddenSize, ::ONNX_NAMESPACE::TensorProto::INT32, Dims{1, 1})->getOutput(0);
+        = addConstantScalar(ctx, hiddenSize, ::onnx::TensorProto::INT32, Dims{1, 1})->getOutput(0);
     nvinfer1::ITensor* hiddenSizeDoubledTensor
-        = addConstantScalar(ctx, 2 * hiddenSize, ::ONNX_NAMESPACE::TensorProto::INT32, Dims{1, 1})->getOutput(0);
+        = addConstantScalar(ctx, 2 * hiddenSize, ::onnx::TensorProto::INT32, Dims{1, 1})->getOutput(0);
     nvinfer1::ITensor* eDimTensor = getAxisLength(ctx, input, 2, Dims{1, 1});
 
     nvinfer1::ITensor* weightsZRStart
-        = addConstant(ctx, std::vector<int32_t>{0, 0, 0}, ::ONNX_NAMESPACE::TensorProto::INT32, Dims{1, 3})
+        = addConstant(ctx, std::vector<int32_t>{0, 0, 0}, ::onnx::TensorProto::INT32, Dims{1, 3})
               ->getOutput(0);
     nvinfer1::ITensor* weightsZRSize
         = net->addConcatenation(
@@ -1826,7 +1826,7 @@ DEFINE_BUILTIN_OP_IMPORTER(GRU)
     LOG_VERBOSE("Weights for ZR gates shape is: " << weightsZR->getDimensions());
 
     nvinfer1::ITensor* weightsHStart
-        = addConstant(ctx, std::vector<int32_t>{0, 2 * hiddenSize, 0}, ::ONNX_NAMESPACE::TensorProto::INT32, Dims{1, 3})
+        = addConstant(ctx, std::vector<int32_t>{0, 2 * hiddenSize, 0}, ::onnx::TensorProto::INT32, Dims{1, 3})
               ->getOutput(0);
     nvinfer1::ITensor* weightsHSize
         = net->addConcatenation(
@@ -1886,12 +1886,12 @@ DEFINE_BUILTIN_OP_IMPORTER(GRU)
     const auto initialStateShape = [&ctx, &numDirections, &hiddenSize, &input, &net]() -> nvinfer1::ITensor* {
         // Get batchSize from input shape
         nvinfer1::ITensor* numDirectionsTensor
-            = addConstantScalar(ctx, numDirections, ::ONNX_NAMESPACE::TensorProto_DataType_INT32, Dims{1, 1})
+            = addConstantScalar(ctx, numDirections, ::onnx::TensorProto_DataType_INT32, Dims{1, 1})
                   ->getOutput(0);
         LOG_VERBOSE("numDirections is: " << numDirections
                                          << ", numDirections Tensor shape: " << numDirectionsTensor->getDimensions());
         nvinfer1::ITensor* hiddenSizeTensor
-            = addConstantScalar(ctx, hiddenSize, ::ONNX_NAMESPACE::TensorProto_DataType_INT32, Dims{1, 1})
+            = addConstantScalar(ctx, hiddenSize, ::onnx::TensorProto_DataType_INT32, Dims{1, 1})
                   ->getOutput(0);
         LOG_VERBOSE(
             "hiddenSize is: " << hiddenSize << ", hiddenSizeTensor shape: " << hiddenSizeTensor->getDimensions());
@@ -1922,7 +1922,7 @@ DEFINE_BUILTIN_OP_IMPORTER(GRU)
             return &convertToTensor(inputs.at(inputIdx), ctx);
         }
         return constantOfShape(ctx, node,
-            addConstantScalar(ctx, 0.f, ::ONNX_NAMESPACE::TensorProto_DataType_FLOAT, Dims{1, 1})->getOutput(0),
+            addConstantScalar(ctx, 0.f, ::onnx::TensorProto_DataType_FLOAT, Dims{1, 1})->getOutput(0),
             gateOutputShape);
     };
 
@@ -1961,7 +1961,7 @@ DEFINE_BUILTIN_OP_IMPORTER(GRU)
         = [&ctx, &hiddenSize, &gateOutputShape, &net](nvinfer1::ITensor* gates, int gateIndex) -> nvinfer1::ITensor* {
         nvinfer1::ISliceLayer* isolateGate = net->addSlice(*gates, Dims3{0, 0, 0}, Dims3{0, 0, 0}, Dims3{1, 1, 1});
         isolateGate->setInput(1, *addConstant(ctx, std::vector<int>{0, 0, gateIndex * hiddenSize},
-                                      ::ONNX_NAMESPACE::TensorProto_DataType_INT32, Dims{1, 3})
+                                      ::onnx::TensorProto_DataType_INT32, Dims{1, 3})
                                       ->getOutput(0)); // Start
         isolateGate->setInput(2, *gateOutputShape);    // Size
         return isolateGate->getOutput(0);
@@ -2036,7 +2036,7 @@ DEFINE_BUILTIN_OP_IMPORTER(GRU)
     nvinfer1::ITensor* Ht
         = net->addElementWise(
                  *net->addElementWise(*net->addElementWise(*addConstantScalar(ctx, 1.f,
-                                                                ::ONNX_NAMESPACE::TensorProto::FLOAT, Dims3{1, 1, 1})
+                                                                ::onnx::TensorProto::FLOAT, Dims3{1, 1, 1})
                                                                 ->getOutput(0),
                                               *zt, eOp::kSUB)
                                            ->getOutput(0),
@@ -2049,7 +2049,7 @@ DEFINE_BUILTIN_OP_IMPORTER(GRU)
     nvinfer1::ITensor* singlePassShape
         = ctx->network()
               ->addElementWise(*gateOutputShape,
-                  *addConstant(ctx, std::vector<int>{numDirections, 1, 1}, ::ONNX_NAMESPACE::TensorProto_DataType_INT32,
+                  *addConstant(ctx, std::vector<int>{numDirections, 1, 1}, ::onnx::TensorProto_DataType_INT32,
                        nvinfer1::Dims{1, 3})
                        ->getOutput(0),
                   nvinfer1::ElementWiseOperation::kDIV)
@@ -2091,8 +2091,8 @@ DEFINE_BUILTIN_OP_IMPORTER(If)
     OnnxAttrs attrs(node, ctx);
     auto cond = inputs.at(0);
 
-    const ::ONNX_NAMESPACE::GraphProto& thenGraph = attrs.get<const ::ONNX_NAMESPACE::GraphProto&>("then_branch");
-    const ::ONNX_NAMESPACE::GraphProto& elseGraph = attrs.get<const ::ONNX_NAMESPACE::GraphProto&>("else_branch");
+    const ::onnx::GraphProto& thenGraph = attrs.get<const ::onnx::GraphProto&>("then_branch");
+    const ::onnx::GraphProto& elseGraph = attrs.get<const ::onnx::GraphProto&>("else_branch");
 
     // Number of outputs are the same between the two branches.
     const int32_t nbOutputs = thenGraph.output_size();
@@ -2102,7 +2102,7 @@ DEFINE_BUILTIN_OP_IMPORTER(If)
     if (cond.is_weights() && cond.weights().count() == 1)
     {
         const auto value = *(static_cast<int*>(cond.weights().values));
-        const ::ONNX_NAMESPACE::GraphProto& body = value == 1 ? thenGraph : elseGraph;
+        const ::onnx::GraphProto& body = value == 1 ? thenGraph : elseGraph;
         CHECK(onnx2trt::parseGraph(ctx, body));
         for (auto i = 0; i < nbOutputs; i++)
         {
@@ -2155,11 +2155,11 @@ DEFINE_BUILTIN_OP_IMPORTER(ImageScaler)
     // Shift the input by a per-channel bias value.
     std::vector<float> biases = attrs.get<std::vector<float>>("bias");
     nvinfer1::Dims dims{1, static_cast<int>(biases.size())};
-    ShapedWeights shiftWeights = ctx->createTempWeights(::ONNX_NAMESPACE::TensorProto_DataType_FLOAT, dims);
+    ShapedWeights shiftWeights = ctx->createTempWeights(::onnx::TensorProto_DataType_FLOAT, dims);
     std::copy(biases.begin(), biases.end(), static_cast<float*>(shiftWeights.values));
     // Scale is applied to every element of the input, but we need to duplicate it over every channel.
     float scale = attrs.get<float>("scale", 1.0f);
-    ShapedWeights scaleWeights = ctx->createTempWeights(::ONNX_NAMESPACE::TensorProto_DataType_FLOAT, dims);
+    ShapedWeights scaleWeights = ctx->createTempWeights(::onnx::TensorProto_DataType_FLOAT, dims);
     std::fill(static_cast<float*>(scaleWeights.values), static_cast<float*>(scaleWeights.values) + scaleWeights.count(),
         scale);
     // Finally add the scale layer.
@@ -2256,7 +2256,7 @@ DEFINE_BUILTIN_OP_IMPORTER(Loop)
     // The number of state variables on the input and output is the same.
     const int nbStateVars = nbInputs - NB_NON_STATE_INPUTS;
 
-    const ::ONNX_NAMESPACE::GraphProto& body = attrs.get<const ::ONNX_NAMESPACE::GraphProto&>("body");
+    const ::onnx::GraphProto& body = attrs.get<const ::onnx::GraphProto&>("body");
 
     auto loop = ctx->network()->addLoop();
     loop->setName(getNodeName(node).c_str());
@@ -2337,7 +2337,7 @@ DEFINE_BUILTIN_OP_IMPORTER(Loop)
         else
         {
             trtScanOut->setInput(
-                1, *addConstantScalar(ctx, MAX_SCAN_OUTPUT_LENGTH, ::ONNX_NAMESPACE::TensorProto_DataType_INT32)
+                1, *addConstantScalar(ctx, MAX_SCAN_OUTPUT_LENGTH, ::onnx::TensorProto_DataType_INT32)
                         ->getOutput(0));
         }
         nodeOutputs.emplace_back(trtScanOut->getOutput(0));
@@ -2431,11 +2431,11 @@ DEFINE_BUILTIN_OP_IMPORTER(LSTM)
     const auto initialStateShape = [&ctx, &numDirections, &hiddenSize, &input]() -> nvinfer1::ITensor* {
         // Get batchSize from input shape
         nvinfer1::ITensor* numDirectionsTensor
-            = addConstantScalar(ctx, numDirections, ::ONNX_NAMESPACE::TensorProto_DataType_INT32, nvinfer1::Dims{1, 1})
+            = addConstantScalar(ctx, numDirections, ::onnx::TensorProto_DataType_INT32, nvinfer1::Dims{1, 1})
                   ->getOutput(0);
         LOG_VERBOSE("numDirectionsTensor shape: " << numDirectionsTensor->getDimensions());
         nvinfer1::ITensor* hiddenSizeTensor
-            = addConstantScalar(ctx, hiddenSize, ::ONNX_NAMESPACE::TensorProto_DataType_INT32, nvinfer1::Dims{1, 1})
+            = addConstantScalar(ctx, hiddenSize, ::onnx::TensorProto_DataType_INT32, nvinfer1::Dims{1, 1})
                   ->getOutput(0);
         LOG_VERBOSE("hiddenSizeTensor shape: " << hiddenSizeTensor->getDimensions());
         nvinfer1::ITensor* batchSizeTensor = getAxisLength(ctx, input, 1, nvinfer1::Dims{1, 1});
@@ -2454,7 +2454,7 @@ DEFINE_BUILTIN_OP_IMPORTER(LSTM)
             return &convertToTensor(inputs.at(inputIdx), ctx);
         }
         return constantOfShape(ctx, node,
-            addConstantScalar(ctx, 0.f, ::ONNX_NAMESPACE::TensorProto_DataType_FLOAT, nvinfer1::Dims{1, 1})
+            addConstantScalar(ctx, 0.f, ::onnx::TensorProto_DataType_FLOAT, nvinfer1::Dims{1, 1})
                 ->getOutput(0),
             gateOutputShape);
     };
@@ -2511,7 +2511,7 @@ DEFINE_BUILTIN_OP_IMPORTER(LSTM)
         nvinfer1::ISliceLayer* isolate = ctx->network()->addSlice(
             *gates, nvinfer1::Dims3{0, 0, 0}, nvinfer1::Dims3{0, 0, 0}, nvinfer1::Dims3{1, 1, 1});
         isolate->setInput(1, *addConstant(ctx, std::vector<int>{0, 0, gateIndex * hiddenSize},
-                                  ::ONNX_NAMESPACE::TensorProto_DataType_INT32, nvinfer1::Dims{1, 3})
+                                  ::onnx::TensorProto_DataType_INT32, nvinfer1::Dims{1, 3})
                                   ->getOutput(0)); // Start
         isolate->setInput(2, *gateOutputShape);    // Size
         return isolate->getOutput(0);
@@ -2586,7 +2586,7 @@ DEFINE_BUILTIN_OP_IMPORTER(LSTM)
     nvinfer1::ITensor* singlePassShape
         = ctx->network()
               ->addElementWise(*gateOutputShape,
-                  *addConstant(ctx, std::vector<int>{numDirections, 1, 1}, ::ONNX_NAMESPACE::TensorProto_DataType_INT32,
+                  *addConstant(ctx, std::vector<int>{numDirections, 1, 1}, ::onnx::TensorProto_DataType_INT32,
                        nvinfer1::Dims{1, 3})
                        ->getOutput(0),
                   eOp::kDIV)
@@ -2665,7 +2665,7 @@ DEFINE_BUILTIN_OP_IMPORTER(LpNormalization)
 
     ASSERT((p == 1 || p == 2) && "Only L1 and L2 normalization are supported.", ErrorCode::kINVALID_NODE);
     nvinfer1::ITensor* norm;
-    TensorOrWeights zeros = ctx->createTempWeights(::ONNX_NAMESPACE::TensorProto::FLOAT, {0,{}});
+    TensorOrWeights zeros = ctx->createTempWeights(::onnx::TensorProto::FLOAT, {0,{}});
     nvinfer1::ITensor* zerosTensor = &convertToTensor(zeros, ctx);
     broadcastTensor(ctx, zerosTensor, nbDims);
 
@@ -2749,7 +2749,7 @@ DEFINE_BUILTIN_OP_IMPORTER(LpPool)
         kernelSz *= kernelShape.d[i];
     }
     nvinfer1::ITensor* kernelSzTensor
-        = addConstantScalar(ctx, kernelSz, ::ONNX_NAMESPACE::TensorProto::FLOAT, scalarDims)->getOutput(0);
+        = addConstantScalar(ctx, kernelSz, ::onnx::TensorProto::FLOAT, scalarDims)->getOutput(0);
 
     nvinfer1::ITensor* output;
     if (p == 1) {
@@ -2816,7 +2816,7 @@ DEFINE_BUILTIN_OP_IMPORTER(MatMul)
         weights = transposedWeights;
 
         // Create empty bias weights as MatMul op does not have bias addition.
-        auto biasWeights = ShapedWeights::empty(::ONNX_NAMESPACE::TensorProto::FLOAT);
+        auto biasWeights = ShapedWeights::empty(::onnx::TensorProto::FLOAT);
         nvinfer1::IFullyConnectedLayer* fc
             = ctx->network()->addFullyConnected(*inputAExtendDim, inputBDims.d[1], transposedWeights, biasWeights);
         // Register layer name and kernel weights for FC.
@@ -2897,7 +2897,7 @@ DEFINE_BUILTIN_OP_IMPORTER(Mean)
 
     int ndim = sum_tensor.getDimensions().nbDims;
     float scale_value = 1.f / inputs.size();
-    auto scale_dtype = ::ONNX_NAMESPACE::TensorProto::FLOAT;
+    auto scale_dtype = ::onnx::TensorProto::FLOAT;
     auto scale_shape = nvinfer1::Dims{ndim, {1, 1, 1, 1, 1, 1, 1, 1}};
     auto scale_weights = ctx->createTempWeights(scale_dtype, scale_shape);
     static_cast<float*>(scale_weights.values)[0] = scale_value;
@@ -3144,7 +3144,7 @@ DEFINE_BUILTIN_OP_IMPORTER(QuantizeLinear)
     return QuantDequantLinearHelper(ctx, node, inputs, false /*isDQ*/);
 }
 
-NodeImportResult randomUniformHelper(IImporterContext* ctx, const ::ONNX_NAMESPACE::NodeProto& node,
+NodeImportResult randomUniformHelper(IImporterContext* ctx, const ::onnx::NodeProto& node,
     const ShapeTensor& inputShape, const OnnxAttrs& attrs, const nvinfer1::DataType& inputDType)
 {
     auto* fillLayer = addFill(ctx, inputShape, nvinfer1::FillOperation::kRANDOM_UNIFORM);
@@ -3158,8 +3158,8 @@ NodeImportResult randomUniformHelper(IImporterContext* ctx, const ::ONNX_NAMESPA
         auto dtype = attrs.get<int>("dtype", 1);
         switch (dtype)
         {
-        case ::ONNX_NAMESPACE::TensorProto::FLOAT: fillLayer->setOutputType(0, nvinfer1::DataType::kFLOAT); break;
-        case ::ONNX_NAMESPACE::TensorProto::FLOAT16: fillLayer->setOutputType(0, nvinfer1::DataType::kHALF); break;
+        case ::onnx::TensorProto::FLOAT: fillLayer->setOutputType(0, nvinfer1::DataType::kFLOAT); break;
+        case ::onnx::TensorProto::FLOAT16: fillLayer->setOutputType(0, nvinfer1::DataType::kHALF); break;
         default: return MAKE_ERROR("Unsupported data type", ErrorCode::kINVALID_VALUE);
         }
     }
@@ -3205,7 +3205,7 @@ DEFINE_BUILTIN_OP_IMPORTER(RandomUniformLike)
     return randomUniformHelper(ctx, node, inputShape, attrs, dType);
 }
 
-NodeImportResult staticFloatRangeImporter(IImporterContext* ctx, const ::ONNX_NAMESPACE::NodeProto& node, const std::vector<TensorOrWeights>& inputs)
+NodeImportResult staticFloatRangeImporter(IImporterContext* ctx, const ::onnx::NodeProto& node, const std::vector<TensorOrWeights>& inputs)
 {
     const float start = static_cast<float*>(inputs.at(0).weights().values)[0];
     const float limit = static_cast<float*>(inputs.at(1).weights().values)[0];
@@ -3224,7 +3224,7 @@ NodeImportResult staticFloatRangeImporter(IImporterContext* ctx, const ::ONNX_NA
 
 DEFINE_BUILTIN_OP_IMPORTER(Range)
 {
-    if (inputs.at(0).is_weights() && inputs.at(0).weights().type == ::ONNX_NAMESPACE::TensorProto_DataType_FLOAT)
+    if (inputs.at(0).is_weights() && inputs.at(0).weights().type == ::onnx::TensorProto_DataType_FLOAT)
     {
         // Floating-point case supported by TensorRT only if all inputs are static.
         if (inputs.at(0).is_weights() && inputs.at(1).is_weights() && inputs.at(2).is_weights())
@@ -3726,11 +3726,11 @@ DEFINE_BUILTIN_OP_IMPORTER(RNN)
     const auto initialStateShape = [&ctx, &numDirections, &hiddenSize, &input]() -> nvinfer1::ITensor* {
         // Get batchSize from input shape
         nvinfer1::ITensor* numDirectionsTensor
-            = addConstantScalar(ctx, numDirections, ::ONNX_NAMESPACE::TensorProto_DataType_INT32, nvinfer1::Dims{1, 1})
+            = addConstantScalar(ctx, numDirections, ::onnx::TensorProto_DataType_INT32, nvinfer1::Dims{1, 1})
                   ->getOutput(0);
         LOG_VERBOSE("numDirectionsTensor shape: " << numDirectionsTensor->getDimensions());
         nvinfer1::ITensor* hiddenSizeTensor
-            = addConstantScalar(ctx, hiddenSize, ::ONNX_NAMESPACE::TensorProto_DataType_INT32, nvinfer1::Dims{1, 1})
+            = addConstantScalar(ctx, hiddenSize, ::onnx::TensorProto_DataType_INT32, nvinfer1::Dims{1, 1})
                   ->getOutput(0);
         LOG_VERBOSE("hiddenSizeTensor shape: " << hiddenSizeTensor->getDimensions());
         nvinfer1::ITensor* batchSizeTensor = getAxisLength(ctx, input, 1, nvinfer1::Dims{1, 1});
@@ -3747,7 +3747,7 @@ DEFINE_BUILTIN_OP_IMPORTER(RNN)
             return &convertToTensor(inputs.at(inputIdx), ctx);
         }
         return constantOfShape(ctx, node,
-            addConstantScalar(ctx, 0.f, ::ONNX_NAMESPACE::TensorProto_DataType_FLOAT, nvinfer1::Dims{1, 1})
+            addConstantScalar(ctx, 0.f, ::onnx::TensorProto_DataType_FLOAT, nvinfer1::Dims{1, 1})
                 ->getOutput(0),
             initialStateShape());
     };
@@ -3803,7 +3803,7 @@ DEFINE_BUILTIN_OP_IMPORTER(RNN)
     nvinfer1::ITensor* singlePassShape
         = ctx->network()
               ->addElementWise(*initialStateShape(),
-                  *addConstant(ctx, std::vector<int>{numDirections, 1, 1}, ::ONNX_NAMESPACE::TensorProto_DataType_INT32,
+                  *addConstant(ctx, std::vector<int>{numDirections, 1, 1}, ::onnx::TensorProto_DataType_INT32,
                        nvinfer1::Dims{1, 3})
                        ->getOutput(0),
                   nvinfer1::ElementWiseOperation::kDIV)
@@ -3875,7 +3875,7 @@ DEFINE_BUILTIN_OP_IMPORTER(Scan)
     std::fill(defaultOutputScanDirection.begin(), defaultOutputScanDirection.end(), 0);
     const std::vector<int> scanOutputDirections(attrs.get("scan_output_directions", defaultOutputScanDirection));
 
-    const ::ONNX_NAMESPACE::GraphProto& body = attrs.get<const ::ONNX_NAMESPACE::GraphProto&>("body");
+    const ::onnx::GraphProto& body = attrs.get<const ::onnx::GraphProto&>("body");
 
     // Support possible negative axis for input and output axes:
     for (auto& axis : scanInputAxes)
@@ -4500,7 +4500,7 @@ DEFINE_BUILTIN_OP_IMPORTER(Upsample)
         ASSERT( (scales_weights.shape.nbDims == 1) && "The scales input must be 1D.", ErrorCode::kUNSUPPORTED_NODE);
         // Scale factors has batch dimension.
         ASSERT( (scales_weights.count() == static_cast<size_t>(nbDims)) && "The shape of the scales input must aligin with the dimensions of the input.", ErrorCode::kUNSUPPORTED_NODE);
-        ASSERT( (scales_weights.type == ::ONNX_NAMESPACE::TensorProto::FLOAT) && "This version of TensorRT only supports FLOAT scales input.", ErrorCode::kINVALID_NODE);
+        ASSERT( (scales_weights.type == ::onnx::TensorProto::FLOAT) && "This version of TensorRT only supports FLOAT scales input.", ErrorCode::kINVALID_NODE);
         float const* scales_ptr = static_cast<float const*>(scales_weights.values);
         for (int i = 0; i < nbDims; i++)
         {
@@ -4647,68 +4647,68 @@ std::vector<nvinfer1::PluginField> loadFields(string_map<std::vector<uint8_t>>& 
         nvinfer1::PluginFieldType type{};
         switch (attrs.type(fieldName))
         {
-            case ::ONNX_NAMESPACE::AttributeProto::FLOAT:
+            case ::onnx::AttributeProto::FLOAT:
                 std::tie(data, length) = copyField(attrs.get<float>(fieldName), fieldName, fieldData);
                 type = nvinfer1::PluginFieldType::kFLOAT32;
                 break;
-            case ::ONNX_NAMESPACE::AttributeProto::INT:
+            case ::onnx::AttributeProto::INT:
                 std::tie(data, length) = copyField(attrs.get<int>(fieldName), fieldName, fieldData);
                 type = nvinfer1::PluginFieldType::kINT32;
                 break;
-            case ::ONNX_NAMESPACE::AttributeProto::STRING:
+            case ::onnx::AttributeProto::STRING:
                 std::tie(data, length) = copyField(attrs.get<std::string>(fieldName), fieldName, fieldData);
                 type = nvinfer1::PluginFieldType::kCHAR;
                 break;
-            case ::ONNX_NAMESPACE::AttributeProto::FLOATS:
+            case ::onnx::AttributeProto::FLOATS:
                 std::tie(data, length) = copyField(attrs.get<std::vector<float>>(fieldName), fieldName, fieldData);
                 type = nvinfer1::PluginFieldType::kFLOAT32;
                 break;
-            case ::ONNX_NAMESPACE::AttributeProto::INTS:
+            case ::onnx::AttributeProto::INTS:
                 std::tie(data, length) = copyField(attrs.get<std::vector<int>>(fieldName), fieldName, fieldData);
                 type = nvinfer1::PluginFieldType::kINT32;
                 break;
-            case ::ONNX_NAMESPACE::AttributeProto::STRINGS:
+            case ::onnx::AttributeProto::STRINGS:
                 std::tie(data, length) = copyField(attrs.get<std::vector<std::string>>(fieldName), fieldName, fieldData);
                 type = nvinfer1::PluginFieldType::kCHAR;
                 break;
-            case ::ONNX_NAMESPACE::AttributeProto::TENSOR:
+            case ::onnx::AttributeProto::TENSOR:
             {
                 ShapedWeights tensor{attrs.get<ShapedWeights>(fieldName)};
                 std::tie(data, length) = copyField(tensor, fieldName, fieldData);
                 switch (tensor.type)
                 {
-                case ::ONNX_NAMESPACE::TensorProto::FLOAT: type = nvinfer1::PluginFieldType::kFLOAT32; break;
-                case ::ONNX_NAMESPACE::TensorProto::INT8: type = nvinfer1::PluginFieldType::kINT8; break;
-                case ::ONNX_NAMESPACE::TensorProto::INT16: type = nvinfer1::PluginFieldType::kINT16; break;
-                case ::ONNX_NAMESPACE::TensorProto::INT32: type = nvinfer1::PluginFieldType::kINT32; break;
-                case ::ONNX_NAMESPACE::TensorProto::STRING: type = nvinfer1::PluginFieldType::kCHAR; break;
-                case ::ONNX_NAMESPACE::TensorProto::FLOAT16: type = nvinfer1::PluginFieldType::kFLOAT16; break;
-                case ::ONNX_NAMESPACE::TensorProto::DOUBLE: type = nvinfer1::PluginFieldType::kFLOAT64; break;
-                case ::ONNX_NAMESPACE::TensorProto::UNDEFINED:
-                case ::ONNX_NAMESPACE::TensorProto::UINT8:
-                case ::ONNX_NAMESPACE::TensorProto::UINT16:
-                case ::ONNX_NAMESPACE::TensorProto::INT64:
-                case ::ONNX_NAMESPACE::TensorProto::BOOL:
-                case ::ONNX_NAMESPACE::TensorProto::UINT32:
-                case ::ONNX_NAMESPACE::TensorProto::UINT64:
-                case ::ONNX_NAMESPACE::TensorProto::COMPLEX64:
-                case ::ONNX_NAMESPACE::TensorProto::COMPLEX128:
+                case ::onnx::TensorProto::FLOAT: type = nvinfer1::PluginFieldType::kFLOAT32; break;
+                case ::onnx::TensorProto::INT8: type = nvinfer1::PluginFieldType::kINT8; break;
+                case ::onnx::TensorProto::INT16: type = nvinfer1::PluginFieldType::kINT16; break;
+                case ::onnx::TensorProto::INT32: type = nvinfer1::PluginFieldType::kINT32; break;
+                case ::onnx::TensorProto::STRING: type = nvinfer1::PluginFieldType::kCHAR; break;
+                case ::onnx::TensorProto::FLOAT16: type = nvinfer1::PluginFieldType::kFLOAT16; break;
+                case ::onnx::TensorProto::DOUBLE: type = nvinfer1::PluginFieldType::kFLOAT64; break;
+                case ::onnx::TensorProto::UNDEFINED:
+                case ::onnx::TensorProto::UINT8:
+                case ::onnx::TensorProto::UINT16:
+                case ::onnx::TensorProto::INT64:
+                case ::onnx::TensorProto::BOOL:
+                case ::onnx::TensorProto::UINT32:
+                case ::onnx::TensorProto::UINT64:
+                case ::onnx::TensorProto::COMPLEX64:
+                case ::onnx::TensorProto::COMPLEX128:
                     MAKE_ERROR("Tensor type: "
-                            + ::ONNX_NAMESPACE::TensorProto::DataType_Name(
-                                  static_cast<::ONNX_NAMESPACE::TensorProto::DataType>(tensor.type))
+                            + ::onnx::TensorProto::DataType_Name(
+                                  static_cast<::onnx::TensorProto::DataType>(tensor.type))
                             + " is unsupported",
                         ErrorCode::kUNSUPPORTED_NODE);
                 }
                 break;
             }
-            case ::ONNX_NAMESPACE::AttributeProto::UNDEFINED:
-            case ::ONNX_NAMESPACE::AttributeProto::SPARSE_TENSOR:
-            case ::ONNX_NAMESPACE::AttributeProto::GRAPH:
-            case ::ONNX_NAMESPACE::AttributeProto::TENSORS:
-            case ::ONNX_NAMESPACE::AttributeProto::SPARSE_TENSORS:
-            case ::ONNX_NAMESPACE::AttributeProto::GRAPHS:
+            case ::onnx::AttributeProto::UNDEFINED:
+            case ::onnx::AttributeProto::SPARSE_TENSOR:
+            case ::onnx::AttributeProto::GRAPH:
+            case ::onnx::AttributeProto::TENSORS:
+            case ::onnx::AttributeProto::SPARSE_TENSORS:
+            case ::onnx::AttributeProto::GRAPHS:
                 MAKE_ERROR(
-                    "Attributes of type: " + ::ONNX_NAMESPACE::AttributeProto::AttributeType_Name(attrs.type(fieldName))
+                    "Attributes of type: " + ::onnx::AttributeProto::AttributeType_Name(attrs.type(fieldName))
                         + " are unsupported",
                     ErrorCode::kUNSUPPORTED_NODE);
             }

@@ -182,5 +182,6 @@ clean :
 	@rm -rf workspace/YoloV5_result workspace/YoloX_result
 	@rm -rf workspace/face/library_draw workspace/face/result
 	@rm -rf build
+	@rm -rf python/trtpy/libplugin_list.so
 
 .PHONY : clean yolo alphapose fall debug

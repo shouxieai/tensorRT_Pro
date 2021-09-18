@@ -83,11 +83,11 @@ public:
     }
     bool isInt32() const
     {
-        return is_tensor() ? _tensor->getType() == nvinfer1::DataType::kINT32 : _weights.type == ::ONNX_NAMESPACE::TensorProto_DataType_INT32;
+        return is_tensor() ? _tensor->getType() == nvinfer1::DataType::kINT32 : _weights.type == ::onnx::TensorProto_DataType_INT32;
     }
     bool isBool() const
     {
-        return is_tensor() ? _tensor->getType() == nvinfer1::DataType::kBOOL : _weights.type == ::ONNX_NAMESPACE::TensorProto_DataType_BOOL;
+        return is_tensor() ? _tensor->getType() == nvinfer1::DataType::kBOOL : _weights.type == ::onnx::TensorProto_DataType_BOOL;
     }
     std::string getName() const
     {
@@ -111,13 +111,13 @@ public:
         {
             switch(_weights.type)
             {
-                case ::ONNX_NAMESPACE::TensorProto::DOUBLE: return "DOUBLE -> FLOAT";
-                case ::ONNX_NAMESPACE::TensorProto::FLOAT: return "FLOAT";
-                case ::ONNX_NAMESPACE::TensorProto::INT8: return "INT8";
-                case ::ONNX_NAMESPACE::TensorProto::FLOAT16: return "HALF";
-                case ::ONNX_NAMESPACE::TensorProto::BOOL: return "BOOL";
-                case ::ONNX_NAMESPACE::TensorProto::INT32: return "INT32";
-                case ::ONNX_NAMESPACE::TensorProto::INT64: return "INT64 -> INT32";
+                case ::onnx::TensorProto::DOUBLE: return "DOUBLE -> FLOAT";
+                case ::onnx::TensorProto::FLOAT: return "FLOAT";
+                case ::onnx::TensorProto::INT8: return "INT8";
+                case ::onnx::TensorProto::FLOAT16: return "HALF";
+                case ::onnx::TensorProto::BOOL: return "BOOL";
+                case ::onnx::TensorProto::INT32: return "INT32";
+                case ::onnx::TensorProto::INT64: return "INT64 -> INT32";
                 default: return "UNKNOWN TYPE";
             }
         }

@@ -15,12 +15,12 @@ class OnnxAttrs
 {
     template <typename T>
     using string_map = std::unordered_map<std::string, T>;
-    typedef string_map<::ONNX_NAMESPACE::AttributeProto const*> AttrMap;
+    typedef string_map<::onnx::AttributeProto const*> AttrMap;
     AttrMap _attrs;
     onnx2trt::IImporterContext* mCtx;
 
 public:
-    explicit OnnxAttrs(::ONNX_NAMESPACE::NodeProto const& onnx_node, onnx2trt::IImporterContext* ctx)
+    explicit OnnxAttrs(::onnx::NodeProto const& onnx_node, onnx2trt::IImporterContext* ctx)
         : mCtx{ctx}
     {
         for (auto const& attr : onnx_node.attribute())
@@ -34,7 +34,7 @@ public:
         return _attrs.count(key);
     }
 
-    ::ONNX_NAMESPACE::AttributeProto const* at(std::string key) const
+    ::onnx::AttributeProto const* at(std::string key) const
     {
         if (!_attrs.count(key))
         {
@@ -43,7 +43,7 @@ public:
         return _attrs.at(key);
     }
 
-    ::ONNX_NAMESPACE::AttributeProto::AttributeType type(const std::string& key) const
+    ::onnx::AttributeProto::AttributeType type(const std::string& key) const
     {
         return this->at(key)->type();
     }

@@ -170,16 +170,16 @@ inline TensorOrWeights identity(IImporterContext* ctx, TensorOrWeights input)
     }
 }
 
-inline ::ONNX_NAMESPACE::TensorProto_DataType trtDataTypeToONNX(nvinfer1::DataType dt)
+inline ::onnx::TensorProto_DataType trtDataTypeToONNX(nvinfer1::DataType dt)
 {
     switch (dt)
     {
-    case nvinfer1::DataType::kFLOAT: return ::ONNX_NAMESPACE::TensorProto::FLOAT;
-    case nvinfer1::DataType::kHALF: return ::ONNX_NAMESPACE::TensorProto::FLOAT16;
-    case nvinfer1::DataType::kINT32: return ::ONNX_NAMESPACE::TensorProto::INT32;
-    case nvinfer1::DataType::kINT8: return ::ONNX_NAMESPACE::TensorProto::INT8;
-    case nvinfer1::DataType::kBOOL: return ::ONNX_NAMESPACE::TensorProto::BOOL;
-    default: return ::ONNX_NAMESPACE::TensorProto_DataType_UNDEFINED;
+    case nvinfer1::DataType::kFLOAT: return ::onnx::TensorProto::FLOAT;
+    case nvinfer1::DataType::kHALF: return ::onnx::TensorProto::FLOAT16;
+    case nvinfer1::DataType::kINT32: return ::onnx::TensorProto::INT32;
+    case nvinfer1::DataType::kINT8: return ::onnx::TensorProto::INT8;
+    case nvinfer1::DataType::kBOOL: return ::onnx::TensorProto::BOOL;
+    default: return ::onnx::TensorProto_DataType_UNDEFINED;
     }
     throw std::runtime_error{"Unreachable"};
 }

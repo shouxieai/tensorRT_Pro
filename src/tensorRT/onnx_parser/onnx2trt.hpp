@@ -28,7 +28,7 @@ class IImporterContext;
 //         Can't use std::function
 typedef ValueOrStatus<std::vector<TensorOrWeights>> NodeImportResult;
 typedef std::function<NodeImportResult(
-    IImporterContext* ctx, ::ONNX_NAMESPACE::NodeProto const& node, std::vector<TensorOrWeights>& inputs)>
+    IImporterContext* ctx, ::onnx::NodeProto const& node, std::vector<TensorOrWeights>& inputs)>
     NodeImporter;
 
 template <typename T>

@@ -90,7 +90,7 @@ nvinfer1::Permutation OnnxAttrs::get<nvinfer1::Permutation>(const std::string& k
 template <>
 onnx2trt::ShapedWeights OnnxAttrs::get<onnx2trt::ShapedWeights>(const std::string& key) const
 {
-    ::ONNX_NAMESPACE::TensorProto const& onnx_weights_tensor = this->at(key)->t();
+    ::onnx::TensorProto const& onnx_weights_tensor = this->at(key)->t();
     onnx2trt::ShapedWeights weights;
     bool success = convertOnnxWeights(onnx_weights_tensor, &weights, mCtx);
     if (!success)
@@ -103,8 +103,8 @@ onnx2trt::ShapedWeights OnnxAttrs::get<onnx2trt::ShapedWeights>(const std::strin
 template <>
 nvinfer1::DataType OnnxAttrs::get<nvinfer1::DataType>(const std::string& key) const
 {
-    ::ONNX_NAMESPACE::TensorProto::DataType onnx_dtype
-        = static_cast<::ONNX_NAMESPACE::TensorProto::DataType>(this->at(key)->i());
+    ::onnx::TensorProto::DataType onnx_dtype
+        = static_cast<::onnx::TensorProto::DataType>(this->at(key)->i());
     nvinfer1::DataType dtype{};
     if (!onnx2trt::convertDtype(onnx_dtype, &dtype))
     {
@@ -197,7 +197,7 @@ std::vector<nvinfer1::ActivationType> OnnxAttrs::get<std::vector<nvinfer1::Activ
 }
 
 template <>
-const ::ONNX_NAMESPACE::GraphProto& OnnxAttrs::get<const ::ONNX_NAMESPACE::GraphProto&>(const std::string& key) const
+const ::onnx::GraphProto& OnnxAttrs::get<const ::onnx::GraphProto&>(const std::string& key) const
 {
     return this->at(key)->g();
 }

@@ -146,11 +146,11 @@ bool transposeWeights(ShapedWeights const& weights, nvinfer1::Permutation const&
 
     if (shape.nbDims <= 4)
     {
-        if (weights.type == ::ONNX_NAMESPACE::TensorProto::FLOAT)
+        if (weights.type == ::onnx::TensorProto::FLOAT)
         {
             transpose4DWeights<float>(weights, perm, result);
         }
-        else if (weights.type == ::ONNX_NAMESPACE::TensorProto::FLOAT16)
+        else if (weights.type == ::onnx::TensorProto::FLOAT16)
         {
             transpose4DWeights<uint16_t>(weights, perm, result);
         }

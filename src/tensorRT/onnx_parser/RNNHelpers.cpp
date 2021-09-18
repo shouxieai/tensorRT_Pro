@@ -10,7 +10,7 @@
 namespace onnx2trt
 {
 
-nvinfer1::ITensor* addRNNInput(IImporterContext* ctx, const ::ONNX_NAMESPACE::NodeProto& node, nvinfer1::ILoop* loop, std::vector<TensorOrWeights>& inputs, const std::string& direction)
+nvinfer1::ITensor* addRNNInput(IImporterContext* ctx, const ::onnx::NodeProto& node, nvinfer1::ILoop* loop, std::vector<TensorOrWeights>& inputs, const std::string& direction)
 {
     // In the forward/reverse cases, we only use a single iterator. In the bidirectional case, a forward and reverse
     // iterator must be concatenated.
@@ -74,17 +74,17 @@ nvinfer1::ITensor* addRNNInput(IImporterContext* ctx, const ::ONNX_NAMESPACE::No
     return iterationInput;
 }
 
-nvinfer1::ITensor* clearMissingSequenceElements(IImporterContext* ctx, const ::ONNX_NAMESPACE::NodeProto& node, nvinfer1::ILoop* loop,
+nvinfer1::ITensor* clearMissingSequenceElements(IImporterContext* ctx, const ::onnx::NodeProto& node, nvinfer1::ILoop* loop,
     nvinfer1::ITensor* seqLens, nvinfer1::ITensor* toMask, nvinfer1::ITensor* maxLen, bool reverse,
     nvinfer1::ITensor* counter)
 {
     nvinfer1::ITensor* zero
-        = addConstantScalar(ctx, 0.f, ::ONNX_NAMESPACE::TensorProto::FLOAT, nvinfer1::Dims3(1, 1, 1))->getOutput(0);
+        = addConstantScalar(ctx, 0.f, ::onnx::TensorProto::FLOAT, nvinfer1::Dims3(1, 1, 1))->getOutput(0);
     nvinfer1::ITensor* seqMask = getRaggedMask(ctx, node, loop, seqLens, maxLen, reverse, counter);
     return ctx->network()->addSelect(*seqMask, *toMask, *zero)->getOutput(0);
 }
 
-nvinfer1::ITensor* maskRNNHidden(IImporterContext* ctx, const ::ONNX_NAMESPACE::NodeProto& node, nvinfer1::ILoop* loop, nvinfer1::ITensor* seqLens,
+nvinfer1::ITensor* maskRNNHidden(IImporterContext* ctx, const ::onnx::NodeProto& node, nvinfer1::ILoop* loop, nvinfer1::ITensor* seqLens,
     nvinfer1::ITensor* prevH, nvinfer1::ITensor* Ht, nvinfer1::ITensor* maxLen, bool reverse,
     nvinfer1::ITensor* counter)
 {
@@ -94,16 +94,16 @@ nvinfer1::ITensor* maskRNNHidden(IImporterContext* ctx, const ::ONNX_NAMESPACE::
     return ctx->network()->addSelect(*valid, *Ht, *prevH)->getOutput(0);
 }
 
-nvinfer1::ITensor* maskBidirRNNHidden(IImporterContext* ctx, const ::ONNX_NAMESPACE::NodeProto& node, nvinfer1::ILoop* loop, nvinfer1::ITensor* seqLens,
+nvinfer1::ITensor* maskBidirRNNHidden(IImporterContext* ctx, const ::onnx::NodeProto& node, nvinfer1::ILoop* loop, nvinfer1::ITensor* seqLens,
     nvinfer1::ITensor* maxLen, nvinfer1::ITensor* Ht1, nvinfer1::ITensor* Ht, nvinfer1::ITensor* singlePassShape)
 {
     // Splits hidden state into forward and backward states, masks each accordingly, then concatenates
 
     nvinfer1::ITensor* forwardStart
-        = addConstant(ctx, std::vector<int32_t>{0, 0, 0}, ::ONNX_NAMESPACE::TensorProto::INT32, nvinfer1::Dims{1, 3})
+        = addConstant(ctx, std::vector<int32_t>{0, 0, 0}, ::onnx::TensorProto::INT32, nvinfer1::Dims{1, 3})
               ->getOutput(0);
     nvinfer1::ITensor* reverseStart
-        = addConstant(ctx, std::vector<int32_t>{1, 0, 0}, ::ONNX_NAMESPACE::TensorProto::INT32, nvinfer1::Dims{1, 3})
+        = addConstant(ctx, std::vector<int32_t>{1, 0, 0}, ::onnx::TensorProto::INT32, nvinfer1::Dims{1, 3})
               ->getOutput(0);
 
     nvinfer1::ISliceLayer* HtForwardLayer
@@ -140,7 +140,7 @@ nvinfer1::ITensor* maskBidirRNNHidden(IImporterContext* ctx, const ::ONNX_NAMESP
     return concat->getOutput(0);
 }
 
-nvinfer1::ITensor* getRaggedMask(IImporterContext* ctx, const ::ONNX_NAMESPACE::NodeProto& node, nvinfer1::ILoop* loop, nvinfer1::ITensor* seqLens,
+nvinfer1::ITensor* getRaggedMask(IImporterContext* ctx, const ::onnx::NodeProto& node, nvinfer1::ILoop* loop, nvinfer1::ITensor* seqLens,
     nvinfer1::ITensor* maxLen, bool reverse, nvinfer1::ITensor* counter)
 {
     // Returns a bool tensor which is true where the elements are valid (within the sequence) and false when outside the
