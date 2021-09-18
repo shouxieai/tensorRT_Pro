@@ -38,6 +38,9 @@ trt_out   = trt_model(input)
 
 ## YoloX和YoloV5系列所有模型性能测试
 
+<details>
+<summary>app_yolo.cpp性能测试</summary>
+
 1. 输入分辨率(YoloV5P5、YoloX)=(640x640)，(YoloV5P6)=(1280x1280)
 2. max batch size = 16
 3. 图像预处理 + 推理 + 后处理
@@ -91,10 +94,10 @@ trt_out   = trt_model(input)
 |yolov5m|640x640|YoloV5_P5|INT8|1.674 |597.40 |
 |yolov5s|640x640|YoloV5_P5|INT8|1.143 |874.91 |
 
-
+</details>
 
 <details>
-<summary>Fast系列速度统计，性能只会无止境的追求</summary>
+<summary>Fast系列app_yolo_fast.cpp速度测试，性能只会无止境的追求</summary>
 
 - 相比上面，模型去头去尾，去掉了Focus和尾部的多余的transpose等节点，融合到了CUDA核函数中实现。其他都是一样的
 - 测试结果：[workspace/perf.result.std.log](workspace/perf.result.std.log)
@@ -182,6 +185,7 @@ trt_out   = trt_model(input)
     - CMakeLists.txt方式:
         - 在CMakeLists.txt中修改`set(HAS_PYTHON ON)`
     - 执行编译`make pyinstall -j8`
+    - 编译后的文件，在`python/trtpy/libtrtpyc.so`
 
 </details>
 
@@ -207,6 +211,7 @@ trt_out   = trt_model(input)
 2. 复制dll，执行python/copy_dll_to_trtpy.bat
 3. 在python目录下执行案例，python test_yolov5.py
 - 如果需要进行安装，则在python目录下，切换到目标环境后，执行`python setup.py install`。（注意，执行了1、2两步后才行）
+- 编译后的文件，在`python/trtpy/libtrtpyc.pyd`
 
 </details>
 
