@@ -69,6 +69,7 @@ link_librarys := $(foreach item,$(link_librarys),-l$(item))
 
 # 如果是其他显卡，请修改-gencode=arch=compute_75,code=sm_75为对应显卡的能力
 # 显卡对应的号码参考这里：https://developer.nvidia.com/zh-cn/cuda-gpus#compute
+# 如果是jetson nano，提示找不到-m64指令，请删掉 -m64选项。不影响结果
 cpp_compile_flags := -std=c++11 -fPIC -m64 -g -fopenmp -w -O0 $(support_define)
 cu_compile_flags  := -std=c++11 -m64 -Xcompiler -fPIC -g -w -gencode=arch=compute_75,code=sm_75 -O0 $(support_define)
 link_flags        := -pthread -fopenmp -Wl,-rpath='$$ORIGIN'
