@@ -239,7 +239,12 @@ auto box = engine->commit(image).get();
 ## 效果图
 ![](workspace/yq.jpg)
 
-## YoloV5支持
+
+## 各项任务支持
+
+<details>
+<summary>YoloV5支持</summary>
+
 - yolov5的onnx，你的pytorch版本>=1.7时，导出的onnx模型可以直接被当前框架所使用
 - 你的pytorch版本低于1.7时，或者对于yolov5其他版本（2.0、3.0、4.0），可以对opset进行简单改动后直接被框架所支持
 - 如果你想实现低版本pytorch的tensorRT推理、动态batchsize等更多更高级的问题，请打开我们[博客地址](http://zifuture.com:8090)后找到二维码进群交流
@@ -285,8 +290,12 @@ cd tensorRT_cpp
 make yolo -j32
 ```
 
+</details>
 
-## YoloX的支持
+
+<details>
+<summary>YoloX支持</summary>
+
 - https://github.com/Megvii-BaseDetection/YOLOX
 - 你可以选择直接make run，会从镜像地址下载onnx并推理运行看到效果。不需要自行导出
 1. 下载YoloX
@@ -345,7 +354,13 @@ cd tensorRT_cpp
 make yolo -j32
 ```
 
-## RetinaFace人脸检测支持
+</details>
+
+
+<details>
+<summary>Retinaface支持</summary>
+
+
 - https://github.com/biubug6/Pytorch_Retinaface
 1. 下载Pytorch_Retinaface
 ```bash
@@ -406,11 +421,21 @@ cd ../tensorRT_cpp
 make retinaface -j64
 ```
 
-## Scrfd支持
+</details>
+
+
+<details>
+<summary>Scrfd支持</summary>
+
 - https://github.com/deepinsight/insightface/tree/master/detection/scrfd
 - 具体导出Onnx的注意事项和方法，请加群沟通。等待后面更新
 
-## ArcFace人脸识别支持
+</details>
+
+
+<details>
+<summary>Arcface支持</summary>
+
 - https://github.com/deepinsight/insightface/tree/master/recognition/arcface_torch
 ```C++
 auto arcface = Arcface::create_infer("arcface_iresnet50.fp32.trtmodel", 0);
@@ -420,6 +445,9 @@ cout << feature << endl;  // 1x512
 - 人脸识别案例中，`workspace/face/library`目录为注册入库人脸
 - 人脸识别案例中，`workspace/face/recognize`目录为待识别的照片
 - 结果储存在`workspace/face/result`和`workspace/face/library_draw`中
+
+</details>
+
 
 ## 推理
 ```C++
