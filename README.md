@@ -39,7 +39,7 @@ trt_out   = trt_model(input)
 ## YoloX和YoloV5系列所有模型性能测试
 
 <details>
-<summary>app_yolo.cpp性能测试</summary>
+<summary>app_yolo.cpp速度测试</summary>
 
 1. 输入分辨率(YoloV5P5、YoloX)=(640x640)，(YoloV5P6)=(1280x1280)
 2. max batch size = 16
@@ -97,9 +97,9 @@ trt_out   = trt_model(input)
 </details>
 
 <details>
-<summary>Fast系列app_yolo_fast.cpp速度测试，性能只会无止境的追求</summary>
+<summary>app_yolo_fast.cpp速度测试，速度只会无止境的追求快</summary>
 
-- 相比上面，模型去头去尾，去掉了Focus和尾部的多余的transpose等节点，融合到了CUDA核函数中实现。其他都是一样的
+- 相比上面，模型去头去尾，去掉了Focus和尾部的多余的transpose等节点，融合到了CUDA核函数中实现。其他都是一样的。没有精度区别，速度上提升大约0.5ms
 - 测试结果：[workspace/perf.result.std.log](workspace/perf.result.std.log)
 - 测试代码：[src/application/app_yolo_fast.cpp](src/application/app_yolo_fast.cpp)
 - 可以自己参照下载后的onnx做修改，或者群里提要求讲一讲
