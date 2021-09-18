@@ -126,7 +126,7 @@
 - 考虑方便，这里有编译好的依赖项
     - 下载地址：[lean-tensorRT8.0.1.6-protobuf3.11.4-cudnn8.2.2.tar.gz](http://zifuture.com:1556/fs/25.shared/lean-tensorRT8.0.1.6-protobuf3.11.4-cudnn8.2.2.tar.gz)
 1. 推荐使用VSCode
-2. 在Makefile中配置你的cudnn、cuda、tensorRT8.0、protobuf路径
+2. 在Makefile/CMakeLists.txt中配置你的cudnn、cuda、tensorRT8.0、protobuf路径
 3. 在.vscode/c_cpp_properties.json中配置你的库路径
 3. CUDA版本：CUDA10.2
 4. CUDNN版本：cudnn8.2.2.26，注意下载dev（h文件）和runtime（so文件）
@@ -134,12 +134,17 @@
 6. protobuf版本（用于onnx解析器）：这里使用的是protobufv3.11.4
     - 下载地址：https://github.com/protocolbuffers/protobuf/tree/v3.11.4
     - 下载并编译，然后修改Makefile或者CMakeLists.txt的路径指向protobuf3.11.4
-7. 执行编译并测试`make yolo -j8`
+- CMake:
+    - `mkdir build && cd build`
+    - `cmake ..`
+    - `make yolo -j8`
+- Makefile:
+    - `make yolo -j8`
 
 </details>
 
 <details>
-<summary>Linux下Python支持</summary>
+<summary>Linux下Python编译</summary>
 
 - 编译并安装:
     - Makefile方式：
@@ -147,21 +152,6 @@
     - CMakeLists.txt方式:
         - 在CMakeLists.txt中修改`set(HAS_PYTHON ON)`
     - 执行编译`make pyinstall -j8`
-    - 在使用时导入trtpy即可`import trtpy as tp`
-
-- YoloV5的tensorRT推理
-```python
-yolo   = tp.Yolo(engine_file, type=tp.YoloType.X)
-image  = cv2.imread("inference/car.jpg")
-bboxes = yolo.commit(image).get()
-```
-
-- Pytorch的无缝对接
-```python
-model     = models.resnet18(True).eval().to(device)
-trt_model = tp.convert_torch_to_trt(model, input)
-trt_out   = trt_model(input)
-```
 
 </details>
 
@@ -186,12 +176,16 @@ trt_out   = trt_model(input)
 1. 编译trtpyc.pyd，在visual studio中选择python进行编译
 2. 复制dll，执行python/copy_dll_to_trtpy.bat
 3. 在python目录下执行案例，python test_yolov5.py
-- 如果需要进行安装，则在python目录下，切换到目标环境后，执行python setup.py install。（注意，执行了1、2两步后才行）
+- 如果需要进行安装，则在python目录下，切换到目标环境后，执行`python setup.py install`。（注意，执行了1、2两步后才行）
 
 </details>
 
 
-## Python接口导出Onnx和trtmodel
+## Python接口使用
+
+<details>
+<summary>从Pytorch模型导出Onnx和trtmodel</summary>
+
 - 使用Python接口可以一句话导出Onnx和trtmodel，一次性调试发生的问题，解决问题。并储存onnx为后续部署使用
 ```python
 import trtpy
@@ -205,6 +199,28 @@ trtpy.from_torch(
     engine_save_file="engine.trtmodel"
 )
 ```
+
+</details>
+
+<details>
+<summary>Python TensorRT的推理</summary>
+
+- YoloX的tensorRT推理
+```python
+yolo   = tp.Yolo(engine_file, type=tp.YoloType.X)
+image  = cv2.imread("inference/car.jpg")
+bboxes = yolo.commit(image).get()
+```
+
+- Pytorch的无缝对接
+```python
+model     = models.resnet18(True).eval().to(device)
+trt_model = tp.from_torch(model, input)
+trt_out   = trt_model(input)
+```
+
+</details>
+
 
 ## 三行代码实现YoloV5的高性能推理
 ```C++
