@@ -2,7 +2,7 @@
 #include <builder/trt_builder.hpp>
 #include <infer/trt_infer.hpp>
 #include <common/ilogger.hpp>
-#include "app_yolo_fast/yolo.hpp"
+#include "app_yolo_fast/yolo_fast.hpp"
 
 using namespace std;
 

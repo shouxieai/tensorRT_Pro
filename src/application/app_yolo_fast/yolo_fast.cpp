@@ -1,4 +1,4 @@
-#include "yolo.hpp"
+#include "yolo_fast.hpp"
 #include <atomic>
 #include <mutex>
 #include <queue>
