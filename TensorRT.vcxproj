@@ -19,6 +19,8 @@
     <ClCompile Include="src\application\app_alphapose\alpha_pose.cpp" />
     <ClCompile Include="src\application\app_arcface.cpp" />
     <ClCompile Include="src\application\app_arcface\arcface.cpp" />
+    <ClCompile Include="src\application\app_centernet.cpp" />
+    <ClCompile Include="src\application\app_centernet\centernet.cpp" />
     <ClCompile Include="src\application\app_fall_gcn\fall_gcn.cpp" />
     <ClCompile Include="src\application\app_fall_recognize.cpp" />
     <ClCompile Include="src\application\app_high_performance.cpp" />
@@ -35,7 +37,7 @@
     <ClCompile Include="src\application\app_lesson.cpp" />
     <ClCompile Include="src\application\app_yolo\yolo.cpp" />
     <ClCompile Include="src\application\app_yolo_fast.cpp" />
-    <ClCompile Include="src\application\app_yolo_fast\yolo.cpp" />
+    <ClCompile Include="src\application\app_yolo_fast\yolo_fast.cpp" />
     <ClCompile Include="src\application\tools\auto_download.cpp" />
     <ClCompile Include="src\application\tools\deepsort.cpp" />
     <ClCompile Include="src\main.cpp" />
@@ -65,6 +67,7 @@
   <ItemGroup>
     <ClInclude Include="src\application\app_alphapose\alpha_pose.hpp" />
     <ClInclude Include="src\application\app_arcface\arcface.hpp" />
+    <ClInclude Include="src\application\app_centernet\centernet.hpp" />
     <ClInclude Include="src\application\app_fall_gcn\fall_gcn.hpp" />
     <ClInclude Include="src\application\app_high_performance\alpha_pose_high_perf.hpp" />
     <ClInclude Include="src\application\app_high_performance\high_performance.hpp" />
@@ -72,7 +75,7 @@
     <ClInclude Include="src\application\app_retinaface\retinaface.hpp" />
     <ClInclude Include="src\application\app_scrfd\scrfd.hpp" />
     <ClInclude Include="src\application\app_yolo\yolo.hpp" />
-    <ClInclude Include="src\application\app_yolo_fast\yolo.hpp" />
+    <ClInclude Include="src\application\app_yolo_fast\yolo_fast.hpp" />
     <ClInclude Include="src\application\common\face_detector.hpp" />
     <ClInclude Include="src\application\tools\deepsort.hpp" />
     <ClInclude Include="src\application\tools\pybind11.hpp" />
@@ -86,7 +89,6 @@
     <ClInclude Include="src\tensorRT\common\trt_tensor.hpp" />
     <ClInclude Include="src\tensorRT\infer\trt_infer.hpp" />
     <ClInclude Include="src\tensorRT\onnxplugin\onnxplugin.hpp" />
-    <ClInclude Include="src\tensorRT\onnxplugin\plugins\HSwish.hpp" />
     <ClInclude Include="src\tensorRT\onnxplugin\plugin_binary_io.hpp" />
     <ClInclude Include="src\tensorRT\onnx\onnx-ml.pb.h" />
     <ClInclude Include="src\tensorRT\onnx\onnx-operators-ml.pb.h" />
@@ -114,12 +116,14 @@
     <ClInclude Include="src\tensorRT\onnx_parser\utils.hpp" />
   </ItemGroup>
   <ItemGroup>
+    <CudaCompile Include="src\application\app_centernet\centernet_decode.cu" />
     <CudaCompile Include="src\application\app_retinaface\retinaface_decode.cu" />
     <CudaCompile Include="src\application\app_scrfd\scrfd_decode.cu" />
     <CudaCompile Include="src\application\app_yolo\yolo_decode.cu" />
     <CudaCompile Include="src\application\app_yolo_fast\yolov5_decode.cu" />
     <CudaCompile Include="src\application\app_yolo_fast\yolox_decode.cu" />
     <CudaCompile Include="src\tensorRT\common\preprocess_kernel.cu" />
+    <CudaCompile Include="src\tensorRT\onnxplugin\plugins\DCNv2.cu" />
     <CudaCompile Include="src\tensorRT\onnxplugin\plugins\HSwish.cu" />
   </ItemGroup>
   <ItemGroup>
@@ -206,7 +210,7 @@
       <ConformanceMode>true</ConformanceMode>
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
       <OpenMPSupport>false</OpenMPSupport>
-      <MultiProcessorCompilation>false</MultiProcessorCompilation>
+      <MultiProcessorCompilation>true</MultiProcessorCompilation>
       <FunctionLevelLinking>true</FunctionLevelLinking>
     </ClCompile>
     <Link>
@@ -234,7 +238,7 @@
       <ConformanceMode>true</ConformanceMode>
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
       <OpenMPSupport>true</OpenMPSupport>
-      <MultiProcessorCompilation>false</MultiProcessorCompilation>
+      <MultiProcessorCompilation>true</MultiProcessorCompilation>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -262,7 +266,7 @@
       <ConformanceMode>true</ConformanceMode>
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
       <OpenMPSupport>true</OpenMPSupport>
-      <MultiProcessorCompilation>false</MultiProcessorCompilation>
+      <MultiProcessorCompilation>true</MultiProcessorCompilation>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>

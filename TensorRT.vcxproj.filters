@@ -65,6 +65,9 @@
     <Filter Include="src\application\app_yolo_fast">
       <UniqueIdentifier>{64177dec-ce04-419b-aeed-30408faacaf3}</UniqueIdentifier>
     </Filter>
+    <Filter Include="src\application\app_centernet">
+      <UniqueIdentifier>{b5548dbf-40be-4814-86dd-fce5fea6da46}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\tensorRT\builder\trt_builder.cpp">
@@ -196,11 +199,17 @@
     <ClCompile Include="src\application\app_yolo_fast.cpp">
       <Filter>src\application</Filter>
     </ClCompile>
-    <ClCompile Include="src\application\app_yolo_fast\yolo.cpp">
-      <Filter>src\application\app_yolo_fast</Filter>
-    </ClCompile>
     <ClCompile Include="src\application\app_yolo\yolo.cpp">
       <Filter>src\application\app_yolo</Filter>
+    </ClCompile>
+    <ClCompile Include="src\application\app_centernet\centernet.cpp">
+      <Filter>src\application\app_centernet</Filter>
+    </ClCompile>
+    <ClCompile Include="src\application\app_centernet.cpp">
+      <Filter>src\application</Filter>
+    </ClCompile>
+    <ClCompile Include="src\application\app_yolo_fast\yolo_fast.cpp">
+      <Filter>src\application\app_yolo_fast</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -248,9 +257,6 @@
     </ClInclude>
     <ClInclude Include="src\tensorRT\onnxplugin\plugin_binary_io.hpp">
       <Filter>src\tensorRT\onnxplugin</Filter>
-    </ClInclude>
-    <ClInclude Include="src\tensorRT\onnxplugin\plugins\HSwish.hpp">
-      <Filter>src\tensorRT\onnxplugin\plugins</Filter>
     </ClInclude>
     <ClInclude Include="src\tensorRT\onnx_parser\builtin_op_importers.hpp">
       <Filter>src\tensorRT\onnx_parser</Filter>
@@ -345,11 +351,14 @@
     <ClInclude Include="src\application\tools\pybind11.hpp">
       <Filter>src\application\tools</Filter>
     </ClInclude>
-    <ClInclude Include="src\application\app_yolo_fast\yolo.hpp">
-      <Filter>src\application\app_yolo_fast</Filter>
-    </ClInclude>
     <ClInclude Include="src\application\app_yolo\yolo.hpp">
       <Filter>src\application\app_yolo</Filter>
+    </ClInclude>
+    <ClInclude Include="src\application\app_centernet\centernet.hpp">
+      <Filter>src\application\app_centernet</Filter>
+    </ClInclude>
+    <ClInclude Include="src\application\app_yolo_fast\yolo_fast.hpp">
+      <Filter>src\application\app_yolo_fast</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -373,6 +382,12 @@
     </CudaCompile>
     <CudaCompile Include="src\application\app_yolo\yolo_decode.cu">
       <Filter>src\application\app_yolo</Filter>
+    </CudaCompile>
+    <CudaCompile Include="src\application\app_centernet\centernet_decode.cu">
+      <Filter>src\application\app_centernet</Filter>
+    </CudaCompile>
+    <CudaCompile Include="src\tensorRT\onnxplugin\plugins\DCNv2.cu">
+      <Filter>src\tensorRT\onnxplugin\plugins</Filter>
     </CudaCompile>
   </ItemGroup>
   <ItemGroup>
