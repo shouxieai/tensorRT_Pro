@@ -71,3 +71,4 @@ __pycache__
 /workspace/*.mp4
 /workspace/single_inference
 /workspace/exp/tracker.final.mp4
+/workspace/perf.result.log
