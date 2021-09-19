@@ -145,6 +145,9 @@ test_all : workspace/pro
 scrfd : workspace/pro
 	@cd workspace && ./pro scrfd
 
+centernet : workspace/pro
+	@cd workspace && ./pro centernet
+
 high_perf : workspace/pro
 	@cd workspace && ./pro high_perf
 
@@ -162,6 +165,9 @@ pyscrfd : trtpyc
 
 pyretinaface : trtpyc
 	@cd python && python test_retinaface.py
+
+pycenternet : trtpyc
+	@cd python && python test_centernet.py
 
 pyyolov5 : trtpyc
 	@cd python && python test_yolov5.py

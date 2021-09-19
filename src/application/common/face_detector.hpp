@@ -6,7 +6,7 @@
 
 namespace FaceDetector{
 
-    struct FaceBox{
+    struct Box{
         float left, top, right, bottom, confidence;
         float landmark[10];
 
@@ -26,7 +26,7 @@ namespace FaceDetector{
         void set_confidence(float value){confidence = value;}
     };
 
-    typedef std::vector<FaceBox> FaceBoxArray;
+    typedef std::vector<Box> BoxArray;
 };
 
 #endif // FACE_DETECTOR_HPP

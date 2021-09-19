@@ -7,6 +7,7 @@
 #include <future>
 #include <opencv2/opencv.hpp>
 #include <common/trt_tensor.hpp>
+#include <common/object_detector.hpp>
 
 /**
  * @brief 发挥极致的性能体验
@@ -15,6 +16,7 @@
 namespace YoloFast{
 
     using namespace std;
+    using namespace ObjectDetector;
 
     enum class Type : int{
         V5_P5 = 0,
@@ -33,22 +35,10 @@ namespace YoloFast{
         static DecodeMeta x_default_meta();
     };
 
-    struct ObjectBox{
-        float left, top, right, bottom, confidence;
-        int class_label;
-
-        ObjectBox() = default;
-
-        ObjectBox(float left, float top, float right, float bottom, float confidence, int class_label)
-        :left(left), top(top), right(right), bottom(bottom), confidence(confidence), class_label(class_label){}
-    };
-
-    typedef vector<ObjectBox> ObjectBoxArray;
-
     class Infer{
     public:
-        virtual shared_future<ObjectBoxArray> commit(const cv::Mat& image) = 0;
-        virtual vector<shared_future<ObjectBoxArray>> commits(const vector<cv::Mat>& images) = 0;
+        virtual shared_future<BoxArray> commit(const cv::Mat& image) = 0;
+        virtual vector<shared_future<BoxArray>> commits(const vector<cv::Mat>& images) = 0;
     };
 
     void image_to_tensor(const cv::Mat& image, shared_ptr<TRT::Tensor>& tensor, Type type, int ibatch);

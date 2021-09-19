@@ -200,18 +200,6 @@ namespace Arcface{
             return ControllerImpl::commit(input);
         }
 
-        virtual Mat face_alignment(const commit_input& input) override{
-
-            auto& image = get<0>(input);
-            Size input_size(input_width_, input_height_);
-            AffineMatrix am;
-            am.compute(get<1>(input));
-
-            Mat output;
-            warpAffine(image, output, Mat_<float>(2, 3, am.i2d), input_size, cv::INTER_LINEAR);
-            return output;
-        }
-
     private:
         int input_width_            = 0;
         int input_height_           = 0;
@@ -220,6 +208,16 @@ namespace Arcface{
         TRT::CUStream stream_       = nullptr;
         CUDAKernel::Norm normalize_;
     };
+
+    Mat face_alignment(const cv::Mat& image, const landmarks& landmark){
+        Size input_size(112, 112);
+        AffineMatrix am;
+        am.compute(landmark);
+
+        Mat output;
+        warpAffine(image, output, Mat_<float>(2, 3, am.i2d), input_size, cv::INTER_LINEAR);
+        return output;
+    }
 
     shared_ptr<Infer> create_infer(const string& engine_file, int gpuid){
         shared_ptr<InferImpl> instance(new InferImpl());

@@ -22,8 +22,11 @@ print(f"Torch and TRTModel abs diff is {abs_diff}")
 
 
 
+print(trt_model.input().shape)
+trt_model.input().resize_single_dim(0, 1)
+print(trt_model.input().shape)
+trt_model.input().resize_single_dim(0, 5)
 
-# 基于对input输入值的方式，numpy赋值对比
 # 获取模型的input，并对输入进行赋值为0.5
 trt_model.input().numpy[:] = 0.5
 

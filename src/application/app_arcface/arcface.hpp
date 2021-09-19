@@ -22,9 +22,9 @@ namespace Arcface{
     public:
         virtual shared_future<feature>         commit (const commit_input& input)          = 0;
         virtual vector<shared_future<feature>> commits(const vector<commit_input>& inputs) = 0;
-        virtual cv::Mat                        face_alignment(const commit_input& input) = 0;
     };
 
+    cv::Mat face_alignment(const cv::Mat& image, const landmarks& landmark);
     shared_ptr<Infer> create_infer(const string& engine_file, int gpuid=0);
 
 }; // namespace RetinaFace

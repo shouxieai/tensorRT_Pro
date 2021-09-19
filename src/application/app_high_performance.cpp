@@ -52,7 +52,7 @@ protected:
     virtual void forward(vector<shared_ptr<Data>>& inputs_data) override{
 
         auto image    = dynamic_obj_cast(inputs_data[0], cv::Mat);
-        auto boxarray = dynamic_obj_cast(inputs_data[1], YoloHighPerf::ObjectBoxArray);
+        auto boxarray = dynamic_obj_cast(inputs_data[1], YoloHighPerf::BoxArray);
         vector<shared_future<DataPtr>> keypoints(boxarray->size());
         for(int i = 0; i < boxarray->size(); ++i){
             auto& box = boxarray->at(i);

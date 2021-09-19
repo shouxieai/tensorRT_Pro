@@ -94,7 +94,7 @@ namespace Yolo{
     using ControllerImpl = InferController
     <
         Mat,                    // input
-        ObjectBoxArray,         // output
+        BoxArray,         // output
         tuple<string, int>,     // start param
         AffineMatrix            // additional
     >;
@@ -259,11 +259,11 @@ namespace Yolo{
             return true;
         }
 
-        virtual vector<shared_future<ObjectBoxArray>> commits(const vector<Mat>& images) override{
+        virtual vector<shared_future<BoxArray>> commits(const vector<Mat>& images) override{
             return ControllerImpl::commits(images);
         }
 
-        virtual std::shared_future<ObjectBoxArray> commit(const Mat& image) override{
+        virtual std::shared_future<BoxArray> commit(const Mat& image) override{
             return ControllerImpl::commit(image);
         }
 

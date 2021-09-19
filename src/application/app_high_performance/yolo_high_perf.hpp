@@ -22,19 +22,19 @@ namespace YoloHighPerf{
         X  = 1
     };    
 
-    struct ObjectBox{
+    struct Box{
         float left, top, right, bottom, confidence;
         int class_label;
 
-        ObjectBox() = default;
+        Box() = default;
 
-        ObjectBox(float left, float top, float right, float bottom, float confidence, int class_label)
+        Box(float left, float top, float right, float bottom, float confidence, int class_label)
         :left(left), top(top), right(right), bottom(bottom), confidence(confidence), class_label(class_label){}
     };
 
-    class ObjectBoxArray : public Data, public vector<ObjectBox>{
+    class BoxArray : public Data, public vector<Box>{
     public:
-        SetupData(ObjectBoxArray);
+        SetupData(BoxArray);
     };
 
     class Infer{

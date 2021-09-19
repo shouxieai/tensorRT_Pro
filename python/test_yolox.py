@@ -6,6 +6,8 @@ import trtpy as tp
 # change current workspace
 os.chdir("../workspace/")
 
+# 如果执行出错，请删掉 ~/.trtpy的缓存模型
+# rm -rf ~/.trtpy，重新下载
 engine_file = "yolox_m.fp32.trtmodel"
 if not os.path.exists(engine_file):
     tp.compile_onnx_to_file(5, tp.onnx_hub("yolox_m"), engine_file)
@@ -16,6 +18,7 @@ bboxes = yolo.commit(image).get()
 print(f"{len(bboxes)} objects")
 
 for box in bboxes:
+    print(f"{box}")
     left, top, right, bottom = map(int, [box.left, box.top, box.right, box.bottom])
     cv2.rectangle(image, (left, top), (right, bottom), tp.random_color(box.class_label), 5)
 

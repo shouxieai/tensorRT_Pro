@@ -193,7 +193,7 @@ namespace YoloHighPerf{
                     float* parray = output_array_device.cpu<float>(ibatch);
                     int count     = min(MAX_IMAGE_BBOX, (int)*parray);
                     auto& job     = fetch_jobs[ibatch];
-                    auto image_based_boxes = make_shared<ObjectBoxArray>();
+                    auto image_based_boxes = make_shared<BoxArray>();
                     for(int i = 0; i < count; ++i){
                         float* pbox  = parray + 1 + i * NUM_BOX_ELEMENT;
                         int label    = pbox[5];

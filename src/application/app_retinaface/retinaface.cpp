@@ -47,7 +47,7 @@ namespace RetinaFace{
     using ControllerImpl = InferController
     <
         Mat,                    // input
-        FaceBoxArray,              // output
+        BoxArray,              // output
         tuple<string, int>,     // start param
         AffineMatrix            // additional
     >;
@@ -197,7 +197,7 @@ namespace RetinaFace{
                         float* pbox  = parray + 1 + i * NUM_BOX_ELEMENT;
                         int keepflag = pbox[5];
                         if(keepflag == 1){
-                            FaceBox box;
+                            Box box;
                             box.left       = pbox[0];
                             box.top        = pbox[1];
                             box.right      = pbox[2];
@@ -262,45 +262,12 @@ namespace RetinaFace{
             return true;
         }
 
-        virtual vector<shared_future<FaceBoxArray>> commits(const vector<Mat>& images) override{
+        virtual vector<shared_future<BoxArray>> commits(const vector<Mat>& images) override{
             return ControllerImpl::commits(images);
         }
 
-        virtual std::shared_future<FaceBoxArray> commit(const Mat& image) override{
+        virtual std::shared_future<BoxArray> commit(const Mat& image) override{
             return ControllerImpl::commit(image);
-        }
-
-        virtual tuple<cv::Mat, FaceBox> crop_face_and_landmark(const cv::Mat& image, const FaceBox& box, float scale_box) override{
-            
-            float padding_x = (scale_box - 1) * box.width() * 0.5f;
-            float padding_y = (scale_box - 1) * box.height() * 0.5f;
-            int left   = std::round(box.left   - padding_x);
-            int top    = std::round(box.top    - padding_y);
-            int right  = std::round(box.right  + padding_x);
-            int bottom = std::round(box.bottom + padding_y);
-
-            Rect rbox(left, top, right-left, bottom-top);
-            rbox = rbox & Rect(0, 0, image.cols, image.rows);
-
-            auto box_copy = box;
-            for(int i = 0; i < 10; ++i){
-                if(i % 2 == 0){
-                    // x
-                    box_copy.landmark[i] -= left;
-                }else{
-                    box_copy.landmark[i] -= top;
-                }
-            }
-
-            box_copy.left   -= left;
-            box_copy.top    -= top;
-            box_copy.right  -= left;
-            box_copy.bottom -= top;
-
-            if(rbox.width < 1 || rbox.height < 1)
-                return make_tuple(Mat(), box_copy);
-
-            return make_tuple(image(rbox).clone(), box_copy);
         }
 
     private:
@@ -312,6 +279,39 @@ namespace RetinaFace{
         TRT::CUStream stream_       = nullptr;
         CUDAKernel::Norm normalize_;
     };
+
+     tuple<cv::Mat, Box> crop_face_and_landmark(const cv::Mat& image, const Box& box, float scale_box){
+            
+        float padding_x = (scale_box - 1) * box.width() * 0.5f;
+        float padding_y = (scale_box - 1) * box.height() * 0.5f;
+        int left   = std::round(box.left   - padding_x);
+        int top    = std::round(box.top    - padding_y);
+        int right  = std::round(box.right  + padding_x);
+        int bottom = std::round(box.bottom + padding_y);
+
+        Rect rbox(left, top, right-left, bottom-top);
+        rbox = rbox & Rect(0, 0, image.cols, image.rows);
+
+        auto box_copy = box;
+        for(int i = 0; i < 10; ++i){
+            if(i % 2 == 0){
+                // x
+                box_copy.landmark[i] -= left;
+            }else{
+                box_copy.landmark[i] -= top;
+            }
+        }
+
+        box_copy.left   -= left;
+        box_copy.top    -= top;
+        box_copy.right  -= left;
+        box_copy.bottom -= top;
+
+        if(rbox.width < 1 || rbox.height < 1)
+            return make_tuple(Mat(), box_copy);
+
+        return make_tuple(image(rbox).clone(), box_copy);
+    }
 
     shared_ptr<Infer> create_infer(const string& engine_file, int gpuid, float confidence_threshold, float nms_threshold){
         shared_ptr<InferImpl> instance(new InferImpl());

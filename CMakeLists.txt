@@ -154,3 +154,10 @@ add_custom_target(
     WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}/python
     COMMAND python test_torch.py
 )
+
+add_custom_target(
+    pycenternet
+    DEPENDS trtpyc
+    WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}/python
+    COMMAND python test_centernet.py
+)

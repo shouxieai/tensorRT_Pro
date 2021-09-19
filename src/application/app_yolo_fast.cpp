@@ -61,7 +61,7 @@ static void inference_and_performance(int deviceid, const string& engine_file, T
     }
 
     // warmup
-    vector<shared_future<YoloFast::ObjectBoxArray>> boxes_array;
+    vector<shared_future<YoloFast::BoxArray>> boxes_array;
     for(int i = 0; i < 10; ++i)
         boxes_array = engine->commits(images);
     boxes_array.back().get();
@@ -94,7 +94,7 @@ static void inference_and_performance(int deviceid, const string& engine_file, T
         
         for(auto& obj : boxes){
             uint8_t b, g, r;
-            tie(r, g, b) = iLogger::random_color(obj.class_label);
+            tie(b, g, r) = iLogger::random_color(obj.class_label);
             cv::rectangle(image, cv::Point(obj.left, obj.top), cv::Point(obj.right, obj.bottom), cv::Scalar(b, g, r), 5);
 
             auto name    = cocolabels[obj.class_label];

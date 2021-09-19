@@ -203,7 +203,7 @@ void lesson_cache1frame(){
     //////////////////优化做法////////////////////////
     {
         cv::VideoCapture cap("exp/face_tracker.mp4");
-        shared_future<Yolo::ObjectBoxArray> prev_future;
+        shared_future<Yolo::BoxArray> prev_future;
         cv::Mat image;
         cv::Mat prev_image;
         int iframe = 0;

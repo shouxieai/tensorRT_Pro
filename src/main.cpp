@@ -16,6 +16,7 @@ int app_high_performance();
 int app_lesson();
 int app_plugin();    
 int app_yolo_fast();
+int app_centernet();
 
 void test_all(){
     app_yolo();
@@ -40,6 +41,8 @@ int main(int argc, char** argv){
         app_yolo();
     }else if(strcmp(method, "yolo_fast") == 0){
         app_yolo_fast();
+    }else if(strcmp(method, "centernet") == 0){
+        app_centernet();
     }else if(strcmp(method, "alphapose") == 0){
         app_alphapose();
     }else if(strcmp(method, "fall_recognize") == 0){

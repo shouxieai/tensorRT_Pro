@@ -66,9 +66,9 @@ tuple<Mat, vector<string>> build_library(shared_ptr<Scrfd::Infer> detector, shar
             continue;
         }
 
-        RetinaFace::FaceBox max_face = faces[0];
+        RetinaFace::Box max_face = faces[0];
         if(faces.size() > 1){
-            int max_face_index = std::max_element(faces.begin(), faces.end(), [](RetinaFace::FaceBox& face1, RetinaFace::FaceBox& face2){
+            int max_face_index = std::max_element(faces.begin(), faces.end(), [](RetinaFace::Box& face1, RetinaFace::Box& face2){
                 return face1.area() < face2.area();
             }) - faces.begin();
             max_face = faces[max_face_index];
@@ -79,7 +79,7 @@ tuple<Mat, vector<string>> build_library(shared_ptr<Scrfd::Infer> detector, shar
             continue;
 
         Mat crop;
-        tie(crop, face) = detector->crop_face_and_landmark(image, face);
+        tie(crop, face) = Scrfd::crop_face_and_landmark(image, face);
         Arcface::landmarks landmarks;
         memcpy(landmarks.points, face.landmark, sizeof(landmarks.points));
 
@@ -128,7 +128,7 @@ int app_arcface(){
         for(int i = 0; i < faces.size(); ++i){
             Mat crop;
             auto face = faces[i];
-            tie(crop, face) = detector->crop_face_and_landmark(image, face);
+            tie(crop, face) = Scrfd::crop_face_and_landmark(image, face);
             
             Arcface::landmarks landmarks;
             memcpy(landmarks.points, face.landmark, sizeof(landmarks.points));
@@ -193,7 +193,7 @@ int app_arcface_video(){
         for(int i = 0; i < faces.size(); ++i){
             Mat crop;
             auto face = faces[i];
-            tie(crop, face) = detector->crop_face_and_landmark(image, face);
+            tie(crop, face) = Scrfd::crop_face_and_landmark(image, face);
             
             Arcface::landmarks landmarks;
             memcpy(landmarks.points, face.landmark, sizeof(landmarks.points));
@@ -317,7 +317,7 @@ int app_arcface_tracker(){
             auto& face = faces[i];
             if(max(face.width(), face.height()) < 30) continue;
 
-            auto crop  = detector->crop_face_and_landmark(image, face);
+            auto crop  = Scrfd::crop_face_and_landmark(image, face);
             auto track_box = DeepSORT::convert_to_box(face);
             
             Arcface::landmarks landmarks;
@@ -343,7 +343,7 @@ int app_arcface_tracker(){
 
             if(person->time_since_update() == 0 && person->state() == DeepSORT::State::Confirmed){
                 uint8_t r, g, b;
-                std::tie(r, g, b) = iLogger::random_color(person->id());
+                std::tie(b, g, r) = iLogger::random_color(person->id());
                 
                 auto loaction = person->last_position();
                 filter.update(loaction);
