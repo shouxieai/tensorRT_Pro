@@ -1,15 +1,16 @@
-English:
 # About dependencies
-- CUDA10.1 (modifiable for TensorRT)
-- CUDNN8.2.2.26 (modifiable for TensorRT)
-- OpenCV3.4.6 (modifiable)
+- CUDA10.1
+- CUDNN8.2.2.26
+- OpenCV3.4.6 or 4.x
+  - the above three are modifiable as long as being compatible to TensorRT
 - Protobuf3.11.4 (unmodifiable, otherwise problematic)
 - tensorrt-8.0.1.6 (8.x, not supported for earlier versions)
 # For Windows
 - Visual Studio 2017 (>=2017)
-- [download the leanpkg] (http://zifuture.com:1556/fs/sxai/lean.rar).
+- [download the lean.rar](http://zifuture.com:1556/fs/sxai/lean.rar).
 
-中文:
+***
+
 # 关于依赖
 - CUDA10.1         （可修改，适配TensorRT即可）
 - CUDNN8.2.2.26    （可修改，适配 TensorRT即可）
