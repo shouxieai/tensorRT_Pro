@@ -259,7 +259,7 @@ make yolo -j64
   
 
 <details>
-<summary>Support tensorRT 7.x</summary>
+<summary>TensorRT 7.x support</summary>
 
 - The default is tensorRT8.x
 1. Replace onnx_parser_for_7.x/onnx_parser to src/tensorRT/onnx_parser
@@ -271,7 +271,7 @@ make yolo -j64
 
 
 <details>
-<summary>Support tensorRT 8.x</summary>
+<summary>TensorRT 8.x support</summary>
 
 - The default is tensorRT8.x
 1. Replace onnx_parser_for_8.x/onnx_parser to src/tensorRT/onnx_parser
