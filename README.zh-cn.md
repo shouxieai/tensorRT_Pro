@@ -1,4 +1,6 @@
 阅读其他语言的README.md:[English](README.md), [简体中文](README.zh-cn.md).
+## 最近的重要更新：
+- 关于CenterNet 从pytorch到tensorRT的模型导出到推理的中英文教程已更新，在tutorial/2.0
 
 ## B站同步视频讲解
 - B站视频讲解：https://www.bilibili.com/video/BV1Xw411f7FW
