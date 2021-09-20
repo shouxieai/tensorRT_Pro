@@ -168,7 +168,7 @@ trt_out   = trt_model(input)
 4. 在.vscode/c_cpp_properties.json中配置你的库路径
 5. CUDA版本：CUDA10.2
 6. CUDNN版本：cudnn8.2.2.26，注意下载dev（h文件）和runtime（so文件）
-7. tensorRT版本：tensorRT-8.0.1.6-cuda10.2
+7. tensorRT版本：tensorRT-8.0.1.6-cuda10.2，若要使用7.x，请看环节配置中的《TensorRT7.x支持》进行修改
 8. protobuf版本（用于onnx解析器）：这里使用的是protobufv3.11.4
     - 如果采用其他版本，请参考该章节下面《适配Protobuf版本》
     - 下载地址：https://github.com/protocolbuffers/protobuf/tree/v3.11.4
@@ -249,6 +249,28 @@ make yolo -j64
 make yolo -j64
 ```
 
+
+</details>
+
+
+<details>
+<summary>TensorRT7.x支持</summary>
+
+- 默认支持的是8.x
+- CMakeLists.txt/MakeFile中修改tensorRT的路径
+- 执行`bash onnx_parser/use_tensorrt_7.x.sh`，修改解析器支持为7.x
+- 正常进行编译运行即可
+
+</details>
+
+
+<details>
+<summary>TensorRT8.x支持</summary>
+
+- 默认支持的是8.x，不需要修改
+- CMakeLists.txt/MakeFile中修改tensorRT的路径
+- 执行`bash onnx_parser/use_tensorrt_8.x.sh`，修改解析器支持为8.x
+- 正常进行编译运行即可
 
 </details>
 

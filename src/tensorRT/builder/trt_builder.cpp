@@ -494,7 +494,6 @@ namespace TRT {
 		shared_ptr<nvonnxparser::IParser> onnxParser;
 		if(source.type() == ModelSourceType::OnnX || source.type() == ModelSourceType::OnnXData){
 			
-			int explicit_batch_size = maxBatchSize;
 			const auto explicitBatch = 1U << static_cast<uint32_t>(nvinfer1::NetworkDefinitionCreationFlag::kEXPLICIT_BATCH);
 			//network = shared_ptr<INetworkDefinition>(builder->createNetworkV2(explicitBatch), destroy_nvidia_pointer<INetworkDefinition>);
 			network = shared_ptr<INetworkDefinition>(builder->createNetworkV2(explicitBatch), destroy_nvidia_pointer<INetworkDefinition>);
@@ -507,7 +506,7 @@ namespace TRT {
 			}
 
 			//from onnx is not markOutput
-			onnxParser.reset(nvonnxparser::createParser(*network, gLogger, dims_setup, explicit_batch_size), destroy_nvidia_pointer<nvonnxparser::IParser>);
+			onnxParser.reset(nvonnxparser::createParser(*network, gLogger, dims_setup), destroy_nvidia_pointer<nvonnxparser::IParser>);
 			if (onnxParser == nullptr) {
 				INFOE("Can not create parser.");
 				return false;
@@ -629,15 +628,16 @@ namespace TRT {
 			profile->setDimensions(input->getName(), nvinfer1::OptProfileSelector::kMAX, input_dims);
 		}
 
-		for(int i = 0; i < net_num_output; ++i){
-			auto output = network->getOutput(i);
-			auto output_dims = output->getDimensions();
-			output_dims.d[0] = 1;
-			profile->setDimensions(output->getName(), nvinfer1::OptProfileSelector::kMIN, output_dims);
-			profile->setDimensions(output->getName(), nvinfer1::OptProfileSelector::kOPT, output_dims);
-			output_dims.d[0] = maxBatchSize;
-			profile->setDimensions(output->getName(), nvinfer1::OptProfileSelector::kMAX, output_dims);
-		}
+		// not need
+		// for(int i = 0; i < net_num_output; ++i){
+		// 	auto output = network->getOutput(i);
+		// 	auto output_dims = output->getDimensions();
+		// 	output_dims.d[0] = 1;
+		// 	profile->setDimensions(output->getName(), nvinfer1::OptProfileSelector::kMIN, output_dims);
+		// 	profile->setDimensions(output->getName(), nvinfer1::OptProfileSelector::kOPT, output_dims);
+		// 	output_dims.d[0] = maxBatchSize;
+		// 	profile->setDimensions(output->getName(), nvinfer1::OptProfileSelector::kMAX, output_dims);
+		// }
 		config->addOptimizationProfile(profile);
 
 		// error on jetson

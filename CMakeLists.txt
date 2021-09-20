@@ -18,14 +18,17 @@ set(CUDA_GEN_CODE "-gencode=arch=compute_75,code=sm_75")
 # 如果你的opencv找不到，可以自己指定目录
 set(OpenCV_DIR   "/data/datav/expstation/lean/opencv4.2.0/lib/cmake/opencv4/")
 
-# 建议cuda10.2以上
-set(CUDA_DIR     "/usr/local/cuda-10.2")
-
-# 需要与cuda、tensorRT配对
+set(CUDA_DIR     "/data/sxai/lean/cuda-10.2")
 set(CUDNN_DIR    "/data/sxai/lean/cudnn8.2.2.26")
-
-# 注意支持8.0以上，以下不见得支持
 set(TENSORRT_DIR "/data/sxai/lean/TensorRT-8.0.1.6-cuda10.2-cudnn8.2")
+
+# set(CUDA_DIR     "/data/sxai/lean/cuda-10.2")
+# set(CUDNN_DIR    "/data/sxai/lean/cudnn7.6.5.32-cuda10.2")
+# set(TENSORRT_DIR "/data/sxai/lean/TensorRT-7.0.0.11")
+
+# set(CUDA_DIR     "/data/sxai/lean/cuda-11.1")
+# set(CUDNN_DIR    "/data/sxai/lean/cudnn8.2.2.26")
+# set(TENSORRT_DIR "/data/sxai/lean/TensorRT-7.2.1.6")
 
 # 因为protobuf，需要用特定版本，所以这里指定路径
 set(PROTOBUF_DIR "/data/sxai/lean/protobuf3.11.4")
@@ -90,6 +93,20 @@ add_custom_target(
     DEPENDS pro
     WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}/workspace
     COMMAND ./pro yolo
+)
+
+add_custom_target(
+    yolo_fast
+    DEPENDS pro
+    WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}/workspace
+    COMMAND ./pro yolo_fast
+)
+
+add_custom_target(
+    centernet
+    DEPENDS pro
+    WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}/workspace
+    COMMAND ./pro centernet
 )
 
 add_custom_target(
