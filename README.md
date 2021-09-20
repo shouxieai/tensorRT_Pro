@@ -263,9 +263,7 @@ make yolo -j64
 
 - The default is tensorRT8.x
 1. Replace onnx_parser_for_7.x/onnx_parser to src/tensorRT/onnx_parser
-    - `rm -rf src/tensorRT/onnx_parser`
-    - `cp -r onnx_parser/onnx_parser_7.x src/tensorRT/onnx_parser`
-    - or execute `bash onnx_parser/use_tensorrt_7.x.sh`
+    - `bash onnx_parser/use_tensorrt_7.x.sh`
 2. Configure Makefile/CMakeLists.txt path to TensorRT7.x
 3. Execute `make yolo -j64`
 
@@ -277,9 +275,7 @@ make yolo -j64
 
 - The default is tensorRT8.x
 1. Replace onnx_parser_for_8.x/onnx_parser to src/tensorRT/onnx_parser
-    - `rm -rf src/tensorRT/onnx_parser`
-    - `cp -r onnx_parser/onnx_parser_8.x src/tensorRT/onnx_parser`
-    - or execute `bash onnx_parser/use_tensorrt_8.x.sh`
+    - `bash onnx_parser/use_tensorrt_8.x.sh`
 2. Configure Makefile/CMakeLists.txt path to TensorRT8.x
 3. Execute `make yolo -j64`
 
