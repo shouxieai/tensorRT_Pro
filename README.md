@@ -5,7 +5,7 @@
 
 - <b>blibli</b> : https://www.bilibili.com/video/BV1Xw411f7FW (Now only in Chinese. English is comming)
 - <b>slides</b> : http://zifuture.com:1556/fs/sxai/tensorRT.pptx (Now only in Chinese. English is comming)
-- <b>>tutorial folder</b> a good intro for beginner to get a general idea of our framework.(Chinese/English)
+- <b>tutorial folder</b>: a good intro for beginner to get a general idea of our framework.(Chinese/English)
 
 ## An Out-of-the-Box TensorRT-based Framework for High Performance Inference with C++/Python Support
 
