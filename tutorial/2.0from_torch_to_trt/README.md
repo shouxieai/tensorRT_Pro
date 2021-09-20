@@ -49,7 +49,7 @@ Then it's the climax during the whole export time -- write CUDA kernel for prepr
 
 (We also offer a detailed code to enable the beginners to experience the whole process, even for those with limited c++ and cuda experience.)
 
-#### Files for CenterNet and Points worth Noting
+## Files for CenterNet and Points worth Noting
 centernet_decode.cu centernet.cpp centernet.hpp and app_centernet.cpp
 
 Most of codes don't need to be modified except that the following are worth noting:
@@ -62,7 +62,7 @@ Most of codes don't need to be modified except that the following are worth noti
 More focus should be on post processing for CenterNet.
 
 
-#### Post processing for CenterNet
+## Post processing for CenterNet
 
 open tensorRT_cpp/src/application/app_centernet/centernet_decode.cu
 
