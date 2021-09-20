@@ -150,7 +150,7 @@
 
 ## Setup and Configuration
 <details>
-<summary>Linux
+<summary>Linux</summary>
 
  
 - complied dependency (Out of the Box feature)
