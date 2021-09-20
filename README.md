@@ -1,5 +1,6 @@
 *Read this in other languages: [English](README.md), [简体中文](README.zh-cn.md).*
-
+## News: 
+Tutorial for exporting CenterNet from pytorch to tensorRT is released. 
 
 ## Tutorial Video
 
@@ -472,6 +473,12 @@ cout << feature << endl;  // 1x512
 - `workspace/face/recognize` is the set of face to be recognized.
 - the result is saved in `workspace/face/result`和`workspace/face/library_draw`
 
+</details>
+  
+<details>
+<summary>CenterNet Support</summary>
+  
+check the great details in tutorial/2.0
 </details>
 
 
