@@ -3,6 +3,7 @@
 ## B站同步视频讲解
 - B站视频讲解：https://www.bilibili.com/video/BV1Xw411f7FW
 - 相关PPTX下载：http://zifuture.com:1556/fs/sxai/tensorRT.pptx
+- tutorial 文件夹: 一个对入门者极其友好的框架概览和指南
 
 
 ## 高性能推理，TensorRT C++/Python库，工业级，便于使用
