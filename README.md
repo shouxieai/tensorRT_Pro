@@ -377,7 +377,10 @@ xy = (outputs[..., :2] + grids) * strides
 wh = torch.exp(outputs[..., 2:4]) * strides
 return torch.cat((xy, wh, outputs[..., 4:]), dim=-1)
 
-
+# line 77 in tools/export_onnx.py
+  model.head.decode_in_inference = True
+  
+  
 3. Export to onnx
 ```bash
 
