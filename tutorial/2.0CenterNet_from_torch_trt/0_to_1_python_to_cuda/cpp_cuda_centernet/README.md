@@ -1,3 +1,6 @@
+- Download model1 for tutorial: https://drive.google.com/file/d/1H5TI6aiWnleYfXjY3l2-VaxXr6evRfre/view?usp=sharing
+- Download model2 for tutorial: https://drive.google.com/file/d/1QNsBDSlXyTtbO0VoZ4HPGnOb1mRHcciL/view?usp=sharing
+
 
 cd to tensorRT_cpp/tutorial/2.0CenterNet_from_torch_trt/0_to_1_python_to_cuda/cpp_cuda_centernet, 
 
@@ -9,6 +12,10 @@ opening folder in tensorRT_cpp/tutorial/2.0CenterNet_from_torch_trt/0_to_1_pytho
 In app_centernet.cpp, a pure c++ implementation and a pure cuda implementation are offered for tutorial. They are not neat because I prefer to keep the draft(the commented code) for guys to learn the API operations in our framework/c++/cuda env. Some codes are hardcoded for simplicity.It is suggested that after being familiar with python, c++ and cuda version, you are free to have a try on integrating CenterNet into our framework like what we've done in /tensorRT_cpp/src/application/app_centernet.
 
 <hr/>
+
+- 下载用于教程的模型1: https://pan.baidu.com/s/1Tj3EhxOOQgexPhuw74QtUA    提取码：75o3
+- 下载用于教程的模型2: https://pan.baidu.com/s/1UEq2n0Kn5jd2n3ahU-sn3w    提取码：aal6
+
 cd to tensorRT_cpp/tutorial/2.0CenterNet_from_torch_trt/0_to_1_python_to_cuda/cpp_cuda_centernet, 
 Copy tensorRT_cpp/src/TensorRT to /0_to_1_python_to_cuda/cpp_cuda_centernet/src/. 记住修改成自己的路径
 
