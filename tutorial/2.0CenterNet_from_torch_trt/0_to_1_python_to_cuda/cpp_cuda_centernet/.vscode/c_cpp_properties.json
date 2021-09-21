@@ -1,0 +1,27 @@
+{
+    "configurations": [
+        {
+            "name": "Linux",
+            "includePath": [
+                "./src/**",
+                "/datav/shared/wkx/tensorRT_cpp/lean/protobuf3.11.4/include/**",
+                "/usr/local/opencv/include/opencv4/**",
+                "/usr/local/cuda/include/**",
+                "/datav/shared/wkx/tensorRT_cpp/lean/TensorRT-8.0.1.6/include/**",
+                "/datav/shared/wkx/tensorRT_cpp/lean/cudnn8.2.2.26/include/**",
+                "/root/anaconda3/include/python3.8/**"
+            ],
+            "defines": ["__CUDACC__", "HAS_PYTHON"],
+            "compilerPath": "/usr/bin/gcc", 
+            "cStandard": "gnu11",
+            "cppStandard": "gnu++11",
+            "intelliSenseMode": "linux-gcc-x64",
+            "configurationProvider": "ms-vscode.makefile-tools",
+            "browse": {
+                "limitSymbolsToIncludedHeaders": false,
+                "databaseFilename": ""
+            }
+        }
+    ],
+    "version": 4
+}
