@@ -133,7 +133,7 @@ namespace CenterNet{
     }
 
     static __global__ void nms_kernel(float* bboxes, int max_objects, float threshold){
-
+        // refer to tensorRT_cpp/tutorial/2.0CenterNet_from_torch_trt/nms_cuda.jpg and comments.jpg for understanding.
         int position = (blockDim.x * blockIdx.x + threadIdx.x);
         int count = min((int)*bboxes, max_objects);
         if (position >= count) 
