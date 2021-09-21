@@ -378,7 +378,7 @@ wh = torch.exp(outputs[..., 2:4]) * strides
 return torch.cat((xy, wh, outputs[..., 4:]), dim=-1)
 
 # line 77 in tools/export_onnx.py
-  model.head.decode_in_inference = True
+model.head.decode_in_inference = True
 ```
 
  
@@ -386,7 +386,7 @@ return torch.cat((xy, wh, outputs[..., 4:]), dim=-1)
 ```bash
 
 # download model
-# wget https://github.com/Megvii-BaseDetection/YOLOX/releases/download/0.1.1rc0/yolox_m.pth
+wget https://github.com/Megvii-BaseDetection/YOLOX/releases/download/0.1.1rc0/yolox_m.pth
 
 # export
 python tools/export_onnx.py -c yolox_m.pth -f exps/default/yolox_m.py --output-name=yolox_m.onnx --dynamic --no-onnxsim
