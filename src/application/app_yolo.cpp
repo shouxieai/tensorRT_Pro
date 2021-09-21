@@ -144,6 +144,7 @@ static void test(Yolo::Type type, TRT::Mode mode, const string& model){
 
 int app_yolo(){
 
+    //iLogger::set_log_level(iLogger::LogLevel::Debug);
     test(Yolo::Type::X, TRT::Mode::FP32, "yolox_s");
 
     //iLogger::set_log_level(iLogger::LogLevel::Info);

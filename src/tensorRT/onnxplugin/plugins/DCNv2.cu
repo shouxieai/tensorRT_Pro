@@ -293,7 +293,7 @@ static void enqueue_native(cublasHandle_t handle, const std::vector<GTensor>& in
     float alpha = 1.0;
     float beta = 0.0;
 
-    cublasCheck(cublasSetStream(handle, stream));
+    //cublasCheck(cublasSetStream(handle, stream));
     for (int ibatch = 0; ibatch < data.batch(); ++ibatch) {
         DataType* maskWorkspacePtr = (DataType*)workspace + (maskSize + im2colSize) * ibatch;
         DataType* im2colWorkspacePtr = (DataType*)workspace + (maskSize + im2colSize) * ibatch + maskSize;

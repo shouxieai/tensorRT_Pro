@@ -257,7 +257,29 @@ make yolo -j64
 
 </details>
   
-  
+
+<details>
+<summary>TensorRT 7.x support</summary>
+
+- The default is tensorRT8.x
+1. Replace onnx_parser_for_7.x/onnx_parser to src/tensorRT/onnx_parser
+    - `bash onnx_parser/use_tensorrt_7.x.sh`
+2. Configure Makefile/CMakeLists.txt path to TensorRT7.x
+3. Execute `make yolo -j64`
+
+</details>
+
+
+<details>
+<summary>TensorRT 8.x support</summary>
+
+- The default is tensorRT8.x
+1. Replace onnx_parser_for_8.x/onnx_parser to src/tensorRT/onnx_parser
+    - `bash onnx_parser/use_tensorrt_8.x.sh`
+2. Configure Makefile/CMakeLists.txt path to TensorRT8.x
+3. Execute `make yolo -j64`
+
+</details>
   
   
 ## Guide for Different Tasks/Model Support
@@ -355,12 +377,16 @@ xy = (outputs[..., :2] + grids) * strides
 wh = torch.exp(outputs[..., 2:4]) * strides
 return torch.cat((xy, wh, outputs[..., 4:]), dim=-1)
 
+# line 77 in tools/export_onnx.py
+model.head.decode_in_inference = True
+```
 
+ 
 3. Export to onnx
 ```bash
 
 # download model
-# wget https://github.com/Megvii-BaseDetection/YOLOX/releases/download/0.1.1rc0/yolox_m.pth
+wget https://github.com/Megvii-BaseDetection/YOLOX/releases/download/0.1.1rc0/yolox_m.pth
 
 # export
 python tools/export_onnx.py -c yolox_m.pth -f exps/default/yolox_m.py --output-name=yolox_m.onnx --dynamic --no-onnxsim

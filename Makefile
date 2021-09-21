@@ -25,7 +25,7 @@ lean_protobuf  := /data/sxai/lean/protobuf3.11.4
 lean_tensor_rt := /data/sxai/lean/TensorRT-8.0.1.6-cuda10.2-cudnn8.2
 lean_cudnn     := /data/sxai/lean/cudnn8.2.2.26
 lean_opencv    := /data/sxai/lean/opencv4.2.0
-lean_cuda      := /data/sxai/lean/cuda10.2
+lean_cuda      := /data/sxai/lean/cuda-10.2
 use_python     := true
 python_root    := /data/datav/newbb/lean/anaconda3/envs/torch1.8
 python_name    := python3.9
@@ -44,7 +44,8 @@ library_paths := $(lean_protobuf)/lib \
 			$(lean_opencv)/lib    \
 			$(lean_tensor_rt)/lib \
 			$(lean_cuda)/lib64  \
-			$(lean_cudnn)/lib
+			$(lean_cudnn)/lib \
+			/datav/k12/lean/ffmpeg4.2/lib
 
 link_librarys := opencv_core opencv_imgproc opencv_videoio opencv_imgcodecs \
 			nvinfer nvinfer_plugin \
