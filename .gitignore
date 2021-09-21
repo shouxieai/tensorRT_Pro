@@ -1,3 +1,8 @@
+#
+tutorial/2.0CenterNet_from_torch_trt/0_to_1_python_to_cuda/cpp_cuda_centernet/src/tensorRT
+tutorial/2.0CenterNet_from_torch_trt/0_to_1_python_to_cuda/cpp_cuda_centernet/objs
+tutorial/2.0CenterNet_from_torch_trt/0_to_1_python_to_cuda/cpp_cuda_centernet/workspace/pro
+
 # compressed files
 *.tar.gz
 *.zip
