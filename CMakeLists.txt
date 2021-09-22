@@ -124,6 +124,13 @@ add_custom_target(
 )
 
 add_custom_target(
+    dbface
+    DEPENDS pro
+    WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}/workspace
+    COMMAND ./pro dbface
+)
+
+add_custom_target(
     arcface 
     DEPENDS pro
     WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}/workspace
