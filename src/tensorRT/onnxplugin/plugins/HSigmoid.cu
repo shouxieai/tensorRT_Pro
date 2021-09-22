@@ -4,16 +4,16 @@
 
 using namespace ONNXPlugin;
 
-static __global__ void hswish_kernel_fp32(float* input, float* output, int edge) {
+static __global__ void hsigmoid_kernel_fp32(float* input, float* output, int edge) {
 
     KernelPositionBlock;
     float x = input[position];
     float a = x + 3;
     a = a < 0 ? 0 : (a >= 6 ? 6 : a);
-	output[position] = x * a / 6;
+	output[position] = a / 6;
 }
 
-static __global__ void hswish_kernel_fp16(__half* input, __half* output, int edge) {
+static __global__ void hsigmoid_kernel_fp16(__half* input, __half* output, int edge) {
 
 	KernelPositionBlock;
 	
@@ -23,16 +23,16 @@ static __global__ void hswish_kernel_fp16(__half* input, __half* output, int edg
     __half a = x + __half(3.0f);
     __half _zero = 0.0f;
     a = a < _zero ? _zero : (a >= _six ? _six : a);
-	output[position] = x * a / _six;
+	output[position] = a / _six;
 }
 
-class HSwish : public TRTPlugin {
+class HSigmoid : public TRTPlugin {
 public:
-	SetupPlugin(HSwish);
+	SetupPlugin(HSigmoid);
 
 	virtual void config_finish() override{
 		 
-		// INFO("init hswish config: %s", config_->info_.c_str());
+		// INFO("init hsigmoid config: %s", config_->info_.c_str());
 		// INFO("weights = %d", config_->weights_.size());
 		// for(int i = 0; i < config_->weights_.size(); ++i){
 		// 	auto& w = config_->weights_[i];
@@ -47,8 +47,8 @@ public:
 	virtual std::shared_ptr<LayerConfig> new_config() override{
 		auto cfg = TRTPlugin::new_config();
 
-		//cfg->support_dtype_set_ = {nvinfer1::DataType::kHALF, nvinfer1::DataType::kFLOAT};
-		cfg->support_dtype_set_ = {nvinfer1::DataType::kFLOAT};
+		cfg->support_dtype_set_ = {nvinfer1::DataType::kHALF, nvinfer1::DataType::kFLOAT};
+		//cfg->support_dtype_set_ = {nvinfer1::DataType::kFLOAT};
 		return cfg;
 	}
 
@@ -65,10 +65,10 @@ public:
 		auto block = CUDATools::block_dims(count);
 
 		if (config_->usage_dtype_ == TRT::DataType::Float) {
-			hswish_kernel_fp32 <<<grid, block, 0, stream >>> (inputs[0].ptr<float>(), outputs[0].ptr<float>(), count);
+			hsigmoid_kernel_fp32 <<<grid, block, 0, stream >>> (inputs[0].ptr<float>(), outputs[0].ptr<float>(), count);
 		}
 		else if (config_->usage_dtype_ == TRT::DataType::Float16) {
-			hswish_kernel_fp16 <<<grid, block, 0, stream >>> (inputs[0].ptr<__half>(), outputs[0].ptr<__half>(), count);
+			hsigmoid_kernel_fp16 <<<grid, block, 0, stream >>> (inputs[0].ptr<__half>(), outputs[0].ptr<__half>(), count);
 		}
 		else{
 			INFOF("not implement function");
@@ -77,4 +77,4 @@ public:
 	}
 };
 
-RegisterPlugin(HSwish);
+RegisterPlugin(HSigmoid);

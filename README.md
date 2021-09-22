@@ -477,6 +477,14 @@ make retinaface -j64
 
 
 <details>
+<summary>DBFace Support</summary>
+- https://github.com/dlunion/DBFace
+```bash
+make dbface -j64
+```
+</details>
+
+<details>
 <summary>Scrfd Support</summary>
 
 - https://github.com/deepinsight/insightface/tree/master/detection/scrfd

@@ -149,6 +149,9 @@ scrfd : workspace/pro
 centernet : workspace/pro
 	@cd workspace && ./pro centernet
 
+dbface : workspace/pro
+	@cd workspace && ./pro dbface
+
 high_perf : workspace/pro
 	@cd workspace && ./pro high_perf
 
