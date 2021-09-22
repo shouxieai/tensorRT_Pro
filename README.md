@@ -478,11 +478,13 @@ make retinaface -j64
 
 <details>
 <summary>DBFace Support</summary>
+
 - https://github.com/dlunion/DBFace
 
 ```bash
 make dbface -j64
 ```
+
 </details>
 
 <details>
