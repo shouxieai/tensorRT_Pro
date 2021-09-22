@@ -319,7 +319,7 @@ python export.py --weights=yolov5s.pt --dynamic --include=onnx --opset=11
 ```
 4. 复制模型并执行
 ```bash
-cp yolov5/yolov5m.onnx tensorRT_cpp/workspace/
+cp yolov5/yolov5s.onnx tensorRT_cpp/workspace/
 cd tensorRT_cpp
 make yolo -j32
 ```
