@@ -136,7 +136,7 @@ inline bool ParseFromFile_WAR(google::protobuf::Message* msg, const char* filena
 
     google::protobuf::io::CodedInputStream coded_input(&rawInput);
     // Note: This WARs the very low default size limit (64MB)
-    coded_input.SetTotalBytesLimit(std::numeric_limits<int>::max(), std::numeric_limits<int>::max() / 4);
+    coded_input.SetTotalBytesLimit(std::numeric_limits<int>::max());
     return msg->ParseFromCodedStream(&coded_input);
 }
 

@@ -86,8 +86,7 @@ namespace common
     raw_input.SetCloseOnDelete(true);
     google::protobuf::io::CodedInputStream coded_input(&raw_input);
     // Note: This WARs the very low default size limit (64MB)
-    coded_input.SetTotalBytesLimit(std::numeric_limits<int>::max(),
-                                   std::numeric_limits<int>::max()/4);
+    coded_input.SetTotalBytesLimit(std::numeric_limits<int>::max());
     return msg->ParseFromCodedStream(&coded_input);
   }
 

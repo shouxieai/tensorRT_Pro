@@ -285,7 +285,7 @@ Status deserialize_onnx_model(void const* serialized_onnx_model, size_t serializ
     {
         google::protobuf::io::CodedInputStream coded_input(&raw_input);
         // Note: This WARs the very low default size limit (64MB)
-        coded_input.SetTotalBytesLimit(std::numeric_limits<int>::max(), std::numeric_limits<int>::max() / 4);
+        coded_input.SetTotalBytesLimit(std::numeric_limits<int>::max());
         ASSERT(model->ParseFromCodedStream(&coded_input), ErrorCode::kMODEL_DESERIALIZE_FAILED);
     }
     return Status::success();
@@ -302,7 +302,7 @@ Status deserialize_onnx_model(int fd, bool is_serialized_as_text, ::onnx::ModelP
     {
         google::protobuf::io::CodedInputStream coded_input(&raw_input);
         // Note: This WARs the very low default size limit (64MB)
-        coded_input.SetTotalBytesLimit(std::numeric_limits<int>::max(), std::numeric_limits<int>::max() / 4);
+        coded_input.SetTotalBytesLimit(std::numeric_limits<int>::max());
         ASSERT(model->ParseFromCodedStream(&coded_input), ErrorCode::kMODEL_DESERIALIZE_FAILED);
     }
     return Status::success();

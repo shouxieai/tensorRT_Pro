@@ -90,6 +90,7 @@
         "__memory": "cpp",
         "__atomic_generated": "cpp",
         "__functional_base_03": "cpp",
-        "__tuple": "cpp"
+        "__tuple": "cpp",
+        "*.inc": "cpp"
     }
 }
