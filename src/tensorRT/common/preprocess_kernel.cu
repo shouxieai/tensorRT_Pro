@@ -84,9 +84,9 @@ namespace CUDAKernel{
 					v4 = src + y_high * src_line_size + x_high * 3;
 			}
 
-			c0 = w1 * v1[0] + w2 * v2[0] + w3 * v3[0] + w4 * v4[0] + 0.5f;
-			c1 = w1 * v1[1] + w2 * v2[1] + w3 * v3[1] + w4 * v4[1] + 0.5f;
-			c2 = w1 * v1[2] + w2 * v2[2] + w3 * v3[2] + w4 * v4[2] + 0.5f;
+			c0 = w1 * v1[0] + w2 * v2[0] + w3 * v3[0] + w4 * v4[0];
+			c1 = w1 * v1[1] + w2 * v2[1] + w3 * v3[1] + w4 * v4[1];
+			c2 = w1 * v1[2] + w2 * v2[2] + w3 * v3[2] + w4 * v4[2];
 		}
 
 		if(norm.channel_type == ChannelType::Invert){
@@ -173,9 +173,9 @@ namespace CUDAKernel{
 					v4 = src + y_high * src_line_size + x_high * 3;
 			}
 
-			c0 = w1 * v1[0] + w2 * v2[0] + w3 * v3[0] + w4 * v4[0] + 0.5f;
-			c1 = w1 * v1[1] + w2 * v2[1] + w3 * v3[1] + w4 * v4[1] + 0.5f;
-			c2 = w1 * v1[2] + w2 * v2[2] + w3 * v3[2] + w4 * v4[2] + 0.5f;
+			c0 = w1 * v1[0] + w2 * v2[0] + w3 * v3[0] + w4 * v4[0];
+			c1 = w1 * v1[1] + w2 * v2[1] + w3 * v3[1] + w4 * v4[1];
+			c2 = w1 * v1[2] + w2 * v2[2] + w3 * v3[2] + w4 * v4[2];
 		}
 
 		if(norm.channel_type == ChannelType::Invert){
@@ -269,9 +269,9 @@ namespace CUDAKernel{
 					v4 = src + y_high * src_line_size + x_high * 3;
 			}
 
-			c0 = w1 * v1[0] + w2 * v2[0] + w3 * v3[0] + w4 * v4[0] + 0.5f;
-			c1 = w1 * v1[1] + w2 * v2[1] + w3 * v3[1] + w4 * v4[1] + 0.5f;
-			c2 = w1 * v1[2] + w2 * v2[2] + w3 * v3[2] + w4 * v4[2] + 0.5f;
+			c0 = w1 * v1[0] + w2 * v2[0] + w3 * v3[0] + w4 * v4[0];
+			c1 = w1 * v1[1] + w2 * v2[1] + w3 * v3[1] + w4 * v4[1];
+			c2 = w1 * v1[2] + w2 * v2[2] + w3 * v3[2] + w4 * v4[2];
 		}
 
 		if(norm.channel_type == ChannelType::Invert){
