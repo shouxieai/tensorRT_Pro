@@ -3789,36 +3789,47 @@ DEFINE_BUILTIN_OP_IMPORTER(Upsample)
     ASSERT(nbDims > 0, ErrorCode::kUNSUPPORTED_NODE);
     OnnxAttrs attrs(node, ctx);
     std::vector<float> scale_factors(nbDims, 1.0f);
-    if (ctx->getOpsetVersion() >= 9)
-    {
-        // Get scale factors from inputs[1]
-        ASSERT(inputs.size() == 2, ErrorCode::kINVALID_NODE);
-        auto scales_input = inputs.at(1);
-        // Retrieve and validate scale factors.
-        ASSERT(scales_input.is_weights(), ErrorCode::kUNSUPPORTED_NODE);
-        ShapedWeights scales_weights = scales_input.weights();
-        ASSERT(scales_weights.shape.nbDims == 1, ErrorCode::kUNSUPPORTED_NODE);
-        // Scale factors has batch dimension.
-        ASSERT(scales_weights.count() == static_cast<size_t>(nbDims), ErrorCode::kUNSUPPORTED_NODE);
-        ASSERT(scales_weights.type == ::onnx::TensorProto::FLOAT, ErrorCode::kINVALID_NODE);
-        float const* scales_ptr = static_cast<float const*>(scales_weights.values);
-        for (int i = 0; i < nbDims; i++)
-        {
-            scale_factors[i] = scales_ptr[i];
-        }
+    // if (ctx->getOpsetVersion() >= 9)
+    // {
+    //     // Get scale factors from inputs[1]
+    //     ASSERT(inputs.size() == 2, ErrorCode::kINVALID_NODE);
+    //     auto scales_input = inputs.at(1);
+    //     // Retrieve and validate scale factors.
+    //     ASSERT(scales_input.is_weights(), ErrorCode::kUNSUPPORTED_NODE);
+    //     ShapedWeights scales_weights = scales_input.weights();
+    //     ASSERT(scales_weights.shape.nbDims == 1, ErrorCode::kUNSUPPORTED_NODE);
+    //     // Scale factors has batch dimension.
+    //     ASSERT(scales_weights.count() == static_cast<size_t>(nbDims), ErrorCode::kUNSUPPORTED_NODE);
+    //     ASSERT(scales_weights.type == ::onnx::TensorProto::FLOAT, ErrorCode::kINVALID_NODE);
+    //     float const* scales_ptr = static_cast<float const*>(scales_weights.values);
+    //     for (int i = 0; i < nbDims; i++)
+    //     {
+    //         scale_factors[i] = scales_ptr[i];
+    //     }
+    // }
+    // else
+    // {
+    //     ASSERT(attrs.count("scales"), ErrorCode::kUNSUPPORTED_NODE);
+    //     // Get scale factors from OnnxAttrs.
+    //     auto scales = attrs.get<std::vector<float>>("scales");
+    //     // Scale factors has batch dimension.
+    //     ASSERT(static_cast<int>(scales.size()) == nbDims, ErrorCode::kUNSUPPORTED_NODE);
+    //     for (int i = 0; i < nbDims; i++)
+    //     {
+    //         scale_factors[i] = scales[i];
+    //     }
+    // }
+    ASSERT(attrs.count("scales") && "Attribute scales is missing.", ErrorCode::kUNSUPPORTED_NODE);
+    // Get scale factors from OnnxAttrs.
+    auto scales = attrs.get<std::vector<float>>("scales");
+    if(scales.size() == 3){
+        scales.insert(scales.begin(), 1);
     }
-    else
-    {
-        ASSERT(attrs.count("scales"), ErrorCode::kUNSUPPORTED_NODE);
-        // Get scale factors from OnnxAttrs.
-        auto scales = attrs.get<std::vector<float>>("scales");
-        // Scale factors has batch dimension.
-        ASSERT(static_cast<int>(scales.size()) == nbDims, ErrorCode::kUNSUPPORTED_NODE);
-        for (int i = 0; i < nbDims; i++)
-        {
-            scale_factors[i] = scales[i];
-        }
-    }
+
+    ASSERT( (static_cast<int>(scales.size()) == nbDims) && "The shape of the scales input must aligin with the dimensions of the input.", ErrorCode::kUNSUPPORTED_NODE);
+    for (int i = 0; i < nbDims; i++)
+        scale_factors[i] = scales[i];
+
     auto mode = attrs.get<std::string>("mode", "nearest");
     ASSERT(mode == "nearest" || mode == "linear", ErrorCode::kUNSUPPORTED_NODE);
     // Set default resize mode. Nearest resize support N-D (where 0 < N <= 8) resize.
