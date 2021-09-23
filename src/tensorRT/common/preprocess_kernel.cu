@@ -43,8 +43,8 @@ namespace CUDAKernel{
 
 		int dx      = position % dst_width;
 		int dy      = position / dst_width;
-		float src_x = (m_x1 * dx + m_y1 * dy + m_z1) + 0.5f;
-		float src_y = (m_x2 * dx + m_y2 * dy + m_z2) + 0.5f;
+		float src_x = floorf(m_x1 * dx + m_y1 * dy + m_z1 + 0.5f);
+		float src_y = floorf(m_x2 * dx + m_y2 * dy + m_z2 + 0.5f);
 		float c0, c1, c2;
 
 		if(src_x <= -1 || src_x >= src_width || src_y <= -1 || src_y >= src_height){
@@ -132,8 +132,8 @@ namespace CUDAKernel{
 
 		int dx      = position % dst_width;
 		int dy      = position / dst_width;
-		float src_x = (m_k * dx + m_b0) + 0.5f;
-		float src_y = (m_k * dy + m_b1) + 0.5f;
+		float src_x = floorf(m_k * dx + m_b0 + 0.5f);
+		float src_y = floorf(m_k * dy + m_b1 + 0.5f);
 		float c0, c1, c2;
 
 		if(src_x <= -1 || src_x >= src_width || src_y <= -1 || src_y >= src_height){
@@ -227,8 +227,8 @@ namespace CUDAKernel{
 
 		int dx      = position % dst_width;
 		int dy      = position / dst_width;
-		float src_x = dx * sx + 0.5f;
-		float src_y = dy * sy + 0.5f;
+		float src_x = floorf(dx * sx + 0.5f);
+		float src_y = floorf(dy * sy + 0.5f);
 		float c0, c1, c2;
 
 		if(src_x <= -1 || src_x >= src_width || src_y <= -1 || src_y >= src_height){
