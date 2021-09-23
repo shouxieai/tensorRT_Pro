@@ -68,6 +68,9 @@
     <Filter Include="src\application\app_centernet">
       <UniqueIdentifier>{b5548dbf-40be-4814-86dd-fce5fea6da46}</UniqueIdentifier>
     </Filter>
+    <Filter Include="src\application\app_dbface">
+      <UniqueIdentifier>{992f9eed-cbae-47ef-ab11-f0e7c606e965}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\tensorRT\builder\trt_builder.cpp">
@@ -210,6 +213,12 @@
     </ClCompile>
     <ClCompile Include="src\application\app_yolo_fast\yolo_fast.cpp">
       <Filter>src\application\app_yolo_fast</Filter>
+    </ClCompile>
+    <ClCompile Include="src\application\app_dbface\dbface.cpp">
+      <Filter>src\application\app_dbface</Filter>
+    </ClCompile>
+    <ClCompile Include="src\application\app_dbface.cpp">
+      <Filter>src\application</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -360,6 +369,9 @@
     <ClInclude Include="src\application\app_yolo_fast\yolo_fast.hpp">
       <Filter>src\application\app_yolo_fast</Filter>
     </ClInclude>
+    <ClInclude Include="src\application\app_dbface\dbface.hpp">
+      <Filter>src\application\app_dbface</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <CudaCompile Include="src\tensorRT\common\preprocess_kernel.cu">
@@ -388,6 +400,9 @@
     </CudaCompile>
     <CudaCompile Include="src\tensorRT\onnxplugin\plugins\DCNv2.cu">
       <Filter>src\tensorRT\onnxplugin\plugins</Filter>
+    </CudaCompile>
+    <CudaCompile Include="src\application\app_dbface\dbface_decode.cu">
+      <Filter>src\application\app_dbface</Filter>
     </CudaCompile>
   </ItemGroup>
   <ItemGroup>

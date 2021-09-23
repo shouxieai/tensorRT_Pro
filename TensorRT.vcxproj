@@ -21,6 +21,8 @@
     <ClCompile Include="src\application\app_arcface\arcface.cpp" />
     <ClCompile Include="src\application\app_centernet.cpp" />
     <ClCompile Include="src\application\app_centernet\centernet.cpp" />
+    <ClCompile Include="src\application\app_dbface.cpp" />
+    <ClCompile Include="src\application\app_dbface\dbface.cpp" />
     <ClCompile Include="src\application\app_fall_gcn\fall_gcn.cpp" />
     <ClCompile Include="src\application\app_fall_recognize.cpp" />
     <ClCompile Include="src\application\app_high_performance.cpp" />
@@ -68,6 +70,7 @@
     <ClInclude Include="src\application\app_alphapose\alpha_pose.hpp" />
     <ClInclude Include="src\application\app_arcface\arcface.hpp" />
     <ClInclude Include="src\application\app_centernet\centernet.hpp" />
+    <ClInclude Include="src\application\app_dbface\dbface.hpp" />
     <ClInclude Include="src\application\app_fall_gcn\fall_gcn.hpp" />
     <ClInclude Include="src\application\app_high_performance\alpha_pose_high_perf.hpp" />
     <ClInclude Include="src\application\app_high_performance\high_performance.hpp" />
@@ -117,6 +120,7 @@
   </ItemGroup>
   <ItemGroup>
     <CudaCompile Include="src\application\app_centernet\centernet_decode.cu" />
+    <CudaCompile Include="src\application\app_dbface\dbface_decode.cu" />
     <CudaCompile Include="src\application\app_retinaface\retinaface_decode.cu" />
     <CudaCompile Include="src\application\app_scrfd\scrfd_decode.cu" />
     <CudaCompile Include="src\application\app_yolo\yolo_decode.cu" />
@@ -209,9 +213,10 @@
       <PreprocessorDefinitions>_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
-      <OpenMPSupport>false</OpenMPSupport>
+      <OpenMPSupport>true</OpenMPSupport>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
       <FunctionLevelLinking>true</FunctionLevelLinking>
+      <LanguageStandard>stdcpp14</LanguageStandard>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -239,6 +244,7 @@
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
       <OpenMPSupport>true</OpenMPSupport>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
+      <LanguageStandard>stdcpp14</LanguageStandard>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -267,6 +273,7 @@
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
       <OpenMPSupport>true</OpenMPSupport>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
+      <LanguageStandard>stdcpp14</LanguageStandard>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
