@@ -2709,8 +2709,9 @@ DEFINE_BUILTIN_OP_IMPORTER(Resize)
             }
             else if (mode == "linear")
             {
-                ASSERT((transformationMode == "asymmetric" || transformationMode == "pytorch_half_pixel" || transformationMode == "half_pixel") && "TensorRT only supports half pixel, pytorch half_pixel, and asymmetric tranformation mode for linear resizes when scales are provided!", ErrorCode::kUNSUPPORTED_NODE);
-                if (transformationMode == "asymmetric")
+                ASSERT((transformationMode == "asymmetric" || transformationMode == "align_corners" || transformationMode == "pytorch_half_pixel" || transformationMode == "half_pixel") 
+	           && "TensorRT only supports half pixel, pytorch half_pixel, and asymmetric tranformation mode for linear resizes when scales are provided!", ErrorCode::kUNSUPPORTED_NODE);
+                if (transformationMode == "asymmetric" || transformationMode == "align_corners") // DBFaceSmallH has the transformationMode "align_corners"
                 {
                     layer->setAlignCorners(true);
                 }

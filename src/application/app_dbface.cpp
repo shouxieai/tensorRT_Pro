@@ -98,6 +98,8 @@ static void test(TRT::Mode mode, const string& model){
 
 int app_dbface(){
     
-    test(TRT::Mode::FP32, "dbface_cvt"); // Type indicates the task. name string indicates the model size and structure.
+    //test(TRT::Mode::FP32, "dbface_cvt"); // Type indicates the task. name string indicates the model size and structure.
+    //test(TRT::Mode::FP32, "dbfaceSmallH"); // DBFaceSmallH, FP32
+    test(TRT::Mode::FP16, "dbfaceSmallH");   // DBFaceSmallH, FP16
     return 0;
 }

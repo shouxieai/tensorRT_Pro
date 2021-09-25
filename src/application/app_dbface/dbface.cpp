@@ -86,7 +86,11 @@ namespace DBFace{
             TRT::Tensor output_array_device(TRT::DataType::Float);
             int max_batch_size = engine->get_max_batch_size();
             auto input         = engine->input(0);
-            auto pool_hm       = engine->tensor("pool_hm");
+	    // DBFaceSmallH network doesn't have the output node: pool_hm
+	    std::shared_ptr<TRT::Tensor> pool_hm = nullptr;
+	    // DBFace network has the output node: pool_hm
+	    if (file.find("SmallH") == std::string::npos)
+	         pool_hm       = engine->tensor("pool_hm");
             auto hm            = engine->tensor("hm");
             auto tlrb          = engine->tensor("tlrb");
             auto landmark      = engine->tensor("landmark");
@@ -130,7 +134,7 @@ namespace DBFace{
                 for(int ibatch = 0; ibatch < infer_batch_size; ++ibatch){
                     
                     auto& job                 = fetch_jobs[ibatch];
-                    float* pool_hm_ptr        = pool_hm->gpu<float>(ibatch);
+                    float* pool_hm_ptr        = pool_hm ? pool_hm->gpu<float>(ibatch) : nullptr;
                     float* hm_ptr             = hm->gpu<float>(ibatch);
                     float* tlrb_ptr           = tlrb->gpu<float>(ibatch);
                     float* landmark_ptr       = landmark->gpu<float>(ibatch);
