@@ -52,7 +52,7 @@ namespace DBFace{
             return;
 
         float confidence = hm_ptr[position];
-        if(confidence != pool_hm_ptr[position])
+        if(pool_hm_ptr && confidence != pool_hm_ptr[position]) // when the network is DBFaceSmall, pool_hm_ptr is nullptr
             return;
 
         if(confidence < conf_T)
