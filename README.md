@@ -2,6 +2,7 @@
 ## News: 
 Tutorial for exporting CenterNet from pytorch to tensorRT is released. 
 - [WarpAffine.lesson.tar.gz](http://zifuture.com:1000/fs/25.shared/warpaffine.lesson.tar.gz)
+- [Offset.tar.gz](http://zifuture.com:1000/fs/25.shared/offset.tar.gz)
 
 ## Tutorial Video
 
