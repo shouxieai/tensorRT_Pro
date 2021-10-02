@@ -170,14 +170,14 @@ namespace TRT {
 		for(int i = 0; i < inputs_.size(); ++i){
 			auto& tensor = inputs_[i];
 			auto& name = inputs_name_[i];
-			INFO("\t\t%d.%s : shape {%s}", i, name.c_str(), tensor->shape_string());
+			INFO("\t\t%d.%s : shape {%s}, %s", i, name.c_str(), tensor->shape_string(), data_type_string(tensor->type()));
 		}
 
 		INFO("\tOutputs: %d", outputs_.size());
 		for(int i = 0; i < outputs_.size(); ++i){
 			auto& tensor = outputs_[i];
 			auto& name = outputs_name_[i];
-			INFO("\t\t%d.%s : shape {%s}", i, name.c_str(), tensor->shape_string());
+			INFO("\t\t%d.%s : shape {%s}, %s", i, name.c_str(), tensor->shape_string(), data_type_string(tensor->type()));
 		}
 	}
 
@@ -238,6 +238,7 @@ namespace TRT {
 		switch(dt){
 			case nvinfer1::DataType::kFLOAT: return TRT::DataType::Float;
 			case nvinfer1::DataType::kHALF: return TRT::DataType::Float16;
+			case nvinfer1::DataType::kINT32: return TRT::DataType::Int32;
 			default:
 				INFOE("Unsupport data type %d", dt);
 				return TRT::DataType::Float;

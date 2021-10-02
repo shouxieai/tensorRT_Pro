@@ -72,6 +72,8 @@ file(GLOB_RECURSE cuda_srcs ${PROJECT_SOURCE_DIR}/src/*.cu)
 cuda_add_library(plugin_list SHARED ${cuda_srcs})
 
 add_executable(pro ${cpp_srcs})
+
+# 如果提示插件找不到，请使用dlopen(xxx.so, NOW)的方式手动加载可以解决插件找不到问题
 target_link_libraries(pro nvinfer nvinfer_plugin)
 target_link_libraries(pro cuda cublas cudart cudnn)
 target_link_libraries(pro protobuf pthread plugin_list)
@@ -135,6 +137,13 @@ add_custom_target(
     DEPENDS pro
     WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}/workspace
     COMMAND ./pro arcface
+)
+
+add_custom_target(
+    bert 
+    DEPENDS pro
+    WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}/workspace
+    COMMAND ./pro bert
 )
 
 add_custom_target(

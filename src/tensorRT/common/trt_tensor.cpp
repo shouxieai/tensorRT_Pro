@@ -23,6 +23,7 @@ namespace TRT{
 		switch (dt) {
 			case DataType::Float: return sizeof(float);
 			case DataType::Float16: return sizeof(float16);
+			case DataType::Int32: return sizeof(int);
 			default: {
 				INFOE("Not support dtype: %d", dt);
 				return -1;
@@ -123,6 +124,7 @@ namespace TRT{
 		switch(dt){
 			case DataType::Float: return "Float32";
 			case DataType::Float16: return "Float16";
+			case DataType::Int32: return "Int32";
 			default: return "Unknow";
 		}
 	}

@@ -139,6 +139,9 @@
     <ClCompile Include="src\application\app_yolo.cpp">
       <Filter>src\application</Filter>
     </ClCompile>
+    <ClCompile Include="src\application\app_bert.cpp">
+      <Filter>src\application</Filter>
+    </ClCompile>
     <ClCompile Include="src\application\app_lesson.cpp">
       <Filter>src\application</Filter>
     </ClCompile>

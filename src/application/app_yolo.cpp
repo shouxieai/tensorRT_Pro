@@ -145,7 +145,7 @@ static void test(Yolo::Type type, TRT::Mode mode, const string& model){
 int app_yolo(){
 
     //iLogger::set_log_level(iLogger::LogLevel::Debug);
-    test(Yolo::Type::X, TRT::Mode::FP32, "yolox_s");
+    //test(Yolo::Type::X, TRT::Mode::FP32, "yolox_s");
 
     //iLogger::set_log_level(iLogger::LogLevel::Info);
     // test(Yolo::Type::X, TRT::Mode::FP32, "yolox_x");
@@ -177,7 +177,7 @@ int app_yolo(){
     // test(Yolo::Type::V5, TRT::Mode::FP16, "yolov5x");
     // test(Yolo::Type::V5, TRT::Mode::FP16, "yolov5l");
     // test(Yolo::Type::V5, TRT::Mode::FP16, "yolov5m");
-    // test(Yolo::Type::V5, TRT::Mode::FP16, "yolov5s");
+    test(Yolo::Type::V5, TRT::Mode::FP32, "yolov5s");
 
     // test(Yolo::Type::V5, TRT::Mode::INT8, "yolov5x6");
     // test(Yolo::Type::V5, TRT::Mode::INT8, "yolov5l6");

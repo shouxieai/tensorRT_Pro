@@ -122,6 +122,9 @@ yolo : workspace/pro
 yolo_fast : workspace/pro
 	@cd workspace && ./pro yolo_fast
 
+bert : workspace/pro
+	@cd workspace && ./pro bert
+
 alphapose : workspace/pro
 	@cd workspace && ./pro alphapose
 

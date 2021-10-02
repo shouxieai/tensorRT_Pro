@@ -24,7 +24,8 @@ namespace TRT {
 
     enum class DataType : int {
         Float = 0,
-        Float16 = 1
+        Float16 = 1,
+        Int32 = 2
     };
 
     float float16_to_float(float16 value);

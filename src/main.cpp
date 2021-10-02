@@ -18,6 +18,7 @@ int app_plugin();
 int app_yolo_fast();
 int app_centernet();
 int app_dbface();
+int app_bert();
 
 void test_all(){
     app_yolo();
@@ -42,6 +43,8 @@ int main(int argc, char** argv){
         app_yolo();
     }else if(strcmp(method, "yolo_fast") == 0){
         app_yolo_fast();
+    }else if(strcmp(method, "bert") == 0){
+        app_bert();
     }else if(strcmp(method, "centernet") == 0){
         app_centernet();
     }else if(strcmp(method, "dbface") == 0){
