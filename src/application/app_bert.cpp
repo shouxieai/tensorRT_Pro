@@ -211,7 +211,6 @@ void softmax(float* ptr, int num){
 
 int app_bert(){
 
-    TRT::set_device(1);
     auto name = "bert";
     if(not requires(name))
         return 0;

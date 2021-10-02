@@ -497,6 +497,15 @@ cout << feature << endl;  // 1x512
 </details>
 
 
+<details>
+<summary>Bert文本分类支持（中文）</summary>
+
+- https://github.com/649453932/Bert-Chinese-Text-Classification-Pytorch
+- `make bert -j6`  
+
+</details>
+
+
 ## 接口介绍
 
 <details>

@@ -521,6 +521,15 @@ check the great details in tutorial/2.0
 </details>
 
 
+<details>
+<summary>Bert Support(Chinese Classification)</summary>
+
+- https://github.com/649453932/Bert-Chinese-Text-Classification-Pytorch
+- `make bert -j6`  
+
+</details>
+
+
 ## the INTRO to Interface
 
 <details>
