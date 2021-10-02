@@ -40,10 +40,10 @@ int find_token(const string& token, const unordered_map<string, int>& vocab){
     return iter->second;
 }
 
-// utf-8
-// 拆分utf8的汉字，把汉字部分独立，ascii部分连续为一个
-// for example:
-//    你jok我good呀  -> ["你", "job", "我", "good", "呀"]
+/* utf-8
+  拆分utf8的汉字，把汉字部分独立，ascii部分连续为一个
+  for example:
+    你jok我good呀  -> ["你", "job", "我", "good", "呀"] */
 vector<string> split_chinese(const string& text){
 
     // 1字节：0xxxxxxx 
@@ -111,7 +111,7 @@ vector<string> split_chinese(const string& text){
     return tokens;
 }
 
-// 把字符串拆分为词组，汉字单个为一组
+/* 把字符串拆分为词组，汉字单个为一组 */
 vector<string> tokenize(const string& text, const unordered_map<string, int>& vocab){
 
     vector<string> tokens = split_chinese(text);
