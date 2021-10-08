@@ -1,10 +1,10 @@
 阅读其他语言的README.md:[English](README.md), [简体中文](README.zh-cn.md).
-## 最近的重要更新： 
+## 最近的重要更新：
 - 关于CenterNet 从pytorch到tensorRT的模型导出到推理的中英文教程已更新，在tutorial/2.0
 - [WarpAffine.lesson.tar.gz](http://zifuture.com:1000/fs/25.shared/warpaffine.lesson.tar.gz)
 - [Offset.tar.gz](http://zifuture.com:1000/fs/25.shared/offset.tar.gz)
 
-## B站同步视频讲解
+## B站同步视频讲解 
 - B站视频讲解：https://www.bilibili.com/video/BV1Xw411f7FW
 - 相关PPTX下载：http://zifuture.com:1556/fs/sxai/tensorRT.pptx
 - tutorial 文件夹: 一个对入门者极其友好的框架概览和指南
