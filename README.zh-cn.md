@@ -5,7 +5,7 @@
 - [Offset.tar.gz](http://zifuture.com:1000/fs/25.shared/offset.tar.gz)
 
 ## B站同步视频讲解 
-- B站视频讲解：https://www.bilibili.com/video/BV1Xw411f7FW
+- B站视频讲解 ：https://www.bilibili.com/video/BV1Xw411f7FW
 - 相关PPTX下载：http://zifuture.com:1556/fs/sxai/tensorRT.pptx
 - tutorial 文件夹: 一个对入门者极其友好的框架概览和指南
 
@@ -691,5 +691,5 @@ RegisterPlugin(HSwish);
 
 
 ## 关于
-- 我们的博客地址：http://www.zifuture.com/
-- 我们的B站地址： https://space.bilibili.com/1413433465
+- 我们的博客地址： http://www.zifuture.com/
+- 我们的B站地址 ： https://space.bilibili.com/1413433465
