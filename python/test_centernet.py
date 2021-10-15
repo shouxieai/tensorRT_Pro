@@ -6,7 +6,7 @@ import trtpy as tp
 # change current workspace
 os.chdir("../workspace/")
 
-# 如果执行出错，请删掉 ~/.trtpy的缓存模型
+# 如果执行出错，请删掉 ~/.trtpy 的缓存模型
 # rm -rf ~/.trtpy，重新下载
 engine_file = "centernet_r18_dcn.fp32.trtmodel"
 if not os.path.exists(engine_file):
