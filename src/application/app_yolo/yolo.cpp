@@ -103,6 +103,9 @@ namespace Yolo{
 
         /** 要求在InferImpl里面执行stop，而不是在基类执行stop **/
         virtual ~InferImpl(){
+            
+            // 部分卸载工作需要明确gpuid
+            TRT::set_device(gpu_);
             stop();
         }
 

@@ -59,6 +59,7 @@ namespace AlphaPose{
     public:
         /** 要求在InferImpl里面执行stop，而不是在基类执行stop **/
         virtual ~InferImpl(){
+            TRT::set_device(gpu_);
             stop();
         }
         

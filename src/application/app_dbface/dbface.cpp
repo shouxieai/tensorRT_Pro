@@ -54,6 +54,12 @@ namespace DBFace{
     >;
     class InferImpl : public Infer, public ControllerImpl{
     public:
+        /** 要求在InferImpl里面执行stop，而不是在基类执行stop **/
+        virtual ~InferImpl(){
+            TRT::set_device(gpu_);
+            stop();
+        }
+
         virtual bool startup(const string& file, int gpuid, float confidence_threshold, float nms_threshold){
 
             float mean[] = {0.408, 0.447, 0.470};
@@ -86,11 +92,12 @@ namespace DBFace{
             TRT::Tensor output_array_device(TRT::DataType::Float);
             int max_batch_size = engine->get_max_batch_size();
             auto input         = engine->input(0);
-	    // DBFaceSmallH network doesn't have the output node: pool_hm
-	    std::shared_ptr<TRT::Tensor> pool_hm = nullptr;
-	    // DBFace network has the output node: pool_hm
-	    if (file.find("SmallH") == std::string::npos)
-	         pool_hm       = engine->tensor("pool_hm");
+            // DBFaceSmallH network doesn't have the output node: pool_hm
+            std::shared_ptr<TRT::Tensor> pool_hm = nullptr;
+            // DBFace network has the output node: pool_hm
+            if (file.find("SmallH") == std::string::npos)
+	            pool_hm       = engine->tensor("pool_hm");
+                
             auto hm            = engine->tensor("hm");
             auto tlrb          = engine->tensor("tlrb");
             auto landmark      = engine->tensor("landmark");

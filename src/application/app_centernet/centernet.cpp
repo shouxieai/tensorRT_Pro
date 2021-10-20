@@ -54,6 +54,12 @@ namespace CenterNet{
     >;
     class InferImpl : public Infer, public ControllerImpl{
     public:
+        /** 要求在InferImpl里面执行stop，而不是在基类执行stop **/
+        virtual ~InferImpl(){
+            TRT::set_device(gpu_);
+            stop();
+        }
+
         virtual bool startup(const string& file, int gpuid, float confidence_threshold, float nms_threshold){
 
             float mean[] = {0.408, 0.447, 0.470};

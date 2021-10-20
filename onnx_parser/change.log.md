@@ -1,0 +1,21 @@
+# 针对OnnxParser的修改记录
+1. builtin_op_importers.cpp:28
+    - 增加针对reshape层hook的函数支持register_layerhook_reshape
+2. builtin_op_importers.cpp:3543
+    - 增加reshape节点中调用g_layerhook_func_reshape函数部分，使得hook生效
+3. builtin_op_importers.cpp:168
+    - 增加Plugin节点支持，并转发到自定义的plugin上实现自定义插件注册机制
+4. builtin_op_importers.cpp:4480
+    - 对upsample屏蔽代码，并允许支持scales为3个值的情况
+5. ModelImporter.cpp:243
+    - 增加对重定义维度的支持，并实现动态batch，固定batch维度为-1
+6. ModelImporter.cpp:750
+    - 增加对onnx数据直接做解析的支持
+7. ModelImporter.hpp:29
+    - 增加对定义维度的支持
+8. ModelImporter.hpp:72
+    - 增加对onnx文件数据解析的支持
+9. NvOnnxParser.h:207
+    - 增加对reshape钩子的支持，接口api
+10. NvOnnxParser.h:228
+    - 增加input_dims参数，支持对输入维度的重定义
