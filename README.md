@@ -160,8 +160,7 @@ Tutorial for exporting CenterNet from pytorch to tensorRT is released.
 
  
 - complied dependency (Out of the Box feature)
-  - link for download [lean-tensorRT8.0.1.6-protobuf3.11.4-cudnn8.2.2.tar.gz]
-  (http://zifuture.com:1556/fs/25.shared/lean-tensorRT8.0.1.6-protobuf3.11.4-cudnn8.2.2.tar.gz)
+  - link for download [lean-tensorRT8.0.1.6-protobuf3.11.4-cudnn8.2.2.tar.gz](http://zifuture.com:1556/fs/25.shared/lean-tensorRT8.0.1.6-protobuf3.11.4-cudnn8.2.2.tar.gz)
   
   
 1. VSCode (highly recommended!)
