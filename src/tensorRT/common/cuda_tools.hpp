@@ -49,6 +49,7 @@ typedef int DeviceID;
 namespace CUDATools{
     bool check_driver(CUresult e, const char* call, int iLine, const char *szFile);
     bool check_runtime(cudaError_t e, const char* call, int iLine, const char *szFile);
+    bool check_device_id(int device_id);
 
     dim3 grid_dims(int numJobs);
     dim3 block_dims(int numJobs);

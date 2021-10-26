@@ -103,6 +103,7 @@ namespace TRT {
 	class InferImpl : public Infer {
 
 	public:
+		virtual ~InferImpl();
 		virtual bool load(const std::string& file);
 		virtual bool load_from_memory(const void* pdata, size_t size);
 		virtual void destroy();
@@ -145,17 +146,26 @@ namespace TRT {
 		std::shared_ptr<EngineContext> context_;
 		std::vector<void*> bindingsPtr_;
 		std::shared_ptr<MixMemory> workspace_;
-		int device_ = -1;
+		int device_ = 0;
 	};
 
 	////////////////////////////////////////////////////////////////////////////////////
+	InferImpl::~InferImpl(){
+		destroy();
+	}
+
 	void InferImpl::destroy() {
+
+		int old_device = 0;
+		checkCudaRuntime(cudaGetDevice(&old_device));
+		checkCudaRuntime(cudaSetDevice(device_));
 		this->context_.reset();
 		this->blobsNameMapper_.clear();
 		this->outputs_.clear();
 		this->inputs_.clear();
 		this->inputs_name_.clear();
 		this->outputs_name_.clear();
+		checkCudaRuntime(cudaSetDevice(old_device));
 	}
 
 	void InferImpl::print(){
@@ -190,7 +200,6 @@ namespace TRT {
 
 	bool InferImpl::load_from_memory(const void* pdata, size_t size) {
 
-		destroy();
 		if (pdata == nullptr || size == 0)
 			return false;
 
@@ -210,7 +219,6 @@ namespace TRT {
 
 	bool InferImpl::load(const std::string& file) {
 
-		destroy();
 		auto data = iLogger::load_file(file);
 		if (data.empty())
 			return false;

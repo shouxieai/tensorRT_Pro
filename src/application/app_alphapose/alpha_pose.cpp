@@ -133,6 +133,8 @@ namespace AlphaPose{
                 }
                 fetch_jobs.clear();
             }
+            stream_ = nullptr;
+            tensor_allocator_.reset();
             INFO("Engine destroy.");
         }
 
@@ -145,6 +147,11 @@ namespace AlphaPose{
         }
 
         virtual bool preprocess(Job& job, const Input& input) override{
+
+            if(tensor_allocator_ == nullptr){
+                INFOE("tensor_allocator_ is nullptr");
+                return false;
+            }
 
             job.mono_tensor = tensor_allocator_->query();
             if(job.mono_tensor == nullptr){

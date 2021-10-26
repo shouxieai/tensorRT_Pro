@@ -24,11 +24,26 @@ namespace TRT{
 			case DataType::Float: return sizeof(float);
 			case DataType::Float16: return sizeof(float16);
 			case DataType::Int32: return sizeof(int);
+			case DataType::UInt8: return sizeof(uint8_t);
 			default: {
 				INFOE("Not support dtype: %d", dt);
 				return -1;
 			}
 		}
+	}
+
+	inline static int get_device(int device_id){
+		if(device_id != CURRENT_DEVICE_ID){
+			CUDATools::check_device_id(device_id);
+			return device_id;
+		}
+
+		checkCudaRuntime(cudaGetDevice(&device_id));
+		return device_id;
+	}
+
+	MixMemory::MixMemory(int device_id){
+		device_id_ = get_device(device_id);
 	}
 
 	MixMemory::MixMemory(void* cpu, size_t cpu_size, void* gpu, size_t gpu_size){
@@ -55,6 +70,7 @@ namespace TRT{
 
 		this->owner_cpu_ = !(cpu && cpu_size > 0);
 		this->owner_gpu_ = !(gpu && gpu_size > 0);
+		checkCudaRuntime(cudaGetDevice(&device_id_));
 	}
 
 	MixMemory::~MixMemory() {
@@ -67,6 +83,7 @@ namespace TRT{
 			release_gpu();
 
 			gpu_size_ = size;
+			CUDATools::AutoDevice auto_device_exchange(device_id_);
 			checkCudaRuntime(cudaMalloc(&gpu_, size));
 			checkCudaRuntime(cudaMemset(gpu_, 0, size));
 		}
@@ -79,6 +96,7 @@ namespace TRT{
 			release_cpu();
 
 			cpu_size_ = size;
+			CUDATools::AutoDevice auto_device_exchange(device_id_);
 			checkCudaRuntime(cudaMallocHost(&cpu_, size));
 			Assert(cpu_ != nullptr);
 			memset(cpu_, 0, size);
@@ -89,6 +107,7 @@ namespace TRT{
 	void MixMemory::release_cpu() {
 		if (cpu_) {
 			if(owner_cpu_){
+				CUDATools::AutoDevice auto_device_exchange(device_id_);
 				checkCudaRuntime(cudaFreeHost(cpu_));
 			}
 			cpu_ = nullptr;
@@ -99,6 +118,7 @@ namespace TRT{
 	void MixMemory::release_gpu() {
 		if (gpu_) {
 			if(owner_gpu_){
+				CUDATools::AutoDevice auto_device_exchange(device_id_);
 				checkCudaRuntime(cudaFree(gpu_));
 			}
 			gpu_ = nullptr;
@@ -125,36 +145,59 @@ namespace TRT{
 			case DataType::Float: return "Float32";
 			case DataType::Float16: return "Float16";
 			case DataType::Int32: return "Int32";
+			case DataType::UInt8: return "UInt8";
 			default: return "Unknow";
 		}
 	}
 
-	Tensor::Tensor(int n, int c, int h, int w, DataType dtype, shared_ptr<MixMemory> data) {
+	Tensor::Tensor(int n, int c, int h, int w, DataType dtype, shared_ptr<MixMemory> data, int device_id) {
 		this->dtype_ = dtype;
+		this->device_id_ = get_device(device_id);
+		descriptor_string_[0] = 0;
 		setup_data(data);
 		resize(n, c, h, w);
 	}
 
-	Tensor::Tensor(const std::vector<int>& dims, DataType dtype, shared_ptr<MixMemory> data){
+	Tensor::Tensor(const std::vector<int>& dims, DataType dtype, shared_ptr<MixMemory> data, int device_id){
 		this->dtype_ = dtype;
+		this->device_id_ = get_device(device_id);
+		descriptor_string_[0] = 0;
 		setup_data(data);
 		resize(dims);
 	}
 
-	Tensor::Tensor(int ndims, const int* dims, DataType dtype, shared_ptr<MixMemory> data) {
+	Tensor::Tensor(int ndims, const int* dims, DataType dtype, shared_ptr<MixMemory> data, int device_id) {
 		this->dtype_ = dtype;
+		this->device_id_ = get_device(device_id);
+		descriptor_string_[0] = 0;
 		setup_data(data);
 		resize(ndims, dims);
 	}
 
-	Tensor::Tensor(DataType dtype, shared_ptr<MixMemory> data){
+	Tensor::Tensor(DataType dtype, shared_ptr<MixMemory> data, int device_id){
 		shape_string_[0] = 0;
+		descriptor_string_[0] = 0;
+		this->device_id_ = get_device(device_id);
 		dtype_ = dtype;
 		setup_data(data);
 	}
 
 	Tensor::~Tensor() {
 		release();
+	}
+
+	const char* Tensor::descriptor() const{
+		
+		char* descriptor_ptr = (char*)descriptor_string_;
+		int device_id = device();
+		snprintf(descriptor_ptr, sizeof(descriptor_string_), 
+			"Tensor:%p, %s, %s, CUDA:%d", 
+			data_.get(),
+			data_type_string(dtype_), 
+			shape_string_, 
+			device_id
+		);
+		return descriptor_ptr;
 	}
 
 	Tensor& Tensor::compute_shape_string(){
@@ -190,7 +233,9 @@ namespace TRT{
 		
 		data_ = data;
 		if(data_ == nullptr){
-			data_ = make_shared<MixMemory>();
+			data_ = make_shared<MixMemory>(device_id_);
+		}else{
+			device_id_ = data_->device_id();
 		}
 
 		head_ = DataHead::Init;
@@ -211,12 +256,13 @@ namespace TRT{
 		if(head_ == DataHead::Host){
 			memcpy(new_tensor->cpu(), this->cpu(), this->bytes_);
 		}else if(head_ == DataHead::Device){
+			CUDATools::AutoDevice auto_device_exchange(device());
 			checkCudaRuntime(cudaMemcpyAsync(new_tensor->gpu(), this->gpu(), bytes_, cudaMemcpyDeviceToDevice, stream_));
 		}
 		return new_tensor;
 	}
 
-	Tensor& Tensor::copy_from_gpu(size_t offset, const void* src, size_t num_element){
+	Tensor& Tensor::copy_from_gpu(size_t offset, const void* src, size_t num_element, int device_id){
 
 		if(head_ == DataHead::Init)
 			to_gpu(false);
@@ -233,10 +279,19 @@ namespace TRT{
 			INFOE("Copyed bytes[%lld] > remain bytes[%lld], out of range", copyed_bytes, remain_bytes);
 			return *this;
 		}
-
+		
 		if(head_ == DataHead::Device){
-			checkCudaRuntime(cudaMemcpyAsync(gpu<unsigned char>() + offset_location, src, copyed_bytes, cudaMemcpyDeviceToDevice, stream_));
+			int current_device_id = get_device(device_id);
+			int gpu_device_id = device();
+			if(current_device_id != gpu_device_id){
+				checkCudaRuntime(cudaMemcpyPeerAsync(gpu<unsigned char>() + offset_location, gpu_device_id, src, current_device_id, copyed_bytes, stream_));
+				//checkCudaRuntime(cudaMemcpyAsync(gpu<unsigned char>() + offset_location, src, copyed_bytes, cudaMemcpyDeviceToDevice, stream_));
+			}
+			else{
+				checkCudaRuntime(cudaMemcpyAsync(gpu<unsigned char>() + offset_location, src, copyed_bytes, cudaMemcpyDeviceToDevice, stream_));
+			}
 		}else if(head_ == DataHead::Host){
+			CUDATools::AutoDevice auto_device_exchange(this->device());
 			checkCudaRuntime(cudaMemcpyAsync(cpu<unsigned char>() + offset_location, src, copyed_bytes, cudaMemcpyDeviceToHost, stream_));
 		}else{
 			INFOE("Unsupport head type %d", head_);
@@ -263,6 +318,7 @@ namespace TRT{
 		}
 
 		if(head_ == DataHead::Device){
+			CUDATools::AutoDevice auto_device_exchange(this->device());
 			checkCudaRuntime(cudaMemcpyAsync((char*)data_->gpu() + offset_location, src, copyed_bytes, cudaMemcpyHostToDevice, stream_));
 		}else if(head_ == DataHead::Host){
 			//checkCudaRuntime(cudaMemcpyAsync((char*)data_->cpu() + offset_location, src, copyed_bytes, cudaMemcpyHostToHost, stream_));
@@ -360,6 +416,7 @@ namespace TRT{
 	}
 
 	Tensor& Tensor::synchronize(){ 
+		CUDATools::AutoDevice auto_device_exchange(this->device());
 		checkCudaRuntime(cudaStreamSynchronize(stream_));
 		return *this;
 	}
@@ -373,6 +430,7 @@ namespace TRT{
 		data_->gpu(bytes_);
 
 		if (copy && data_->cpu() != nullptr) {
+			CUDATools::AutoDevice auto_device_exchange(this->device());
 			checkCudaRuntime(cudaMemcpyAsync(data_->gpu(), data_->cpu(), bytes_, cudaMemcpyHostToDevice, stream_));
 		}
 		return *this;
@@ -387,6 +445,7 @@ namespace TRT{
 		data_->cpu(bytes_);
 
 		if (copy && data_->gpu() != nullptr) {
+			CUDATools::AutoDevice auto_device_exchange(this->device());
 			checkCudaRuntime(cudaMemcpyAsync(data_->cpu(), data_->gpu(), bytes_, cudaMemcpyDeviceToHost, stream_));
 			checkCudaRuntime(cudaStreamSynchronize(stream_));
 		}
@@ -400,6 +459,7 @@ namespace TRT{
 
 		if (type() != DataType::Float16) {
 			INFOF("not implement function");
+			return *this;
 		}
 
 		auto c = count();
@@ -424,6 +484,7 @@ namespace TRT{
 
 		if (type() != DataType::Float) {
 			INFOF("not implement function");
+			return *this;
 		}
 
 		auto c = count();
@@ -440,19 +501,29 @@ namespace TRT{
 		free(convert_memory);
 		return *this;
 	}
+	
+	template<typename _T>
+	static inline void memset_any_type(_T* ptr, size_t count, _T value){
+		for (size_t i = 0; i < count; ++i)
+			*ptr++ = value;
+	}
 
 	Tensor& Tensor::set_to(float value) {
 		int c = count();
 		if (dtype_ == DataType::Float) {
-			float* ptr = cpu<float>();
-			for (int i = 0; i < c; ++i)
-				*ptr++ = value;
+			memset_any_type(cpu<float>(), c, value);
 		}
-		else {
-			float16* ptr = cpu<float16>();
-			auto val = float_to_float16(value);
-			for (int i = 0; i < c; ++i)
-				*ptr++ = val;
+		else if(dtype_ == DataType::Float16) {
+			memset_any_type(cpu<float16>(), c, float_to_float16(value));
+		}
+		else if(dtype_ == DataType::Int32) {
+			memset_any_type(cpu<int>(), c, (int)value);
+		}
+		else if(dtype_ == DataType::UInt8) {
+			memset_any_type(cpu<uint8_t>(), c, (uint8_t)value);
+		}
+		else{
+			INFOE("Unsupport type: %d", dtype_);
 		}
 		return *this;
 	}

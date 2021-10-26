@@ -99,6 +99,7 @@ static void inference_and_performance(int deviceid, const string& engine_file, T
         INFO("Save to %s, %d object, average time %.2f ms", save_path.c_str(), boxes.size(), inference_average_time);
         cv::imwrite(save_path, image);
     }
+    engine.reset();
 }
 
 static void test(Yolo::Type type, TRT::Mode mode, const string& model){
@@ -143,7 +144,6 @@ static void test(Yolo::Type type, TRT::Mode mode, const string& model){
 }
 
 int app_yolo(){
-
     //iLogger::set_log_level(iLogger::LogLevel::Debug);
     //test(Yolo::Type::X, TRT::Mode::FP32, "yolox_s");
 
@@ -178,7 +178,6 @@ int app_yolo(){
     // test(Yolo::Type::V5, TRT::Mode::FP16, "yolov5l");
     // test(Yolo::Type::V5, TRT::Mode::FP16, "yolov5m");
     test(Yolo::Type::V5, TRT::Mode::FP32, "yolov5s");
-
     // test(Yolo::Type::V5, TRT::Mode::INT8, "yolov5x6");
     // test(Yolo::Type::V5, TRT::Mode::INT8, "yolov5l6");
     // test(Yolo::Type::V5, TRT::Mode::INT8, "yolov5m6");

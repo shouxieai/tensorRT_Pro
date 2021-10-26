@@ -55,7 +55,6 @@ namespace Scrfd{
     public:
         /** 要求在InferImpl里面执行stop，而不是在基类执行stop **/
         virtual ~InferImpl(){
-            TRT::set_device(gpu_);
             stop();
         }
         
@@ -214,10 +213,18 @@ namespace Scrfd{
                 }
                 fetch_jobs.clear();
             }
+            stream_ = nullptr;
+            tensor_allocator_.reset();
             INFOV("Engine destroy.");
         }
 
         virtual bool preprocess(Job& job, const Mat& image) override{
+
+            if(tensor_allocator_ == nullptr){
+                INFOE("tensor_allocator_ is nullptr");
+                return false;
+            }
+
             job.mono_tensor = tensor_allocator_->query();
             if(job.mono_tensor == nullptr){
                 INFOE("Tensor allocator query failed.");

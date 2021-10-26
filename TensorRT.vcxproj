@@ -35,6 +35,7 @@
     <ClCompile Include="src\application\app_scrfd.cpp" />
     <ClCompile Include="src\application\app_scrfd\scrfd.cpp" />
     <ClCompile Include="src\application\app_yolo.cpp" />
+    <ClCompile Include="src\application\app_bert.cpp" />
     <ClCompile Include="src\application\app_plugin.cpp" />
     <ClCompile Include="src\application\app_lesson.cpp" />
     <ClCompile Include="src\application\app_yolo\yolo.cpp" />

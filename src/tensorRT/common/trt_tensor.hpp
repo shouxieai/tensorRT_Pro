@@ -11,6 +11,8 @@
 struct CUstream_st;
 typedef CUstream_st CUStreamRaw;
 
+#define CURRENT_DEVICE_ID           -1
+
 namespace TRT {
 
     typedef struct{unsigned short _;} float16;
@@ -25,7 +27,8 @@ namespace TRT {
     enum class DataType : int {
         Float = 0,
         Float16 = 1,
-        Int32 = 2
+        Int32 = 2,
+        UInt8 = 3
     };
 
     float float16_to_float(float16 value);
@@ -36,7 +39,7 @@ namespace TRT {
 
     class MixMemory {
     public:
-        MixMemory() = default;
+        MixMemory(int device_id = CURRENT_DEVICE_ID);
         MixMemory(void* cpu, size_t cpu_size, void* gpu, size_t gpu_size);
         virtual ~MixMemory();
         void* gpu(size_t size);
@@ -50,6 +53,7 @@ namespace TRT {
 
         inline size_t cpu_size() const{return cpu_size_;}
         inline size_t gpu_size() const{return gpu_size_;}
+        inline int device_id() const{return device_id_;}
 
         inline void* gpu() const { return gpu_; }
 
@@ -62,6 +66,7 @@ namespace TRT {
         void* cpu_ = nullptr;
         size_t cpu_size_ = 0;
         bool owner_cpu_ = true;
+        int device_id_ = 0;
 
         void* gpu_ = nullptr;
         size_t gpu_size_ = 0;
@@ -73,10 +78,10 @@ namespace TRT {
         Tensor(const Tensor& other) = delete;
         Tensor& operator = (const Tensor& other) = delete;
 
-        explicit Tensor(DataType dtype = DataType::Float, std::shared_ptr<MixMemory> data = nullptr);
-        explicit Tensor(int n, int c, int h, int w, DataType dtype = DataType::Float, std::shared_ptr<MixMemory> data = nullptr);
-        explicit Tensor(int ndims, const int* dims, DataType dtype = DataType::Float, std::shared_ptr<MixMemory> data = nullptr);
-        explicit Tensor(const std::vector<int>& dims, DataType dtype = DataType::Float, std::shared_ptr<MixMemory> data = nullptr);
+        explicit Tensor(DataType dtype = DataType::Float, std::shared_ptr<MixMemory> data = nullptr, int device_id = CURRENT_DEVICE_ID);
+        explicit Tensor(int n, int c, int h, int w, DataType dtype = DataType::Float, std::shared_ptr<MixMemory> data = nullptr, int device_id = CURRENT_DEVICE_ID);
+        explicit Tensor(int ndims, const int* dims, DataType dtype = DataType::Float, std::shared_ptr<MixMemory> data = nullptr, int device_id = CURRENT_DEVICE_ID);
+        explicit Tensor(const std::vector<int>& dims, DataType dtype = DataType::Float, std::shared_ptr<MixMemory> data = nullptr, int device_id = CURRENT_DEVICE_ID);
         virtual ~Tensor();
 
         int numel() const;
@@ -121,6 +126,7 @@ namespace TRT {
         Tensor& resize(const std::vector<int>& dims);
         Tensor& resize_single_dim(int idim, int size);
         int  count(int start_axis = 0) const;
+        int device() const{return device_id_;}
 
         Tensor& to_gpu(bool copy=true);
         Tensor& to_cpu(bool copy=true);
@@ -160,8 +166,9 @@ namespace TRT {
 
         Tensor& synchronize();
         const char* shape_string() const{return shape_string_;}
+        const char* descriptor() const;
 
-        Tensor& copy_from_gpu(size_t offset, const void* src, size_t num_element);
+        Tensor& copy_from_gpu(size_t offset, const void* src, size_t num_element, int device_id = CURRENT_DEVICE_ID);
         Tensor& copy_from_cpu(size_t offset, const void* src, size_t num_element);
 
         void reference_data(const std::vector<int>& shape, void* cpu_data, size_t cpu_size, void* gpu_data, size_t gpu_size, DataType dtype);
@@ -205,7 +212,9 @@ namespace TRT {
         DataHead head_   = DataHead::Init;
         DataType dtype_  = DataType::Float;
         CUStream stream_ = nullptr;
+        int device_id_   = 0;
         char shape_string_[100];
+        char descriptor_string_[100];
         std::shared_ptr<MixMemory> data_;
         std::shared_ptr<MixMemory> workspace_;
     };
