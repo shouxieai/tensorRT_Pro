@@ -86,3 +86,4 @@ __pycache__
 /workspace/single_inference
 /workspace/exp/tracker.final.mp4
 /workspace/perf.result.log
+/simple_yolo/workspace/pro

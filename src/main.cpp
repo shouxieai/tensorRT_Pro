@@ -33,7 +33,7 @@ void test_all(){
 }
 
 int main(int argc, char** argv){
-
+    
     const char* method = "yolo";
     if(argc > 1){
         method = argv[1];
