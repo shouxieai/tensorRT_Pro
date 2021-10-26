@@ -299,7 +299,6 @@ def init_nv_plugins(): ...
 os_name = platform.system()
 if os_name == "Windows":
     os.environ["PATH"] = os.environ["PATH"] + ";" + os.path.dirname(os.path.abspath(__file__))
-    os.environ["LD_LIBRARY_PATH"] = os.environ["LD_LIBRARY_PATH"] + ";" + os.path.dirname(os.path.abspath(__file__))
 else:
     os.environ["PATH"] = os.environ["PATH"] + ":" + os.path.dirname(os.path.abspath(__file__))
     os.environ["LD_LIBRARY_PATH"] = os.environ["LD_LIBRARY_PATH"] + ":" + os.path.dirname(os.path.abspath(__file__))
