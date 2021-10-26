@@ -178,7 +178,7 @@ static void inference_and_performance(int deviceid, const string& engine_file, S
 
 static void test(SimpleYolo::Type type, SimpleYolo::Mode mode, const string& model){
 
-    int deviceid = 1;
+    int deviceid = 0;
     auto mode_name = SimpleYolo::mode_string(mode);
     SimpleYolo::set_device(deviceid);
 
@@ -206,7 +206,7 @@ static void test(SimpleYolo::Type type, SimpleYolo::Mode mode, const string& mod
 
 void direct_test(){
 
-    int device_id = 1;
+    int device_id = 0;
     auto type = SimpleYolo::Type::X;
     auto mode = SimpleYolo::Mode::FP32;
     string model = "yolox_s";

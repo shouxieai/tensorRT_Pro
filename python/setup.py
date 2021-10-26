@@ -6,7 +6,7 @@ import os
 
 os_name = platform.system()
 if os_name == "Linux":
-    cpp_library = ["libtrtpyc.so"]
+    cpp_library = ["libtrtpyc.so", "libplugin_list.so"]
 elif os_name == "Windows":
     os.system("copy_dll_to_trtpy.bat")
     cpp_library = [
