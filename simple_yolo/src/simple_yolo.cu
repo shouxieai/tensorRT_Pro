@@ -135,6 +135,7 @@ namespace SimpleYolo{
         return Norm();
     }
 
+    /* 构造时设置当前gpuid，析构时修改为原来的gpuid */
     class AutoDevice{
     public:
         AutoDevice(int device_id = 0){
@@ -162,6 +163,33 @@ namespace SimpleYolo{
             case LogLevel::Fatal: return "fatal";
             default: return "unknow";
         }
+    }
+
+    template<typename _T>
+    static string join_dims(const vector<_T>& dims){
+        stringstream output;
+        char buf[64];
+        const char* fmts[] = {"%d", " x %d"};
+        for(int i = 0; i < dims.size(); ++i){
+            snprintf(buf, sizeof(buf), fmts[i != 0], dims[i]);
+            output << buf;
+        }
+        return output.str();
+    }
+
+    static bool save_file(const string& file, const void* data, size_t length){
+
+        FILE* f = fopen(file.c_str(), "wb");
+        if (!f) return false;
+
+        if (data and length > 0){
+            if (fwrite(data, 1, length, f) not_eq length){
+                fclose(f);
+                return false;
+            }
+        }
+        fclose(f);
+        return true;
     }
 
     static string file_name(const string& path, bool include_suffix){
@@ -227,6 +255,238 @@ namespace SimpleYolo{
         return device_id;
     }
 
+    void set_device(int device_id) {
+        if (device_id == -1)
+            return;
+
+        checkCudaRuntime(cudaSetDevice(device_id));
+    }
+
+    /////////////////////////////CUDA kernels////////////////////////////////////////////////
+
+    const int NUM_BOX_ELEMENT = 7;      // left, top, right, bottom, confidence, class, keepflag
+    static __device__ void affine_project(float* matrix, float x, float y, float* ox, float* oy){
+        *ox = matrix[0] * x + matrix[1] * y + matrix[2];
+        *oy = matrix[3] * x + matrix[4] * y + matrix[5];
+    }
+
+    static __global__ void decode_kernel(float* predict, int num_bboxes, int num_classes, float confidence_threshold, float* invert_affine_matrix, float* parray, int max_objects){  
+
+        int position = blockDim.x * blockIdx.x + threadIdx.x;
+        if (position >= num_bboxes) return;
+
+        float* pitem     = predict + (5 + num_classes) * position;
+        float objectness = pitem[4];
+        if(objectness < confidence_threshold)
+            return;
+
+        float* class_confidence = pitem + 5;
+        float confidence        = *class_confidence++;
+        int label               = 0;
+        for(int i = 1; i < num_classes; ++i, ++class_confidence){
+            if(*class_confidence > confidence){
+                confidence = *class_confidence;
+                label      = i;
+            }
+        }
+
+        confidence *= objectness;
+        if(confidence < confidence_threshold)
+            return;
+
+        int index = atomicAdd(parray, 1);
+        if(index >= max_objects)
+            return;
+
+        float cx         = *pitem++;
+        float cy         = *pitem++;
+        float width      = *pitem++;
+        float height     = *pitem++;
+        float left   = cx - width * 0.5f;
+        float top    = cy - height * 0.5f;
+        float right  = cx + width * 0.5f;
+        float bottom = cy + height * 0.5f;
+        affine_project(invert_affine_matrix, left,  top,    &left,  &top);
+        affine_project(invert_affine_matrix, right, bottom, &right, &bottom);
+
+        float* pout_item = parray + 1 + index * NUM_BOX_ELEMENT;
+        *pout_item++ = left;
+        *pout_item++ = top;
+        *pout_item++ = right;
+        *pout_item++ = bottom;
+        *pout_item++ = confidence;
+        *pout_item++ = label;
+        *pout_item++ = 1; // 1 = keep, 0 = ignore
+    }
+
+    static __device__ float box_iou(
+        float aleft, float atop, float aright, float abottom, 
+        float bleft, float btop, float bright, float bbottom
+    ){
+
+        float cleft 	= max(aleft, bleft);
+        float ctop 		= max(atop, btop);
+        float cright 	= min(aright, bright);
+        float cbottom 	= min(abottom, bbottom);
+        
+        float c_area = max(cright - cleft, 0.0f) * max(cbottom - ctop, 0.0f);
+        if(c_area == 0.0f)
+            return 0.0f;
+        
+        float a_area = max(0.0f, aright - aleft) * max(0.0f, abottom - atop);
+        float b_area = max(0.0f, bright - bleft) * max(0.0f, bbottom - btop);
+        return c_area / (a_area + b_area - c_area);
+    }
+    
+    static __global__ void fast_nms_kernel(float* bboxes, int max_objects, float threshold){
+
+        int position = (blockDim.x * blockIdx.x + threadIdx.x);
+        int count = min((int)*bboxes, max_objects);
+        if (position >= count) 
+            return;
+        
+        // left, top, right, bottom, confidence, class, keepflag
+        float* pcurrent = bboxes + 1 + position * NUM_BOX_ELEMENT;
+        for(int i = 0; i < count; ++i){
+            float* pitem = bboxes + 1 + i * NUM_BOX_ELEMENT;
+            if(i == position || pcurrent[5] != pitem[5]) continue;
+
+            if(pitem[4] >= pcurrent[4]){
+                if(pitem[4] == pcurrent[4] && i < position)
+                    continue;
+
+                float iou = box_iou(
+                    pcurrent[0], pcurrent[1], pcurrent[2], pcurrent[3],
+                    pitem[0],    pitem[1],    pitem[2],    pitem[3]
+                );
+
+                if(iou > threshold){
+                    pcurrent[6] = 0;  // 1=keep, 0=ignore
+                    return;
+                }
+            }
+        }
+    } 
+
+    static void decode_kernel_invoker(float* predict, int num_bboxes, int num_classes, float confidence_threshold, float nms_threshold, float* invert_affine_matrix, float* parray, int max_objects, cudaStream_t stream){
+        
+        auto grid = grid_dims(num_bboxes);
+        auto block = block_dims(num_bboxes);
+        checkCudaKernel(decode_kernel<<<grid, block, 0, stream>>>(predict, num_bboxes, num_classes, confidence_threshold, invert_affine_matrix, parray, max_objects));
+
+        grid = grid_dims(max_objects);
+        block = block_dims(max_objects);
+        checkCudaKernel(fast_nms_kernel<<<grid, block, 0, stream>>>(parray, max_objects, nms_threshold));
+    }
+
+    static __global__ void warp_affine_bilinear_and_normalize_plane_kernel(uint8_t* src, int src_line_size, int src_width, int src_height, float* dst, int dst_width, int dst_height, 
+        uint8_t const_value_st, float* warp_affine_matrix_2_3, Norm norm, int edge){
+
+        int position = blockDim.x * blockIdx.x + threadIdx.x;
+        if (position >= edge) return;
+
+        float m_x1 = warp_affine_matrix_2_3[0];
+        float m_y1 = warp_affine_matrix_2_3[1];
+        float m_z1 = warp_affine_matrix_2_3[2];
+        float m_x2 = warp_affine_matrix_2_3[3];
+        float m_y2 = warp_affine_matrix_2_3[4];
+        float m_z2 = warp_affine_matrix_2_3[5];
+
+        int dx      = position % dst_width;
+        int dy      = position / dst_width;
+        float src_x = m_x1 * dx + m_y1 * dy + m_z1 + 0.5f;
+        float src_y = m_x2 * dx + m_y2 * dy + m_z2 + 0.5f;
+        float c0, c1, c2;
+
+        if(src_x <= -1 || src_x >= src_width || src_y <= -1 || src_y >= src_height){
+            // out of range
+            c0 = const_value_st;
+            c1 = const_value_st;
+            c2 = const_value_st;
+        }else{
+            int y_low = floorf(src_y);
+            int x_low = floorf(src_x);
+            int y_high = y_low + 1;
+            int x_high = x_low + 1;
+
+            uint8_t const_value[] = {const_value_st, const_value_st, const_value_st};
+            float ly    = src_y - y_low;
+            float lx    = src_x - x_low;
+            float hy    = 1 - ly;
+            float hx    = 1 - lx;
+            float w1    = hy * hx, w2 = hy * lx, w3 = ly * hx, w4 = ly * lx;
+            uint8_t* v1 = const_value;
+            uint8_t* v2 = const_value;
+            uint8_t* v3 = const_value;
+            uint8_t* v4 = const_value;
+            if(y_low >= 0){
+                if (x_low >= 0)
+                    v1 = src + y_low * src_line_size + x_low * 3;
+
+                if (x_high < src_width)
+                    v2 = src + y_low * src_line_size + x_high * 3;
+            }
+            
+            if(y_high < src_height){
+                if (x_low >= 0)
+                    v3 = src + y_high * src_line_size + x_low * 3;
+
+                if (x_high < src_width)
+                    v4 = src + y_high * src_line_size + x_high * 3;
+            }
+
+            c0 = w1 * v1[0] + w2 * v2[0] + w3 * v3[0] + w4 * v4[0];
+            c1 = w1 * v1[1] + w2 * v2[1] + w3 * v3[1] + w4 * v4[1];
+            c2 = w1 * v1[2] + w2 * v2[2] + w3 * v3[2] + w4 * v4[2];
+        }
+
+        if(norm.channel_type == ChannelType::Invert){
+            float t = c2;
+            c2 = c0;  c0 = t;
+        }
+
+        if(norm.type == NormType::MeanStd){
+            c0 = (c0 * norm.alpha - norm.mean[0]) / norm.std[0];
+            c1 = (c1 * norm.alpha - norm.mean[1]) / norm.std[1];
+            c2 = (c2 * norm.alpha - norm.mean[2]) / norm.std[2];
+        }else if(norm.type == NormType::AlphaBeta){
+            c0 = c0 * norm.alpha + norm.beta;
+            c1 = c1 * norm.alpha + norm.beta;
+            c2 = c2 * norm.alpha + norm.beta;
+        }
+
+        int area = dst_width * dst_height;
+        float* pdst_c0 = dst + dy * dst_width + dx;
+        float* pdst_c1 = pdst_c0 + area;
+        float* pdst_c2 = pdst_c1 + area;
+        *pdst_c0 = c0;
+        *pdst_c1 = c1;
+        *pdst_c2 = c2;
+    }
+
+    static void warp_affine_bilinear_and_normalize_plane(
+        uint8_t* src, int src_line_size, int src_width, int src_height, float* dst, int dst_width, int dst_height,
+        float* matrix_2_3, uint8_t const_value, const Norm& norm,
+        cudaStream_t stream) {
+        
+        int jobs   = dst_width * dst_height;
+        auto grid  = grid_dims(jobs);
+        auto block = block_dims(jobs);
+        
+        checkCudaKernel(warp_affine_bilinear_and_normalize_plane_kernel << <grid, block, 0, stream >> > (
+            src, src_line_size,
+            src_width, src_height, dst,
+            dst_width, dst_height, const_value, matrix_2_3, norm, jobs
+        ));
+    }
+
+
+    //////////////////////////////class MixMemory/////////////////////////////////////////////////
+    /* gpu/cpu内存管理
+        自动对gpu和cpu内存进行分配和释放
+        这里的cpu使用的是pinned memory，当对gpu做内存复制时，性能比较好
+        因为是cudaMallocHost分配的，因此他与cuda context有关联
+    */
     class MixMemory {
     public:
         MixMemory(int device_id = CURRENT_DEVICE_ID);
@@ -352,6 +612,11 @@ namespace SimpleYolo{
         release_gpu();
     }
 
+    /////////////////////////////////class Tensor////////////////////////////////////////////////
+    /* Tensor类，实现张量的管理
+        由于NN多用张量，必须有个类进行管理才方便，实现内存自动分配，计算索引等等
+        如果要调试，可以执行save_to_file，储存为文件后，在python中加载并查看
+    */
     enum class DataHead : int{
         Init   = 0,
         Device = 1,
@@ -380,7 +645,6 @@ namespace SimpleYolo{
         inline int width()   const{return shape_[3];}
 
         inline const std::vector<int>& dims() const { return shape_; }
-        inline const std::vector<size_t>& strides() const {return strides_;}
         inline int bytes()                    const { return bytes_; }
         inline int bytes(int start_axis)      const { return count(start_axis) * element_size(); }
         inline int element_size()             const { return sizeof(float); }
@@ -415,8 +679,6 @@ namespace SimpleYolo{
         Tensor& to_gpu(bool copy=true);
         Tensor& to_cpu(bool copy=true);
 
-        Tensor& to_half();
-        Tensor& to_float();
         inline void* cpu() const { ((Tensor*)this)->to_cpu(); return data_->cpu(); }
         inline void* gpu() const { ((Tensor*)this)->to_gpu(); return data_->gpu(); }
         
@@ -432,7 +694,6 @@ namespace SimpleYolo{
 
         template<typename DType, typename ... _Args> 
         inline DType* gpu(int i, _Args&& ... args) { return gpu<DType>() + offset(i, args...); }
-
 
         template<typename DType, typename ... _Args> 
         inline DType& at(int i, _Args&& ... args) { return *(cpu<DType>() + offset(i, args...)); }
@@ -453,7 +714,6 @@ namespace SimpleYolo{
         const char* descriptor() const;
 
         Tensor& copy_from_gpu(size_t offset, const void* src, size_t num_element, int device_id = CURRENT_DEVICE_ID);
-        Tensor& copy_from_cpu(size_t offset, const void* src, size_t num_element);
 
         /**
         
@@ -489,7 +749,6 @@ namespace SimpleYolo{
 
     private:
         std::vector<int> shape_;
-        std::vector<size_t> strides_;
         size_t bytes_    = 0;
         DataHead head_   = DataHead::Init;
         cudaStream_t stream_ = nullptr;
@@ -679,20 +938,6 @@ namespace SimpleYolo{
             setup_dims[i] = dim;
         }
         this->shape_ = setup_dims;
-
-        // strides = element_size
-        this->strides_.resize(setup_dims.size());
-        
-        size_t prev_size  = element_size();
-        size_t prev_shape = 1;
-        for(int i = (int)strides_.size() - 1; i >= 0; --i){
-            if(i + 1 < strides_.size()){
-                prev_size  = strides_[i+1];
-                prev_shape = shape_[i+1];
-            }
-            strides_[i] = prev_size * prev_shape;
-        }
-
         this->adajust_memory_by_update_dims_or_type();
         this->compute_shape_string();
         return *this;
@@ -781,225 +1026,7 @@ namespace SimpleYolo{
         return true;
     }
 
-
-    const int NUM_BOX_ELEMENT = 7;      // left, top, right, bottom, confidence, class, keepflag
-    static __device__ void affine_project(float* matrix, float x, float y, float* ox, float* oy){
-        *ox = matrix[0] * x + matrix[1] * y + matrix[2];
-        *oy = matrix[3] * x + matrix[4] * y + matrix[5];
-    }
-
-    static __global__ void decode_kernel(float* predict, int num_bboxes, int num_classes, float confidence_threshold, float* invert_affine_matrix, float* parray, int max_objects){  
-
-        int position = blockDim.x * blockIdx.x + threadIdx.x;
-        if (position >= num_bboxes) return;
-
-        float* pitem     = predict + (5 + num_classes) * position;
-        float objectness = pitem[4];
-        if(objectness < confidence_threshold)
-            return;
-
-        float* class_confidence = pitem + 5;
-        float confidence        = *class_confidence++;
-        int label               = 0;
-        for(int i = 1; i < num_classes; ++i, ++class_confidence){
-            if(*class_confidence > confidence){
-                confidence = *class_confidence;
-                label      = i;
-            }
-        }
-
-        confidence *= objectness;
-        if(confidence < confidence_threshold)
-            return;
-
-        int index = atomicAdd(parray, 1);
-        if(index >= max_objects)
-            return;
-
-        float cx         = *pitem++;
-        float cy         = *pitem++;
-        float width      = *pitem++;
-        float height     = *pitem++;
-        float left   = cx - width * 0.5f;
-        float top    = cy - height * 0.5f;
-        float right  = cx + width * 0.5f;
-        float bottom = cy + height * 0.5f;
-        affine_project(invert_affine_matrix, left,  top,    &left,  &top);
-        affine_project(invert_affine_matrix, right, bottom, &right, &bottom);
-
-        float* pout_item = parray + 1 + index * NUM_BOX_ELEMENT;
-        *pout_item++ = left;
-        *pout_item++ = top;
-        *pout_item++ = right;
-        *pout_item++ = bottom;
-        *pout_item++ = confidence;
-        *pout_item++ = label;
-        *pout_item++ = 1; // 1 = keep, 0 = ignore
-    }
-
-    static __device__ float box_iou(
-        float aleft, float atop, float aright, float abottom, 
-        float bleft, float btop, float bright, float bbottom
-    ){
-
-        float cleft 	= max(aleft, bleft);
-        float ctop 		= max(atop, btop);
-        float cright 	= min(aright, bright);
-        float cbottom 	= min(abottom, bbottom);
-        
-        float c_area = max(cright - cleft, 0.0f) * max(cbottom - ctop, 0.0f);
-        if(c_area == 0.0f)
-            return 0.0f;
-        
-        float a_area = max(0.0f, aright - aleft) * max(0.0f, abottom - atop);
-        float b_area = max(0.0f, bright - bleft) * max(0.0f, bbottom - btop);
-        return c_area / (a_area + b_area - c_area);
-    }
-
-    static __global__ void nms_kernel(float* bboxes, int max_objects, float threshold){
-
-        int position = (blockDim.x * blockIdx.x + threadIdx.x);
-        int count = min((int)*bboxes, max_objects);
-        if (position >= count) 
-            return;
-        
-        // left, top, right, bottom, confidence, class, keepflag
-        float* pcurrent = bboxes + 1 + position * NUM_BOX_ELEMENT;
-        for(int i = 0; i < count; ++i){
-            float* pitem = bboxes + 1 + i * NUM_BOX_ELEMENT;
-            if(i == position || pcurrent[5] != pitem[5]) continue;
-
-            if(pitem[4] >= pcurrent[4]){
-                if(pitem[4] == pcurrent[4] && i < position)
-                    continue;
-
-                float iou = box_iou(
-                    pcurrent[0], pcurrent[1], pcurrent[2], pcurrent[3],
-                    pitem[0],    pitem[1],    pitem[2],    pitem[3]
-                );
-
-                if(iou > threshold){
-                    pcurrent[6] = 0;  // 1=keep, 0=ignore
-                    return;
-                }
-            }
-        }
-    } 
-
-    void decode_kernel_invoker(float* predict, int num_bboxes, int num_classes, float confidence_threshold, float nms_threshold, float* invert_affine_matrix, float* parray, int max_objects, cudaStream_t stream){
-        
-        auto grid = grid_dims(num_bboxes);
-        auto block = block_dims(num_bboxes);
-        checkCudaKernel(decode_kernel<<<grid, block, 0, stream>>>(predict, num_bboxes, num_classes, confidence_threshold, invert_affine_matrix, parray, max_objects));
-
-        grid = grid_dims(max_objects);
-        block = block_dims(max_objects);
-        checkCudaKernel(nms_kernel<<<grid, block, 0, stream>>>(parray, max_objects, nms_threshold));
-    }
-
-    __global__ void warp_affine_bilinear_and_normalize_plane_kernel(uint8_t* src, int src_line_size, int src_width, int src_height, float* dst, int dst_width, int dst_height, 
-        uint8_t const_value_st, float* warp_affine_matrix_2_3, Norm norm, int edge){
-
-        int position = blockDim.x * blockIdx.x + threadIdx.x;
-        if (position >= edge) return;
-
-        float m_x1 = warp_affine_matrix_2_3[0];
-        float m_y1 = warp_affine_matrix_2_3[1];
-        float m_z1 = warp_affine_matrix_2_3[2];
-        float m_x2 = warp_affine_matrix_2_3[3];
-        float m_y2 = warp_affine_matrix_2_3[4];
-        float m_z2 = warp_affine_matrix_2_3[5];
-
-        int dx      = position % dst_width;
-        int dy      = position / dst_width;
-        float src_x = m_x1 * dx + m_y1 * dy + m_z1 + 0.5f;
-        float src_y = m_x2 * dx + m_y2 * dy + m_z2 + 0.5f;
-        float c0, c1, c2;
-
-        if(src_x <= -1 || src_x >= src_width || src_y <= -1 || src_y >= src_height){
-            // out of range
-            c0 = const_value_st;
-            c1 = const_value_st;
-            c2 = const_value_st;
-        }else{
-            int y_low = floorf(src_y);
-            int x_low = floorf(src_x);
-            int y_high = y_low + 1;
-            int x_high = x_low + 1;
-
-            uint8_t const_value[] = {const_value_st, const_value_st, const_value_st};
-            float ly    = src_y - y_low;
-            float lx    = src_x - x_low;
-            float hy    = 1 - ly;
-            float hx    = 1 - lx;
-            float w1    = hy * hx, w2 = hy * lx, w3 = ly * hx, w4 = ly * lx;
-            uint8_t* v1 = const_value;
-            uint8_t* v2 = const_value;
-            uint8_t* v3 = const_value;
-            uint8_t* v4 = const_value;
-            if(y_low >= 0){
-                if (x_low >= 0)
-                    v1 = src + y_low * src_line_size + x_low * 3;
-
-                if (x_high < src_width)
-                    v2 = src + y_low * src_line_size + x_high * 3;
-            }
-            
-            if(y_high < src_height){
-                if (x_low >= 0)
-                    v3 = src + y_high * src_line_size + x_low * 3;
-
-                if (x_high < src_width)
-                    v4 = src + y_high * src_line_size + x_high * 3;
-            }
-
-            c0 = w1 * v1[0] + w2 * v2[0] + w3 * v3[0] + w4 * v4[0];
-            c1 = w1 * v1[1] + w2 * v2[1] + w3 * v3[1] + w4 * v4[1];
-            c2 = w1 * v1[2] + w2 * v2[2] + w3 * v3[2] + w4 * v4[2];
-        }
-
-        if(norm.channel_type == ChannelType::Invert){
-            float t = c2;
-            c2 = c0;  c0 = t;
-        }
-
-        if(norm.type == NormType::MeanStd){
-            c0 = (c0 * norm.alpha - norm.mean[0]) / norm.std[0];
-            c1 = (c1 * norm.alpha - norm.mean[1]) / norm.std[1];
-            c2 = (c2 * norm.alpha - norm.mean[2]) / norm.std[2];
-        }else if(norm.type == NormType::AlphaBeta){
-            c0 = c0 * norm.alpha + norm.beta;
-            c1 = c1 * norm.alpha + norm.beta;
-            c2 = c2 * norm.alpha + norm.beta;
-        }
-
-        int area = dst_width * dst_height;
-        float* pdst_c0 = dst + dy * dst_width + dx;
-        float* pdst_c1 = pdst_c0 + area;
-        float* pdst_c2 = pdst_c1 + area;
-        *pdst_c0 = c0;
-        *pdst_c1 = c1;
-        *pdst_c2 = c2;
-    }
-
-    void warp_affine_bilinear_and_normalize_plane(
-        uint8_t* src, int src_line_size, int src_width, int src_height, float* dst, int dst_width, int dst_height,
-        float* matrix_2_3, uint8_t const_value, const Norm& norm,
-        cudaStream_t stream) {
-        
-        int jobs   = dst_width * dst_height;
-        auto grid  = grid_dims(jobs);
-        auto block = block_dims(jobs);
-        
-        checkCudaKernel(warp_affine_bilinear_and_normalize_plane_kernel << <grid, block, 0, stream >> > (
-            src, src_line_size,
-            src_width, src_height, dst,
-            dst_width, dst_height, const_value, matrix_2_3, norm, jobs
-        ));
-    }
-
-
-    /////////////////////////////////////////
+    /////////////////////////////////class TRTInferImpl////////////////////////////////////////////////
     class Logger : public ILogger {
     public:
         virtual void log(Severity severity, const char* msg) noexcept override {
@@ -1023,7 +1050,6 @@ namespace SimpleYolo{
     };
     static Logger gLogger;
 
-    ////////////////////////////////////////////////////////////////////////////////
     template<typename _T>
     static void destroy_nvidia_pointer(_T* ptr) {
         if (ptr) ptr->destroy();
@@ -1086,9 +1112,9 @@ namespace SimpleYolo{
         shared_ptr<IRuntime> runtime_ = nullptr;
     };
 
-    class InferImpl{
+    class TRTInferImpl{
     public:
-        virtual ~InferImpl();
+        virtual ~TRTInferImpl();
         bool load(const std::string& file);
         bool load_from_memory(const void* pdata, size_t size);
         void destroy();
@@ -1135,11 +1161,11 @@ namespace SimpleYolo{
     };
 
     ////////////////////////////////////////////////////////////////////////////////////
-    InferImpl::~InferImpl(){
+    TRTInferImpl::~TRTInferImpl(){
         destroy();
     }
 
-    void InferImpl::destroy() {
+    void TRTInferImpl::destroy() {
 
         int old_device = 0;
         checkCudaRuntime(cudaGetDevice(&old_device));
@@ -1153,7 +1179,7 @@ namespace SimpleYolo{
         checkCudaRuntime(cudaSetDevice(old_device));
     }
 
-    void InferImpl::print(){
+    void TRTInferImpl::print(){
         if(!context_){
             INFOW("Infer print, nullptr.");
             return;
@@ -1176,14 +1202,14 @@ namespace SimpleYolo{
         }
     }
 
-    std::shared_ptr<std::vector<uint8_t>> InferImpl::serial_engine() {
+    std::shared_ptr<std::vector<uint8_t>> TRTInferImpl::serial_engine() {
         auto memory = this->context_->engine_->serialize();
         auto output = make_shared<std::vector<uint8_t>>((uint8_t*)memory->data(), (uint8_t*)memory->data()+memory->size());
         memory->destroy();
         return output;
     }
 
-    bool InferImpl::load_from_memory(const void* pdata, size_t size) {
+    bool TRTInferImpl::load_from_memory(const void* pdata, size_t size) {
 
         if (pdata == nullptr || size == 0)
             return false;
@@ -1222,7 +1248,7 @@ namespace SimpleYolo{
         return data;
     }
 
-    bool InferImpl::load(const std::string& file) {
+    bool TRTInferImpl::load(const std::string& file) {
 
         auto data = load_file(file);
         if (data.empty())
@@ -1242,12 +1268,12 @@ namespace SimpleYolo{
         return true;
     }
 
-    size_t InferImpl::get_device_memory_size() {
+    size_t TRTInferImpl::get_device_memory_size() {
         EngineContext* context = (EngineContext*)this->context_.get();
         return context->context_->getEngine().getDeviceMemorySize();
     }
 
-    void InferImpl::build_engine_input_and_outputs_mapper() {
+    void TRTInferImpl::build_engine_input_and_outputs_mapper() {
         
         EngineContext* context = (EngineContext*)this->context_.get();
         int nbBindings = context->engine_->getNbBindings();
@@ -1287,34 +1313,34 @@ namespace SimpleYolo{
         bindingsPtr_.resize(orderdBlobs_.size());
     }
 
-    void InferImpl::set_stream(cudaStream_t stream){
+    void TRTInferImpl::set_stream(cudaStream_t stream){
         this->context_->set_stream(stream);
 
         for(auto& t : orderdBlobs_)
             t->set_stream(stream);
     }
 
-    cudaStream_t InferImpl::get_stream() {
+    cudaStream_t TRTInferImpl::get_stream() {
         return this->context_->stream_;
     }
 
-    int InferImpl::device() {
+    int TRTInferImpl::device() {
         return device_;
     }
 
-    void InferImpl::synchronize() {
+    void TRTInferImpl::synchronize() {
         checkCudaRuntime(cudaStreamSynchronize(context_->stream_));
     }
 
-    bool InferImpl::is_output_name(const std::string& name){
+    bool TRTInferImpl::is_output_name(const std::string& name){
         return std::find(outputs_name_.begin(), outputs_name_.end(), name) != outputs_name_.end();
     }
 
-    bool InferImpl::is_input_name(const std::string& name){
+    bool TRTInferImpl::is_input_name(const std::string& name){
         return std::find(inputs_name_.begin(), inputs_name_.end(), name) != inputs_name_.end();
     }
 
-    void InferImpl::forward(bool sync) {
+    void TRTInferImpl::forward(bool sync) {
 
         EngineContext* context = (EngineContext*)context_.get();
         int inputBatchSize = inputs_[0]->size(0);
@@ -1348,19 +1374,19 @@ namespace SimpleYolo{
         }
     }
 
-    std::shared_ptr<MixMemory> InferImpl::get_workspace() {
+    std::shared_ptr<MixMemory> TRTInferImpl::get_workspace() {
         return workspace_;
     }
 
-    int InferImpl::num_input() {
+    int TRTInferImpl::num_input() {
         return this->inputs_.size();
     }
 
-    int InferImpl::num_output() {
+    int TRTInferImpl::num_output() {
         return this->outputs_.size();
     }
 
-    void InferImpl::set_input (int index, std::shared_ptr<Tensor> tensor){
+    void TRTInferImpl::set_input (int index, std::shared_ptr<Tensor> tensor){
         Assert(index >= 0 && index < inputs_.size());
         this->inputs_[index] = tensor;
 
@@ -1368,7 +1394,7 @@ namespace SimpleYolo{
         this->orderdBlobs_[order_index] = tensor;
     }
 
-    void InferImpl::set_output(int index, std::shared_ptr<Tensor> tensor){
+    void TRTInferImpl::set_output(int index, std::shared_ptr<Tensor> tensor){
         Assert(index >= 0 && index < outputs_.size());
         this->outputs_[index] = tensor;
 
@@ -1376,58 +1402,49 @@ namespace SimpleYolo{
         this->orderdBlobs_[order_index] = tensor;
     }
 
-    std::shared_ptr<Tensor> InferImpl::input(int index) {
+    std::shared_ptr<Tensor> TRTInferImpl::input(int index) {
         Assert(index >= 0 && index < inputs_name_.size());
         return this->inputs_[index];
     }
 
-    std::string InferImpl::get_input_name(int index){
+    std::string TRTInferImpl::get_input_name(int index){
         Assert(index >= 0 && index < inputs_name_.size());
         return inputs_name_[index];
     }
 
-    std::shared_ptr<Tensor> InferImpl::output(int index) {
+    std::shared_ptr<Tensor> TRTInferImpl::output(int index) {
         Assert(index >= 0 && index < outputs_.size());
         return outputs_[index];
     }
 
-    std::string InferImpl::get_output_name(int index){
+    std::string TRTInferImpl::get_output_name(int index){
         Assert(index >= 0 && index < outputs_name_.size());
         return outputs_name_[index];
     }
 
-    int InferImpl::get_max_batch_size() {
+    int TRTInferImpl::get_max_batch_size() {
         Assert(this->context_ != nullptr);
         return this->context_->engine_->getMaxBatchSize();
     }
 
-    std::shared_ptr<Tensor> InferImpl::tensor(const std::string& name) {
+    std::shared_ptr<Tensor> TRTInferImpl::tensor(const std::string& name) {
         Assert(this->blobsNameMapper_.find(name) != this->blobsNameMapper_.end());
         return orderdBlobs_[blobsNameMapper_[name]];
     }
 
-    std::shared_ptr<InferImpl> load_infer(const string& file) {
+    std::shared_ptr<TRTInferImpl> load_infer(const string& file) {
         
-        std::shared_ptr<InferImpl> infer(new InferImpl());
+        std::shared_ptr<TRTInferImpl> infer(new TRTInferImpl());
         if (!infer->load(file))
             infer.reset();
         return infer;
     }
 
-    int get_device() {
-        int device = 0;
-        checkCudaRuntime(cudaGetDevice(&device));
-        return device;
-    }
-
-    void set_device(int device_id) {
-        if (device_id == -1)
-            return;
-
-        checkCudaRuntime(cudaSetDevice(device_id));
-    }
-
-    ////////////////////////////////////////////////////////////////////
+    //////////////////////////////class MonopolyAllocator//////////////////////////////////////
+    /* 独占分配器
+       通过对tensor做独占管理，具有max_batch * 2个tensor，通过query获取一个
+       当推理结束后，该tensor释放使用权，即可交给下一个图像使用，内存实现复用
+    */
     template<class _ItemType>
     class MonopolyAllocator{
     public:
@@ -1525,9 +1542,12 @@ namespace SimpleYolo{
     };
 
 
-    ////////////////////////////////////////////////////////////////////////////////////////////
+    /////////////////////////////////////////class ThreadSafedAsyncInfer/////////////////////////////////////////////
+    /* 异步线程安全的推理器
+       通过异步线程启动，使得调用方允许任意线程调用把图像做输入，并通过future来获取异步结果
+    */
     template<class Input, class Output, class StartParam=std::tuple<std::string, int>, class JobAdditional=int>
-    class InferController{
+    class ThreadSafedAsyncInfer{
     public:
         struct Job{
             Input input;
@@ -1537,7 +1557,7 @@ namespace SimpleYolo{
             std::shared_ptr<std::promise<Output>> pro;
         };
 
-        virtual ~InferController(){
+        virtual ~ThreadSafedAsyncInfer(){
             stop();
         }
 
@@ -1567,7 +1587,7 @@ namespace SimpleYolo{
 
             std::promise<bool> pro;
             start_param_ = param;
-            worker_      = std::make_shared<std::thread>(&InferController::worker, this, std::ref(pro));
+            worker_      = std::make_shared<std::thread>(&ThreadSafedAsyncInfer::worker, this, std::ref(pro));
             return pro.get_future().get();
         }
 
@@ -1667,7 +1687,11 @@ namespace SimpleYolo{
     };
 
 
-    /////////////////////////////////////////////////////////////
+    ///////////////////////////////////class YoloTRTInferImpl//////////////////////////////////////
+    /* Yolo的具体实现
+        通过上述类的特性，实现预处理的计算重叠、异步垮线程调用，最终拼接为多个图为一个batch进行推理。最大化的利用
+        显卡性能，实现高性能高可用好用的yolo推理
+    */
     const char* type_name(Type type){
         switch(type){
         case Type::V5: return "YoloV5";
@@ -1683,49 +1707,7 @@ namespace SimpleYolo{
         void compute(const cv::Size& from, const cv::Size& to){
             float scale_x = to.width / (float)from.width;
             float scale_y = to.height / (float)from.height;
-
-            // 这里取min的理由是
-            // 1. M矩阵是 from * M = to的方式进行映射，因此scale的分母一定是from
-            // 2. 取最小，即根据宽高比，算出最小的比例，如果取最大，则势必有一部分超出图像范围而被裁剪掉，这不是我们要的
-            // **
             float scale = std::min(scale_x, scale_y);
-
-            /**
-            这里的仿射变换矩阵实质上是2x3的矩阵，具体实现是
-            scale, 0, -scale * from.width * 0.5 + to.width * 0.5
-            0, scale, -scale * from.height * 0.5 + to.height * 0.5
-            
-            这里可以想象成，是经历过缩放、平移、平移三次变换后的组合，M = TPS
-            例如第一个S矩阵，定义为把输入的from图像，等比缩放scale倍，到to尺度下
-            S = [
-            scale,     0,      0
-            0,     scale,      0
-            0,         0,      1
-            ]
-            
-            P矩阵定义为第一次平移变换矩阵，将图像的原点，从左上角，移动到缩放(scale)后图像的中心上
-            P = [
-            1,        0,      -scale * from.width * 0.5
-            0,        1,      -scale * from.height * 0.5
-            0,        0,                1
-            ]
-
-            T矩阵定义为第二次平移变换矩阵，将图像从原点移动到目标（to）图的中心上
-            T = [
-            1,        0,      to.width * 0.5,
-            0,        1,      to.height * 0.5,
-            0,        0,            1
-            ]
-
-            通过将3个矩阵顺序乘起来，即可得到下面的表达式：
-            M = [
-            scale,    0,     -scale * from.width * 0.5 + to.width * 0.5
-            0,     scale,    -scale * from.height * 0.5 + to.height * 0.5
-            0,        0,                     1
-            ]
-            去掉第三行就得到opencv需要的输入2x3矩阵
-            **/
-
             i2d[0] = scale;  i2d[1] = 0;  i2d[2] = -scale * from.width  * 0.5  + to.width * 0.5;
             i2d[3] = 0;  i2d[4] = scale;  i2d[5] = -scale * from.height * 0.5 + to.height * 0.5;
 
@@ -1739,18 +1721,18 @@ namespace SimpleYolo{
         }
     };
 
-    using ControllerImpl = InferController
+    using ControllerImpl = ThreadSafedAsyncInfer
     <
         cv::Mat,                    // input
         BoxArray,         // output
         tuple<string, int>,     // start param
         AffineMatrix            // additional
     >;
-    class YoloInferImpl : public Infer, public ControllerImpl{
+    class YoloTRTInferImpl : public Infer, public ControllerImpl{
     public:
 
-        /** 要求在InferImpl里面执行stop，而不是在基类执行stop **/
-        virtual ~YoloInferImpl(){
+        /** 要求在TRTInferImpl里面执行stop，而不是在基类执行stop **/
+        virtual ~YoloTRTInferImpl(){
             stop();
         }
 
@@ -1934,7 +1916,7 @@ namespace SimpleYolo{
     };
 
     shared_ptr<Infer> create_infer(const string& engine_file, Type type, int gpuid, float confidence_threshold, float nms_threshold){
-        shared_ptr<YoloInferImpl> instance(new YoloInferImpl());
+        shared_ptr<YoloTRTInferImpl> instance(new YoloTRTInferImpl());
         if(!instance->startup(engine_file, type, gpuid, confidence_threshold, nms_threshold)){
             instance.reset();
         }
@@ -1952,38 +1934,7 @@ namespace SimpleYolo{
         }
     }
 
-    template<typename _T>
-    static string join_dims(const vector<_T>& dims){
-        stringstream output;
-        char buf[64];
-        const char* fmts[] = {"%d", " x %d"};
-        for(int i = 0; i < dims.size(); ++i){
-            snprintf(buf, sizeof(buf), fmts[i != 0], dims[i]);
-            output << buf;
-        }
-        return output.str();
-    }
-
-    static bool save_file(const string& file, const void* data, size_t length){
-
-        FILE* f = fopen(file.c_str(), "wb");
-        if (!f) return false;
-
-        if (data and length > 0){
-            if (fwrite(data, 1, length, f) not_eq length){
-                fclose(f);
-                return false;
-            }
-        }
-        fclose(f);
-        return true;
-    }
-
-    bool compile(
-        Mode mode,
-        unsigned int maxBatchSize,
-        const string& source_onnx,
-        const string& saveto) {
+    bool compile(Mode mode, unsigned int maxBatchSize, const string& source_onnx, const string& saveto) {
 
         INFO("Compile %s %s.", mode_string(mode), source_onnx.c_str());
         shared_ptr<IBuilder> builder(createInferBuilder(gLogger), destroy_nvidia_pointer<IBuilder>);
@@ -2007,10 +1958,8 @@ namespace SimpleYolo{
         }
 
         shared_ptr<INetworkDefinition> network;
-        //shared_ptr<ICaffeParser> caffeParser;
         shared_ptr<nvonnxparser::IParser> onnxParser;
         const auto explicitBatch = 1U << static_cast<uint32_t>(nvinfer1::NetworkDefinitionCreationFlag::kEXPLICIT_BATCH);
-        //network = shared_ptr<INetworkDefinition>(builder->createNetworkV2(explicitBatch), destroy_nvidia_pointer<INetworkDefinition>);
         network = shared_ptr<INetworkDefinition>(builder->createNetworkV2(explicitBatch), destroy_nvidia_pointer<INetworkDefinition>);
 
         //from onnx is not markOutput
@@ -2069,25 +2018,7 @@ namespace SimpleYolo{
             input_dims.d[0] = maxBatchSize;
             profile->setDimensions(input->getName(), nvinfer1::OptProfileSelector::kMAX, input_dims);
         }
-
-        // not need
-        // for(int i = 0; i < net_num_output; ++i){
-        // 	auto output = network->getOutput(i);
-        // 	auto output_dims = output->getDimensions();
-        // 	output_dims.d[0] = 1;
-        // 	profile->setDimensions(output->getName(), nvinfer1::OptProfileSelector::kMIN, output_dims);
-        // 	profile->setDimensions(output->getName(), nvinfer1::OptProfileSelector::kOPT, output_dims);
-        // 	output_dims.d[0] = maxBatchSize;
-        // 	profile->setDimensions(output->getName(), nvinfer1::OptProfileSelector::kMAX, output_dims);
-        // }
         config->addOptimizationProfile(profile);
-
-        // error on jetson
-        // auto timing_cache = shared_ptr<nvinfer1::ITimingCache>(config->createTimingCache(nullptr, 0), [](nvinfer1::ITimingCache* ptr){ptr->reset();});
-        // config->setTimingCache(*timing_cache, false);
-        // config->setFlag(BuilderFlag::kGPU_FALLBACK);
-        // config->setDefaultDeviceType(DeviceType::kDLA);
-        // config->setDLACore(0);
 
         INFO("Building engine...");
         auto time_start = chrono::duration_cast<chrono::milliseconds>(chrono::system_clock::now().time_since_epoch()).count();
