@@ -2,9 +2,26 @@
 #include <builder/trt_builder.hpp>
 #include <infer/trt_infer.hpp>
 #include <common/ilogger.hpp>
+#include <unordered_map>
+#include <string>
+#include <vector>
 
 using namespace std;
 
+#ifdef U_OS_WINDOWS
+const char* class_label[] = {
+    "finance", // finance
+    "realty", // realty
+    "stocks", // stocks
+    "education", // education
+    "science", // science
+    "society", // society
+    "politics", // politics
+    "sports", // sports
+    "game", // game
+    "entertainment"  // entertainment
+};
+#else
 /* 如果在windows下编译报错，请屏蔽掉这个文件 */
 const char* class_label[] = {
     "金融", // finance
@@ -18,6 +35,7 @@ const char* class_label[] = {
     "游戏", // game
     "娱乐"  // entertainment
 };
+#endif
 
 bool requires(const char* name);
 
