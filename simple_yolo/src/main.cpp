@@ -36,8 +36,6 @@ static const char* cocolabels[] = {
     "scissors", "teddy bear", "hair drier", "toothbrush"
 };
 
-bool requires(const char* name);
-
 static std::tuple<uint8_t, uint8_t, uint8_t> hsv2bgr(float h, float s, float v){
     const int h_i = static_cast<int>(h * 6);
     const float f = h * 6 - h_i;
