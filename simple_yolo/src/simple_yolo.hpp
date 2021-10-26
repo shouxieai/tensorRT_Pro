@@ -21,9 +21,9 @@ namespace SimpleYolo{
     };
 
     enum class Mode : int {
-		FP32,
-		FP16
-	};
+        FP32,
+        FP16
+    };
 
     struct Box{
         float left, top, right, bottom, confidence;
@@ -46,7 +46,9 @@ namespace SimpleYolo{
     const char* type_name(Type type);
     const char* mode_string(Mode type);
     void set_device(int device_id);
-    bool compile(Mode mode, unsigned int maxBatchSize, const string& source_onnx, const string& saveto);
+
+    // 1GB = 1<<30
+    bool compile(Mode mode, unsigned int max_batch_size, const string& source_onnx, const string& saveto, size_t max_workspace_size=1<<30);
     shared_ptr<Infer> create_infer(const string& engine_file, Type type, int gpuid, float confidence_threshold=0.25f, float nms_threshold=0.5f);
 
 }; // namespace SimpleYolo

@@ -1934,7 +1934,7 @@ namespace SimpleYolo{
         }
     }
 
-    bool compile(Mode mode, unsigned int maxBatchSize, const string& source_onnx, const string& saveto) {
+    bool compile(Mode mode, unsigned int max_batch_size, const string& source_onnx, const string& saveto, size_t max_workspace_size) {
 
         INFO("Compile %s %s.", mode_string(mode), source_onnx.c_str());
         shared_ptr<IBuilder> builder(createInferBuilder(gLogger), destroy_nvidia_pointer<IBuilder>);
@@ -1977,10 +1977,9 @@ namespace SimpleYolo{
         auto inputTensor = network->getInput(0);
         auto inputDims = inputTensor->getDimensions();
 
-        size_t _1_GB = 1 << 30;
         INFO("Input shape is %s", join_dims(vector<int>(inputDims.d, inputDims.d + inputDims.nbDims)).c_str());
-        INFO("Set max batch size = %d", maxBatchSize);
-        INFO("Set max workspace size = %.2f MB", _1_GB / 1024.0f / 1024.0f);
+        INFO("Set max batch size = %d", max_batch_size);
+        INFO("Set max workspace size = %.2f MB", max_workspace_size / 1024.0f / 1024.0f);
 
         int net_num_input = network->getNbInputs();
         INFO("Network has %d inputs:", net_num_input);
@@ -2005,8 +2004,8 @@ namespace SimpleYolo{
 
         int net_num_layers = network->getNbLayers();
         INFO("Network has %d layers:", net_num_layers);
-        builder->setMaxBatchSize(maxBatchSize);
-        config->setMaxWorkspaceSize(_1_GB);
+        builder->setMaxBatchSize(max_batch_size);
+        config->setMaxWorkspaceSize(max_workspace_size);
 
         auto profile = builder->createOptimizationProfile();
         for(int i = 0; i < net_num_input; ++i){
@@ -2015,7 +2014,7 @@ namespace SimpleYolo{
             input_dims.d[0] = 1;
             profile->setDimensions(input->getName(), nvinfer1::OptProfileSelector::kMIN, input_dims);
             profile->setDimensions(input->getName(), nvinfer1::OptProfileSelector::kOPT, input_dims);
-            input_dims.d[0] = maxBatchSize;
+            input_dims.d[0] = max_batch_size;
             profile->setDimensions(input->getName(), nvinfer1::OptProfileSelector::kMAX, input_dims);
         }
         config->addOptimizationProfile(profile);
