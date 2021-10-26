@@ -10,16 +10,12 @@ cu_objs := $(cu_objs:src/%=objs/%)
 cu_mk   := $(cu_objs:.cuo=.cumk)
 
 # 配置你的库路径
-# 1. onnx-tensorrt（项目集成了，不需要配置，下面地址是下载位置）
-#    https://github.com/onnx/onnx-tensorrt/tree/release/8.0
-# 2. protobuf（请自行下载编译）
-#    https://github.com/protocolbuffers/protobuf/tree/v3.11.4
-# 3. cudnn8.2.2.26（请自行下载）
+# 1. cudnn8.2.2.26（请自行下载）
 #    runtime的tar包，runtime中包含了lib、so文件
 #    develop的tar包，develop中包含了include、h等文件
-# 4. tensorRT-8.0.1.6-cuda10.2（请自行下载）
+# 2. tensorRT-8.0.1.6-cuda10.2（请自行下载）
 #    tensorRT下载GA版本（通用版、稳定版），EA（尝鲜版本）不要
-# 5. cuda10.2，也可以是11.x看搭配（请自行下载安装）
+# 3. cuda10.2，也可以是11.x看搭配（请自行下载安装）
 
 lean_tensor_rt := /data/sxai/lean/TensorRT-8.0.1.6-cuda10.2-cudnn8.2
 lean_cudnn     := /data/sxai/lean/cudnn8.2.2.26
@@ -40,7 +36,7 @@ library_paths := $(lean_tensor_rt)/lib \
 link_librarys := opencv_core opencv_imgproc opencv_videoio opencv_imgcodecs \
 			nvinfer nvonnxparser \
 			cuda cublas cudart cudnn \
-			stdc++ protobuf dl
+			stdc++ dl
 
 
 paths     := $(foreach item,$(library_paths),-Wl,-rpath=$(item))
