@@ -210,6 +210,7 @@ void direct_test(){
     auto mode = SimpleYolo::Mode::FP32;
     string model = "yolox_s";
     string onnx_file = cv::format("%s_dynamic.onnx", model.c_str());
+    // onnx_file = "yolox_s_dynamic_upsample.onnx";
     string model_file = cv::format("%s_dynamic.%s.trtmodel", model.c_str(), SimpleYolo::mode_string(mode));
     SimpleYolo::set_device(device_id);
     

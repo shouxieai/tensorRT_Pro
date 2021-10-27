@@ -25,3 +25,6 @@ python tools/export_onnx.py --output-name=yolox_s.onnx --no-onnxsim --exp_file=e
 
 # 运行
 - 按照主项目配置Makefile或者CMakeLists.txt，然后`make run -j64`即可
+
+# 关于Reisze报错
+- 如果你是7.x，通常会提示onnx解析的resize无法解析报错，此时考虑用workspace/fix_trt7.0_resize.py把resize改为upsample即可正常运行
