@@ -319,6 +319,29 @@ x[i] = x[i].view(bs, self.na, self.no, ny, nx).permute(0, 1, 3, 4, 2).contiguous
 # modified into：
 z.append(y.view(bs, self.na * ny * nx, self.no))
 
+############# for yolov5-6.0 #####################
+# line 65 in yolov5/models/yolo.py
+# if self.grid[i].shape[2:4] != x[i].shape[2:4] or self.onnx_dynamic:
+#    self.grid[i], self.anchor_grid[i] = self._make_grid(nx, ny, i)
+# modified into:
+if self.grid[i].shape[2:4] != x[i].shape[2:4] or self.onnx_dynamic:
+    self.grid[i], self.anchor_grid[i] = self._make_grid(nx, ny, i)
+
+    # disconnect for pytorch trace
+    anchor_grid = torch.from_numpy(self.anchor_grid[i].cpu().data.numpy()).to(self.anchor_grid[i].device)
+
+# line 70 in yolov5/models/yolo.py
+# y[..., 2:4] = (y[..., 2:4] * 2) ** 2 * self.anchor_grid[i]  # wh
+# modified into:
+y[..., 2:4] = (y[..., 2:4] * 2) ** 2 * anchor_grid  # wh
+
+# line 73 in yolov5/models/yolo.py
+# wh = (y[..., 2:4] * 2) ** 2 * self.anchor_grid[i]  # wh
+# modified into:
+wh = (y[..., 2:4] * 2) ** 2 * anchor_grid  # wh
+############# for yolov5-6.0 #####################
+
+
 # line 52 in yolov5/export.py
 # torch.onnx.export(dynamic_axes={'images': {0: 'batch', 2: 'height', 3: 'width'},  # shape(1,3,640,640)
 #                                'output': {0: 'batch', 1: 'anchors'}  # shape(1,25200,85)  修改为
