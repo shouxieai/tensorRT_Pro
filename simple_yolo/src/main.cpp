@@ -192,13 +192,14 @@ static void test(SimpleYolo::Type type, SimpleYolo::Mode mode, const string& mod
     
     if(!exists(model_file)){
         SimpleYolo::compile(
-            mode,                       // FP32、FP16、INT8
+            mode, type,                 // FP32、FP16、INT8
             test_batch_size,            // max batch size
             onnx_file,                  // source 
-            model_file                  // save to
+            model_file,                 // save to
+            1 << 30,
+            "inference"
         );
     }
-
     inference_and_performance(deviceid, model_file, mode, type, name);
 }
 
@@ -217,7 +218,7 @@ void direct_test(){
         return;
     }
     
-    if(!exists(model_file) && !SimpleYolo::compile(mode, 6, onnx_file, model_file)){
+    if(!exists(model_file) && !SimpleYolo::compile(mode, type, 6, onnx_file, model_file, 1<<30, "inference")){
         printf("Compile failed\n");
         return;
     }
@@ -251,7 +252,8 @@ void direct_test(){
 int main(){
 
     direct_test();
-    test(SimpleYolo::Type::X, SimpleYolo::Mode::FP32, "yolox_s");
+    test(SimpleYolo::Type::V5, SimpleYolo::Mode::FP32, "yolov5s");
+    //test(SimpleYolo::Type::X, SimpleYolo::Mode::INT8, "yolox_s");
     
     //test(SimpleYolo::Type::X, SimpleYolo::Mode::FP32, "yolox_s");
     // test(SimpleYolo::Type::X, SimpleYolo::Mode::FP32, "yolox_x");
