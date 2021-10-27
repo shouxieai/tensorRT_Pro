@@ -3,6 +3,7 @@
 ## News: 
 - Tutorial for exporting CenterNet from pytorch to tensorRT is released. 
 - 🔥 [Simple yolov5/yolox implemention is released. Simple and easy to use.](simple_yolo)
+- 🔥 yolov5-1.0-6.0/master are supported.
 - Tutorial notebooks download:
   - [WarpAffine.lesson.tar.gz](http://zifuture.com:1000/fs/25.shared/warpaffine.lesson.tar.gz)
   - [Offset.tar.gz](http://zifuture.com:1000/fs/25.shared/offset.tar.gz)
@@ -42,10 +43,9 @@
 ## INTRO
 
 1. High level interface for C++/Python.
-2. Based on TensorRT8.0.
-3. Simplify the implementation of custom plugin. And serialization and deserialization have been encapsulated for easier usage.
-4. Simplify the compile of fp32, fp16 and int8 for facilitating the deployment with C++/Python in server or embeded device.
-5. Models ready for use also with examples are RetinaFace, Scrfd, YoloV5, YoloX, Arcface, AlphaPose, CenterNet and DeepSORT(C++)
+2. Simplify the implementation of custom plugin. And serialization and deserialization have been encapsulated for easier usage.
+3. Simplify the compile of fp32, fp16 and int8 for facilitating the deployment with C++/Python in server or embeded device.
+4. Models ready for use also with examples are RetinaFace, Scrfd, YoloV5, YoloX, Arcface, AlphaPose, CenterNet and DeepSORT(C++)
 
 ## YoloX and YoloV5-series Model Test Report
 
