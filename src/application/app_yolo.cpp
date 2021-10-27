@@ -151,7 +151,7 @@ int app_yolo(){
     // test(Yolo::Type::X, TRT::Mode::FP32, "yolox_x");
     // test(Yolo::Type::X, TRT::Mode::FP32, "yolox_l");
     // test(Yolo::Type::X, TRT::Mode::FP32, "yolox_m");
-    // test(Yolo::Type::X, TRT::Mode::FP32, "yolox_s");
+    test(Yolo::Type::X, TRT::Mode::FP32, "yolox_s");
     // test(Yolo::Type::X, TRT::Mode::FP16, "yolox_x");
     // test(Yolo::Type::X, TRT::Mode::FP16, "yolox_l");
     // test(Yolo::Type::X, TRT::Mode::FP16, "yolox_m");
@@ -177,7 +177,7 @@ int app_yolo(){
     // test(Yolo::Type::V5, TRT::Mode::FP16, "yolov5x");
     // test(Yolo::Type::V5, TRT::Mode::FP16, "yolov5l");
     // test(Yolo::Type::V5, TRT::Mode::FP16, "yolov5m");
-    test(Yolo::Type::V5, TRT::Mode::FP32, "yolov5s");
+    //test(Yolo::Type::V5, TRT::Mode::FP32, "yolov5s");
     // test(Yolo::Type::V5, TRT::Mode::INT8, "yolov5x6");
     // test(Yolo::Type::V5, TRT::Mode::INT8, "yolov5l6");
     // test(Yolo::Type::V5, TRT::Mode::INT8, "yolov5m6");
