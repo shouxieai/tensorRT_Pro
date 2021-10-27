@@ -292,7 +292,7 @@ make yolo -j64
   
 - if pytorch >= 1.7, and the model is 5.0+, the model is suppored by the framework 
 - if pytorch < 1.7 or yolov5(2.0, 3.0 or 4.0), minor modification should be done in opset.
-- if you want to achieve the inference with lower pytorch, dynamic batchsize and other advanced setting, please check our blog (http://zifuture.com:8090)(now in Chinese) and scan the QRcode via Wechat to join us.
+- if you want to achieve the inference with lower pytorch, dynamic batchsize and other advanced setting, please check our [blog](http://zifuture.com:8090) (now in Chinese) and scan the QRcode via Wechat to join us.
 
                   
 1. Download yolov5
