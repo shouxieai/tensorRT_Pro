@@ -60,12 +60,12 @@ namespace SimpleYolo{
     // 1GB = 1<<30
     bool compile(
         Mode mode, Type type,
-		unsigned int max_batch_size,
-		const string& source_onnx,
-		const string& saveto,
+        unsigned int max_batch_size,
+        const string& source_onnx,
+        const string& saveto,
         size_t max_workspace_size = 1<<30,
-		const std::string& int8_images_folder = "",
-		const std::string& int8_entropy_calibrator_cache_file = ""
+        const std::string& int8_images_folder = "",
+        const std::string& int8_entropy_calibrator_cache_file = ""
     );
 
     shared_ptr<Infer> create_infer(const string& engine_file, Type type, int gpuid, float confidence_threshold=0.25f, float nms_threshold=0.5f);

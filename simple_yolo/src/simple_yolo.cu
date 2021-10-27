@@ -2051,105 +2051,105 @@ namespace SimpleYolo{
     typedef std::function<void(int current, int count, const std::vector<std::string>& files, std::shared_ptr<Tensor>& tensor)> Int8Process;
 
     class Int8EntropyCalibrator : public IInt8EntropyCalibrator2{
-	public:
-		Int8EntropyCalibrator(const vector<string>& imagefiles, nvinfer1::Dims dims, const Int8Process& preprocess) {
+    public:
+        Int8EntropyCalibrator(const vector<string>& imagefiles, nvinfer1::Dims dims, const Int8Process& preprocess) {
 
-			Assert(preprocess != nullptr);
-			this->dims_ = dims;
-			this->allimgs_ = imagefiles;
-			this->preprocess_ = preprocess;
-			this->fromCalibratorData_ = false;
-			files_.resize(dims.d[0]);
-			checkCudaRuntime(cudaStreamCreate(&stream_));
-		}
+            Assert(preprocess != nullptr);
+            this->dims_ = dims;
+            this->allimgs_ = imagefiles;
+            this->preprocess_ = preprocess;
+            this->fromCalibratorData_ = false;
+            files_.resize(dims.d[0]);
+            checkCudaRuntime(cudaStreamCreate(&stream_));
+        }
 
-		Int8EntropyCalibrator(const vector<uint8_t>& entropyCalibratorData, nvinfer1::Dims dims, const Int8Process& preprocess) {
-			Assert(preprocess != nullptr);
+        Int8EntropyCalibrator(const vector<uint8_t>& entropyCalibratorData, nvinfer1::Dims dims, const Int8Process& preprocess) {
+            Assert(preprocess != nullptr);
 
-			this->dims_ = dims;
-			this->entropyCalibratorData_ = entropyCalibratorData;
-			this->preprocess_ = preprocess;
-			this->fromCalibratorData_ = true;
-			files_.resize(dims.d[0]);
-			checkCudaRuntime(cudaStreamCreate(&stream_));
-		}
+            this->dims_ = dims;
+            this->entropyCalibratorData_ = entropyCalibratorData;
+            this->preprocess_ = preprocess;
+            this->fromCalibratorData_ = true;
+            files_.resize(dims.d[0]);
+            checkCudaRuntime(cudaStreamCreate(&stream_));
+        }
 
-		virtual ~Int8EntropyCalibrator(){
-			checkCudaRuntime(cudaStreamDestroy(stream_));
-		}
+        virtual ~Int8EntropyCalibrator(){
+            checkCudaRuntime(cudaStreamDestroy(stream_));
+        }
 
-		int getBatchSize() const noexcept {
-			return dims_.d[0];
-		}
+        int getBatchSize() const noexcept {
+            return dims_.d[0];
+        }
 
-		bool next() {
-			int batch_size = dims_.d[0];
-			if (cursor_ + batch_size > allimgs_.size())
-				return false;
+        bool next() {
+            int batch_size = dims_.d[0];
+            if (cursor_ + batch_size > allimgs_.size())
+                return false;
 
             int old_cursor = cursor_;
-			for(int i = 0; i < batch_size; ++i)
-				files_[i] = allimgs_[cursor_++];
+            for(int i = 0; i < batch_size; ++i)
+                files_[i] = allimgs_[cursor_++];
 
-			if (!tensor_){
-				tensor_.reset(new Tensor(dims_.nbDims, dims_.d));
-				tensor_->set_stream(stream_);
-				tensor_->set_workspace(make_shared<MixMemory>());
-			}
+            if (!tensor_){
+                tensor_.reset(new Tensor(dims_.nbDims, dims_.d));
+                tensor_->set_stream(stream_);
+                tensor_->set_workspace(make_shared<MixMemory>());
+            }
 
-			preprocess_(old_cursor, allimgs_.size(), files_, tensor_);
-			return true;
-		}
+            preprocess_(old_cursor, allimgs_.size(), files_, tensor_);
+            return true;
+        }
 
-		bool getBatch(void* bindings[], const char* names[], int nbBindings) noexcept {
-			if (!next()) return false;
-			bindings[0] = tensor_->gpu();
-			return true;
-		}
+        bool getBatch(void* bindings[], const char* names[], int nbBindings) noexcept {
+            if (!next()) return false;
+            bindings[0] = tensor_->gpu();
+            return true;
+        }
 
-		const vector<uint8_t>& getEntropyCalibratorData() {
-			return entropyCalibratorData_;
-		}
+        const vector<uint8_t>& getEntropyCalibratorData() {
+            return entropyCalibratorData_;
+        }
 
-		const void* readCalibrationCache(size_t& length) noexcept {
-			if (fromCalibratorData_) {
-				length = this->entropyCalibratorData_.size();
-				return this->entropyCalibratorData_.data();
-			}
+        const void* readCalibrationCache(size_t& length) noexcept {
+            if (fromCalibratorData_) {
+                length = this->entropyCalibratorData_.size();
+                return this->entropyCalibratorData_.data();
+            }
 
-			length = 0;
-			return nullptr;
-		}
+            length = 0;
+            return nullptr;
+        }
 
-		virtual void writeCalibrationCache(const void* cache, size_t length) noexcept {
-			entropyCalibratorData_.assign((uint8_t*)cache, (uint8_t*)cache + length);
-		}
+        virtual void writeCalibrationCache(const void* cache, size_t length) noexcept {
+            entropyCalibratorData_.assign((uint8_t*)cache, (uint8_t*)cache + length);
+        }
 
-	private:
-		Int8Process preprocess_;
-		vector<string> allimgs_;
-		size_t batchCudaSize_ = 0;
-		int cursor_ = 0;
-		nvinfer1::Dims dims_;
-		vector<string> files_;
-		shared_ptr<Tensor> tensor_;
-		vector<uint8_t> entropyCalibratorData_;
-		bool fromCalibratorData_ = false;
-		cudaStream_t stream_ = nullptr;
-	};
+    private:
+        Int8Process preprocess_;
+        vector<string> allimgs_;
+        size_t batchCudaSize_ = 0;
+        int cursor_ = 0;
+        nvinfer1::Dims dims_;
+        vector<string> files_;
+        shared_ptr<Tensor> tensor_;
+        vector<uint8_t> entropyCalibratorData_;
+        bool fromCalibratorData_ = false;
+        cudaStream_t stream_ = nullptr;
+    };
 
     bool compile(
-		Mode mode, Type type,
-		unsigned int max_batch_size,
-		const string& source_onnx,
-		const string& saveto,
+        Mode mode, Type type,
+        unsigned int max_batch_size,
+        const string& source_onnx,
+        const string& saveto,
         size_t max_workspace_size,
-		const std::string& int8_images_folder,
-		const std::string& int8_entropy_calibrator_cache_file) {
+        const std::string& int8_images_folder,
+        const std::string& int8_entropy_calibrator_cache_file) {
 
-		bool hasEntropyCalibrator = false;
-		vector<uint8_t> entropyCalibratorData;
-		vector<string> entropyCalibratorFiles;
+        bool hasEntropyCalibrator = false;
+        vector<uint8_t> entropyCalibratorData;
+        vector<string> entropyCalibratorFiles;
 
         auto int8process = [=](int current, int count, const vector<string>& files, shared_ptr<Tensor>& tensor){
 
@@ -2168,66 +2168,66 @@ namespace SimpleYolo{
             tensor->synchronize();
         };
 
-		if (mode == Mode::INT8) {
-			if (!int8_entropy_calibrator_cache_file.empty()) {
-				if (exists(int8_entropy_calibrator_cache_file)) {
-					entropyCalibratorData = load_file(int8_entropy_calibrator_cache_file);
-					if (entropyCalibratorData.empty()) {
-						INFOE("entropyCalibratorFile is set as: %s, but we read is empty.", int8_entropy_calibrator_cache_file.c_str());
-						return false;
-					}
-					hasEntropyCalibrator = true;
-				}
-			}
-			
-			if (hasEntropyCalibrator) {
-				if (!int8_images_folder.empty()) {
-					INFOW("int8_images_folder is ignore, when int8_entropy_calibrator_cache_file is set");
-				}
-			}
-			else {
-				entropyCalibratorFiles = glob_image_files(int8_images_folder);
-				if (entropyCalibratorFiles.empty()) {
-					INFOE("Can not find any images(jpg/png/bmp/jpeg/tiff) from directory: %s", int8_images_folder.c_str());
-					return false;
-				}
+        if (mode == Mode::INT8) {
+            if (!int8_entropy_calibrator_cache_file.empty()) {
+                if (exists(int8_entropy_calibrator_cache_file)) {
+                    entropyCalibratorData = load_file(int8_entropy_calibrator_cache_file);
+                    if (entropyCalibratorData.empty()) {
+                        INFOE("entropyCalibratorFile is set as: %s, but we read is empty.", int8_entropy_calibrator_cache_file.c_str());
+                        return false;
+                    }
+                    hasEntropyCalibrator = true;
+                }
+            }
+            
+            if (hasEntropyCalibrator) {
+                if (!int8_images_folder.empty()) {
+                    INFOW("int8_images_folder is ignore, when int8_entropy_calibrator_cache_file is set");
+                }
+            }
+            else {
+                entropyCalibratorFiles = glob_image_files(int8_images_folder);
+                if (entropyCalibratorFiles.empty()) {
+                    INFOE("Can not find any images(jpg/png/bmp/jpeg/tiff) from directory: %s", int8_images_folder.c_str());
+                    return false;
+                }
 
-				if(entropyCalibratorFiles.size() < max_batch_size){
-					INFOW("Too few images provided, %d[provided] < %d[max batch size], image copy will be performed", entropyCalibratorFiles.size(), max_batch_size);
-					for(int i = entropyCalibratorFiles.size(); i < max_batch_size; ++i)
-						entropyCalibratorFiles.push_back(entropyCalibratorFiles[i % entropyCalibratorFiles.size()]);
-				}
-			}
-		}
-		else {
-			if (hasEntropyCalibrator) {
-				INFOW("int8_entropy_calibrator_cache_file is ignore, when Mode is '%s'", mode_string(mode));
-			}
-		}
+                if(entropyCalibratorFiles.size() < max_batch_size){
+                    INFOW("Too few images provided, %d[provided] < %d[max batch size], image copy will be performed", entropyCalibratorFiles.size(), max_batch_size);
+                    for(int i = entropyCalibratorFiles.size(); i < max_batch_size; ++i)
+                        entropyCalibratorFiles.push_back(entropyCalibratorFiles[i % entropyCalibratorFiles.size()]);
+                }
+            }
+        }
+        else {
+            if (hasEntropyCalibrator) {
+                INFOW("int8_entropy_calibrator_cache_file is ignore, when Mode is '%s'", mode_string(mode));
+            }
+        }
 
-		INFO("Compile %s %s.", mode_string(mode), source_onnx.c_str());
-		shared_ptr<IBuilder> builder(createInferBuilder(gLogger), destroy_nvidia_pointer<IBuilder>);
-		if (builder == nullptr) {
-			INFOE("Can not create builder.");
-			return false;
-		}
+        INFO("Compile %s %s.", mode_string(mode), source_onnx.c_str());
+        shared_ptr<IBuilder> builder(createInferBuilder(gLogger), destroy_nvidia_pointer<IBuilder>);
+        if (builder == nullptr) {
+            INFOE("Can not create builder.");
+            return false;
+        }
 
-		shared_ptr<IBuilderConfig> config(builder->createBuilderConfig(), destroy_nvidia_pointer<IBuilderConfig>);
-		if (mode == Mode::FP16) {
-			if (!builder->platformHasFastFp16()) {
-				INFOW("Platform not have fast fp16 support");
-			}
-			config->setFlag(BuilderFlag::kFP16);
-		}
-		else if (mode == Mode::INT8) {
-			if (!builder->platformHasFastInt8()) {
-				INFOW("Platform not have fast int8 support");
-			}
-			config->setFlag(BuilderFlag::kINT8);
-		}
+        shared_ptr<IBuilderConfig> config(builder->createBuilderConfig(), destroy_nvidia_pointer<IBuilderConfig>);
+        if (mode == Mode::FP16) {
+            if (!builder->platformHasFastFp16()) {
+                INFOW("Platform not have fast fp16 support");
+            }
+            config->setFlag(BuilderFlag::kFP16);
+        }
+        else if (mode == Mode::INT8) {
+            if (!builder->platformHasFastInt8()) {
+                INFOW("Platform not have fast int8 support");
+            }
+            config->setFlag(BuilderFlag::kINT8);
+        }
 
-		shared_ptr<INetworkDefinition> network;
-		shared_ptr<nvonnxparser::IParser> onnxParser;
+        shared_ptr<INetworkDefinition> network;
+        shared_ptr<nvonnxparser::IParser> onnxParser;
         const auto explicitBatch = 1U << static_cast<uint32_t>(nvinfer1::NetworkDefinitionCreationFlag::kEXPLICIT_BATCH);
         network = shared_ptr<INetworkDefinition>(builder->createNetworkV2(explicitBatch), destroy_nvidia_pointer<INetworkDefinition>);
 
@@ -2243,96 +2243,96 @@ namespace SimpleYolo{
             return false;
         }
         
-		auto inputTensor = network->getInput(0);
-		auto inputDims = inputTensor->getDimensions();
+        auto inputTensor = network->getInput(0);
+        auto inputDims = inputTensor->getDimensions();
 
-		shared_ptr<Int8EntropyCalibrator> int8Calibrator;
-		if (mode == Mode::INT8) {
-			auto calibratorDims = inputDims;
-			calibratorDims.d[0] = max_batch_size;
+        shared_ptr<Int8EntropyCalibrator> int8Calibrator;
+        if (mode == Mode::INT8) {
+            auto calibratorDims = inputDims;
+            calibratorDims.d[0] = max_batch_size;
 
-			if (hasEntropyCalibrator) {
-				INFO("Using exist entropy calibrator data[%d bytes]: %s", entropyCalibratorData.size(), int8_entropy_calibrator_cache_file.c_str());
-				int8Calibrator.reset(new Int8EntropyCalibrator(
-					entropyCalibratorData, calibratorDims, int8process
-				));
-			}
-			else {
-				INFO("Using image list[%d files]: %s", entropyCalibratorFiles.size(), int8_images_folder.c_str());
-				int8Calibrator.reset(new Int8EntropyCalibrator(
-					entropyCalibratorFiles, calibratorDims, int8process
-				));
-			}
-			config->setInt8Calibrator(int8Calibrator.get());
-		}
+            if (hasEntropyCalibrator) {
+                INFO("Using exist entropy calibrator data[%d bytes]: %s", entropyCalibratorData.size(), int8_entropy_calibrator_cache_file.c_str());
+                int8Calibrator.reset(new Int8EntropyCalibrator(
+                    entropyCalibratorData, calibratorDims, int8process
+                ));
+            }
+            else {
+                INFO("Using image list[%d files]: %s", entropyCalibratorFiles.size(), int8_images_folder.c_str());
+                int8Calibrator.reset(new Int8EntropyCalibrator(
+                    entropyCalibratorFiles, calibratorDims, int8process
+                ));
+            }
+            config->setInt8Calibrator(int8Calibrator.get());
+        }
 
-		INFO("Input shape is %s", join_dims(vector<int>(inputDims.d, inputDims.d + inputDims.nbDims)).c_str());
-		INFO("Set max batch size = %d", max_batch_size);
-		INFO("Set max workspace size = %.2f MB", max_workspace_size / 1024.0f / 1024.0f);
+        INFO("Input shape is %s", join_dims(vector<int>(inputDims.d, inputDims.d + inputDims.nbDims)).c_str());
+        INFO("Set max batch size = %d", max_batch_size);
+        INFO("Set max workspace size = %.2f MB", max_workspace_size / 1024.0f / 1024.0f);
 
-		int net_num_input = network->getNbInputs();
-		INFO("Network has %d inputs:", net_num_input);
-		vector<string> input_names(net_num_input);
-		for(int i = 0; i < net_num_input; ++i){
-			auto tensor = network->getInput(i);
-			auto dims = tensor->getDimensions();
-			auto dims_str = join_dims(vector<int>(dims.d, dims.d+dims.nbDims));
-			INFO("      %d.[%s] shape is %s", i, tensor->getName(), dims_str.c_str());
+        int net_num_input = network->getNbInputs();
+        INFO("Network has %d inputs:", net_num_input);
+        vector<string> input_names(net_num_input);
+        for(int i = 0; i < net_num_input; ++i){
+            auto tensor = network->getInput(i);
+            auto dims = tensor->getDimensions();
+            auto dims_str = join_dims(vector<int>(dims.d, dims.d+dims.nbDims));
+            INFO("      %d.[%s] shape is %s", i, tensor->getName(), dims_str.c_str());
 
-			input_names[i] = tensor->getName();
-		}
+            input_names[i] = tensor->getName();
+        }
 
-		int net_num_output = network->getNbOutputs();
-		INFO("Network has %d outputs:", net_num_output);
-		for(int i = 0; i < net_num_output; ++i){
-			auto tensor = network->getOutput(i);
-			auto dims = tensor->getDimensions();
-			auto dims_str = join_dims(vector<int>(dims.d, dims.d+dims.nbDims));
-			INFO("      %d.[%s] shape is %s", i, tensor->getName(), dims_str.c_str());
-		}
+        int net_num_output = network->getNbOutputs();
+        INFO("Network has %d outputs:", net_num_output);
+        for(int i = 0; i < net_num_output; ++i){
+            auto tensor = network->getOutput(i);
+            auto dims = tensor->getDimensions();
+            auto dims_str = join_dims(vector<int>(dims.d, dims.d+dims.nbDims));
+            INFO("      %d.[%s] shape is %s", i, tensor->getName(), dims_str.c_str());
+        }
 
-		int net_num_layers = network->getNbLayers();
-		INFO("Network has %d layers", net_num_layers);		
-		builder->setMaxBatchSize(max_batch_size);
-		config->setMaxWorkspaceSize(max_workspace_size);
+        int net_num_layers = network->getNbLayers();
+        INFO("Network has %d layers", net_num_layers);		
+        builder->setMaxBatchSize(max_batch_size);
+        config->setMaxWorkspaceSize(max_workspace_size);
 
-		auto profile = builder->createOptimizationProfile();
-		for(int i = 0; i < net_num_input; ++i){
-			auto input = network->getInput(i);
-			auto input_dims = input->getDimensions();
-			input_dims.d[0] = 1;
-			profile->setDimensions(input->getName(), nvinfer1::OptProfileSelector::kMIN, input_dims);
-			profile->setDimensions(input->getName(), nvinfer1::OptProfileSelector::kOPT, input_dims);
-			input_dims.d[0] = max_batch_size;
-			profile->setDimensions(input->getName(), nvinfer1::OptProfileSelector::kMAX, input_dims);
-		}
-		config->addOptimizationProfile(profile);
+        auto profile = builder->createOptimizationProfile();
+        for(int i = 0; i < net_num_input; ++i){
+            auto input = network->getInput(i);
+            auto input_dims = input->getDimensions();
+            input_dims.d[0] = 1;
+            profile->setDimensions(input->getName(), nvinfer1::OptProfileSelector::kMIN, input_dims);
+            profile->setDimensions(input->getName(), nvinfer1::OptProfileSelector::kOPT, input_dims);
+            input_dims.d[0] = max_batch_size;
+            profile->setDimensions(input->getName(), nvinfer1::OptProfileSelector::kMAX, input_dims);
+        }
+        config->addOptimizationProfile(profile);
 
-		INFO("Building engine...");
-		auto time_start = chrono::duration_cast<chrono::milliseconds>(chrono::system_clock::now().time_since_epoch()).count();
-		shared_ptr<ICudaEngine> engine(builder->buildEngineWithConfig(*network, *config), destroy_nvidia_pointer<ICudaEngine>);
-		if (engine == nullptr) {
-			INFOE("engine is nullptr");
-			return false;
-		}
+        INFO("Building engine...");
+        auto time_start = chrono::duration_cast<chrono::milliseconds>(chrono::system_clock::now().time_since_epoch()).count();
+        shared_ptr<ICudaEngine> engine(builder->buildEngineWithConfig(*network, *config), destroy_nvidia_pointer<ICudaEngine>);
+        if (engine == nullptr) {
+            INFOE("engine is nullptr");
+            return false;
+        }
 
-		if (mode == Mode::INT8) {
-			if (!hasEntropyCalibrator) {
-				if (!int8_entropy_calibrator_cache_file.empty()) {
-					INFO("Save calibrator to: %s", int8_entropy_calibrator_cache_file.c_str());
-					save_file(int8_entropy_calibrator_cache_file, int8Calibrator->getEntropyCalibratorData());
-				}
-				else {
-					INFO("No set entropyCalibratorFile, and entropyCalibrator will not save.");
-				}
-			}
-		}
+        if (mode == Mode::INT8) {
+            if (!hasEntropyCalibrator) {
+                if (!int8_entropy_calibrator_cache_file.empty()) {
+                    INFO("Save calibrator to: %s", int8_entropy_calibrator_cache_file.c_str());
+                    save_file(int8_entropy_calibrator_cache_file, int8Calibrator->getEntropyCalibratorData());
+                }
+                else {
+                    INFO("No set entropyCalibratorFile, and entropyCalibrator will not save.");
+                }
+            }
+        }
 
         auto time_end = chrono::duration_cast<chrono::milliseconds>(chrono::system_clock::now().time_since_epoch()).count();
-		INFO("Build done %lld ms !", time_end - time_start);
-		
-		// serialize the engine, then close everything down
-		shared_ptr<IHostMemory> seridata(engine->serialize(), destroy_nvidia_pointer<IHostMemory>);
-		return save_file(saveto, seridata->data(), seridata->size());
-	}
+        INFO("Build done %lld ms !", time_end - time_start);
+        
+        // serialize the engine, then close everything down
+        shared_ptr<IHostMemory> seridata(engine->serialize(), destroy_nvidia_pointer<IHostMemory>);
+        return save_file(saveto, seridata->data(), seridata->size());
+    }
 };

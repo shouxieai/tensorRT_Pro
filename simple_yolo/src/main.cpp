@@ -96,17 +96,17 @@ static double timestamp_now_float() {
 
 bool requires_model(const string& name) {
 
-	auto onnx_file = cv::format("%s_dynamic.onnx", name.c_str());
-	if (!exists(onnx_file)) {
-		printf("Auto download %s\n", onnx_file.c_str());
-		system(cv::format("wget http://zifuture.com:1556/fs/25.shared/%s", onnx_file.c_str()).c_str());
-	}
+    auto onnx_file = cv::format("%s_dynamic.onnx", name.c_str());
+    if (!exists(onnx_file)) {
+        printf("Auto download %s\n", onnx_file.c_str());
+        system(cv::format("wget http://zifuture.com:1556/fs/25.shared/%s", onnx_file.c_str()).c_str());
+    }
 
-	bool isexists = exists(onnx_file);
-	if (!isexists) {
-		printf("Download %s failed\n", onnx_file.c_str());
-	}
-	return isexists;
+    bool isexists = exists(onnx_file);
+    if (!isexists) {
+        printf("Download %s failed\n", onnx_file.c_str());
+    }
+    return isexists;
 }
 
 static void inference_and_performance(int deviceid, const string& engine_file, SimpleYolo::Mode mode, SimpleYolo::Type type, const string& model_name){
