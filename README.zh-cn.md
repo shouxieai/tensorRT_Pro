@@ -2,6 +2,7 @@
 ## 最近的重要更新：
 - 关于CenterNet 从pytorch到tensorRT的模型导出到推理的中英文教程已更新，在tutorial/2.0
 - 🔥 [简单的YoloV5/YoloX实现已经发布，简单好使，高性能，只有2个文件哦，没有多余依赖](simple_yolo)
+- 🔥yolov5-1.0到6.0/master是支持的，请看readme中对yolov5支持部分的解释
 - 教程的笔记和代码下载：
     - [WarpAffine.lesson.tar.gz](http://zifuture.com:1000/fs/25.shared/warpaffine.lesson.tar.gz)
     - [Offset.tar.gz](http://zifuture.com:1000/fs/25.shared/offset.tar.gz)
@@ -309,12 +310,38 @@ x[i] = x[i].view(bs, self.na, self.no, ny, nx).permute(0, 1, 3, 4, 2).contiguous
 # 修改为：
 z.append(y.view(bs, self.na * ny * nx, self.no))
 
+
+############# 对于 yolov5-6.0 #####################
+# yolov5/models/yolo.py第65行
+# if self.grid[i].shape[2:4] != x[i].shape[2:4] or self.onnx_dynamic:
+#    self.grid[i], self.anchor_grid[i] = self._make_grid(nx, ny, i)
+# 修改为:
+if self.grid[i].shape[2:4] != x[i].shape[2:4] or self.onnx_dynamic:
+    self.grid[i], self.anchor_grid[i] = self._make_grid(nx, ny, i)
+
+    # disconnect for pytorch trace
+    anchor_grid = torch.from_numpy(self.anchor_grid[i].cpu().data.numpy()).to(self.anchor_grid[i].device)
+
+# yolov5/models/yolo.py第70行
+# y[..., 2:4] = (y[..., 2:4] * 2) ** 2 * self.anchor_grid[i]  # wh
+# 修改为:
+y[..., 2:4] = (y[..., 2:4] * 2) ** 2 * anchor_grid  # wh
+
+# yolov5/models/yolo.py第73行
+# wh = (y[..., 2:4] * 2) ** 2 * self.anchor_grid[i]  # wh
+# 修改为:
+wh = (y[..., 2:4] * 2) ** 2 * anchor_grid  # wh
+
+############# 对于 yolov5-6.0 #####################
+
+
 # yolov5/export.py第52行
 #torch.onnx.export(dynamic_axes={'images': {0: 'batch', 2: 'height', 3: 'width'},  # shape(1,3,640,640)
 #                                'output': {0: 'batch', 1: 'anchors'}  # shape(1,25200,85)  修改为
 torch.onnx.export(dynamic_axes={'images': {0: 'batch'},  # shape(1,3,640,640)
                                 'output': {0: 'batch'}  # shape(1,25200,85) 
 ```
+
 
 3. 导出onnx模型
 ```bash
