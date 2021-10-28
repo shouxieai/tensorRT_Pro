@@ -22,6 +22,16 @@ lean_cudnn     := /data/sxai/lean/cudnn8.2.2.26
 lean_opencv    := /data/sxai/lean/opencv4.2.0
 lean_cuda      := /data/sxai/lean/cuda-10.2
 
+# lean_tensor_rt := /data/sxai/lean/TensorRT-7.0.0.11
+# lean_cudnn     := /data/sxai/lean/cudnn7.6.5.32-cuda10.2
+# lean_opencv    := /data/sxai/lean/opencv4.2.0
+# lean_cuda      := /data/sxai/lean/cuda-10.2
+
+# lean_tensor_rt := /data/sxai/lean/TensorRT-7.2.1.6
+# lean_cudnn     := /data/sxai/lean/cudnn8.2.2.26
+# lean_opencv    := /data/sxai/lean/opencv4.2.0
+# lean_cuda      := /data/sxai/lean/cuda-11.1
+
 include_paths := src        \
 			$(lean_opencv)/include/opencv4 \
 			$(lean_tensor_rt)/include \

@@ -44,6 +44,7 @@ namespace SimpleYolo{
         virtual vector<shared_future<BoxArray>> commits(const vector<cv::Mat>& images) = 0;
     };
 
+    const char* trt_version();
     const char* type_name(Type type);
     const char* mode_string(Mode type);
     void set_device(int device_id);

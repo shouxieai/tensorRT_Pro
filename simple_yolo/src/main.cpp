@@ -205,12 +205,13 @@ static void test(SimpleYolo::Type type, SimpleYolo::Mode mode, const string& mod
 
 void direct_test(){
 
+    printf("TRTVersion: %s\n", SimpleYolo::trt_version());
+    
     int device_id = 0;
+    string model = "yolox_s";
     auto type = SimpleYolo::Type::X;
     auto mode = SimpleYolo::Mode::FP32;
-    string model = "yolox_s";
     string onnx_file = cv::format("%s_dynamic.onnx", model.c_str());
-    // onnx_file = "yolox_s_dynamic_upsample.onnx";
     string model_file = cv::format("%s_dynamic.%s.trtmodel", model.c_str(), SimpleYolo::mode_string(mode));
     SimpleYolo::set_device(device_id);
     
@@ -247,7 +248,7 @@ void direct_test(){
     }
 
     printf("Save result to infer.jpg, %d objects\n", objs.size());
-    cv::imwrite("infer.jpg", image);
+    cv::imwrite(cv::format("infer_%s.jpg", SimpleYolo::trt_version()), image);
 }
 
 int main(){

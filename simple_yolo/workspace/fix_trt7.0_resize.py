@@ -5,7 +5,7 @@ import onnx
 # 实现方案是把Resize修改为Upsample
 
 # https://github.com/onnx/onnx/blob/v1.2.1/onnx/onnx-ml.proto
-model = onnx.load("yolox_s_dynamic.onnx")
+model = onnx.load("yolov5s-6.0.onnx")
 nodes = model.graph.node
 
 resize_layers = [
@@ -40,4 +40,4 @@ for i in range(len(nodes)-1, -1, -1):
             del nodes[i]
             break
 
-onnx.save(model, "yolox_s_dynamic_upsample.onnx")
+onnx.save(model, "yolov5s-6.0_upsample_dynamic.onnx")

@@ -160,6 +160,12 @@ namespace SimpleYolo{
         return true;
     }
 
+    #define TRT_STR(v)  #v
+    #define TRT_VERSION_STRING(major, minor, patch, build)   TRT_STR(major) "." TRT_STR(minor) "." TRT_STR(patch) "." TRT_STR(build)
+    const char* trt_version(){
+        return TRT_VERSION_STRING(NV_TENSORRT_MAJOR, NV_TENSORRT_MINOR, NV_TENSORRT_PATCH, NV_TENSORRT_BUILD);
+    }
+
     static bool check_device_id(int device_id){
         int device_count = -1;
         checkCudaRuntime(cudaGetDeviceCount(&device_count));
