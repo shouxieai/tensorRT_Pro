@@ -6,7 +6,7 @@ option(CUDA_USE_STATIC_CUDA_RUNTIME OFF)
 set(CMAKE_CXX_STANDARD 11)
 set(CMAKE_BUILD_TYPE Debug)
 set(EXECUTABLE_OUTPUT_PATH ${PROJECT_SOURCE_DIR}/workspace)
-set(HAS_PYTHON ON)
+set(HAS_PYTHON OFF)
 
 # 如果要支持python则设置python路径
 set(PythonRoot "/data/datav/newbb/lean/anaconda3/envs/torch1.8")
