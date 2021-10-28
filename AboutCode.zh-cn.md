@@ -15,6 +15,7 @@
     - 项目的python接口代码支持部分。写了python的测试代码和适配代码
 - simple_yolo：
     - 与主项目完全独立的关于yolo的简单版本，该版本没有任何依赖，也不携带解析器。仅仅只有一个cu和一个hpp。快速集成和使用。高性能低耦合
+    - 如果你用yolo，你可以考虑只用这个项目即可解决高性能部署，还简单的方式使用
 - src：
     - 主项目的源代码部分，内包含了main.cpp用于调用各种应用，application包含了各种应用（yolo、yolox、scrfd、retinaface、arcface、dbface等等）的高性能实现，tensorRT是主要的tensorRT封装的实现他相比application是独立存在的
 - tools：
