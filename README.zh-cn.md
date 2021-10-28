@@ -163,8 +163,7 @@ trt_out   = trt_model(input)
 <details>
 <summary>Linux下配置</summary>
 
-- 考虑方便，这里有编译好的依赖项
-    - 下载地址：[lean-tensorRT8.0.1.6-protobuf3.11.4-cudnn8.2.2.tar.gz](http://zifuture.com:1556/fs/25.shared/lean-tensorRT8.0.1.6-protobuf3.11.4-cudnn8.2.2.tar.gz)
+
 1. 推荐使用VSCode
 2. 在Makefile/CMakeLists.txt中配置你的cudnn、cuda、tensorRT8.0、protobuf路径
 3. 配置Makefile或者CMakeLists中的计算能力为你的显卡对应值
