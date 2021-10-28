@@ -1,0 +1,45 @@
+# 关于项目代码含义的解释
+- .vscode：
+    - vscode在linux下的配置文件，比如代码解析器的头文件路径配置，比如debug调试的配置等，再比如运行之前先进行编译的prelaunchtask
+- lean：
+    - Windows下的依赖项存放路径，下面有readme说明
+- onnx：
+    - 用于解析onnx的protobuf格式协议文件，proto文件
+    - 文件夹内的make_pb.sh，用来生成protobuf解析onnx文件的代码，并自动复制到项目的特定目录下进行替换
+    - 如果你的protobuf版本不是3.11.4，则需要执行make_pb.sh来产生适配你当前系统protobuf版本的解析器
+- onnx_parser：
+    - onnx解析器，该解析器包含了7.x和8.x
+    - 当需要适配不同的tensorRT时，你应该执行文件夹下的use_tensorrt_7.x.sh或者use_tensorrt_8.x.sh来适配你的tensorRT
+    - 因为项目携带了解析器，好处是可以自定义plugin、自定义操作，以及如果onnx出现了错误，可以进行排查和解决。若使用系统默认解析器，则难以做到这些工作
+- python：
+    - 项目的python接口代码支持部分。写了python的测试代码和适配代码
+- simple_yolo：
+    - 与主项目完全独立的关于yolo的简单版本，该版本没有任何依赖，也不携带解析器。仅仅只有一个cu和一个hpp。快速集成和使用。高性能低耦合
+- src：
+    - 主项目的源代码部分，内包含了main.cpp用于调用各种应用，application包含了各种应用（yolo、yolox、scrfd、retinaface、arcface、dbface等等）的高性能实现，tensorRT是主要的tensorRT封装的实现他相比application是独立存在的
+- tools：
+    - show.py是用于配合src/application/tools/zmq_remote_show.hpp，使用zmq实现远端服务器连接本地show.py程序实现图片的显示，也就是远端imshow功能
+    - 对于没有桌面系统的服务器开发时，是比较好用的
+- tutorial：
+    - 教程案例，关于centernet的详细案例解说
+- workspace：
+    - 工作空间，储存数据、模型、图像等文件杂项的，编译后的程序也会放到该目录下
+    - 当进行make yolo时或者cmake时，workspace会配置为其工作目录（当前目录），加载图像时以workspace为基准
+- .gitignore：
+    - git的忽略文件清单
+- CMakeLists.txt：
+    - CMake的配置文件，可以通过cmake进行项目编译，例如：`mkdir build && cd build && cmake .. && make yolo -j64`
+- Makefile：
+    - linux下的make编译配置文件，支持Makefile进行文件编译，例如：`make yolo -j64`
+- TensorRT.sln：
+    - windows下的解决方案文件
+- TensorRT.vcxproj：
+    - windows下的工程文件
+- TensorRT.vcxproj.filters：
+    - windows下的目录结构记录文件
+- TensorRT.vcxproj.user：
+    - windows下的用户配置，比如断点等信息、环境变量设置等储存文件
+- YoloTRT_speed.xlsx：
+    - 关于yolo的性能速度测试统计表格
+- dll_export.def：
+    - windows下编译python时需要导出符号，用以表述导出符号的文件
