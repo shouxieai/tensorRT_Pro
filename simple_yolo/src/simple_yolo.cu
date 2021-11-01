@@ -467,8 +467,8 @@ namespace SimpleYolo{
 
         int dx      = position % dst_width;
         int dy      = position / dst_width;
-        float src_x = m_x1 * dx + m_y1 * dy + m_z1 + 0.5f;
-        float src_y = m_x2 * dx + m_y2 * dy + m_z2 + 0.5f;
+        float src_x = m_x1 * dx + m_y1 * dy + m_z1;
+        float src_y = m_x2 * dx + m_y2 * dy + m_z2;
         float c0, c1, c2;
 
         if(src_x <= -1 || src_x >= src_width || src_y <= -1 || src_y >= src_height){
@@ -508,9 +508,9 @@ namespace SimpleYolo{
                     v4 = src + y_high * src_line_size + x_high * 3;
             }
 
-            c0 = w1 * v1[0] + w2 * v2[0] + w3 * v3[0] + w4 * v4[0];
-            c1 = w1 * v1[1] + w2 * v2[1] + w3 * v3[1] + w4 * v4[1];
-            c2 = w1 * v1[2] + w2 * v2[2] + w3 * v3[2] + w4 * v4[2];
+            c0 = w1 * v1[0] + w2 * v2[0] + w3 * v3[0] + w4 * v4[0] + 0.5f;
+            c1 = w1 * v1[1] + w2 * v2[1] + w3 * v3[1] + w4 * v4[1] + 0.5f;
+            c2 = w1 * v1[2] + w2 * v2[2] + w3 * v3[2] + w4 * v4[2] + 0.5f;
         }
 
         if(norm.channel_type == ChannelType::SwapRB){
@@ -1781,8 +1781,8 @@ namespace SimpleYolo{
             float scale_x = to.width / (float)from.width;
             float scale_y = to.height / (float)from.height;
             float scale = std::min(scale_x, scale_y);
-            i2d[0] = scale;  i2d[1] = 0;  i2d[2] = -scale * from.width  * 0.5  + to.width * 0.5;
-            i2d[3] = 0;  i2d[4] = scale;  i2d[5] = -scale * from.height * 0.5 + to.height * 0.5;
+            i2d[0] = scale;  i2d[1] = 0;  i2d[2] = -scale * from.width  * 0.5  + to.width * 0.5 + scale * 0.5 - 0.5;
+            i2d[3] = 0;  i2d[4] = scale;  i2d[5] = -scale * from.height * 0.5 + to.height * 0.5 + scale * 0.5 - 0.5;
 
             cv::Mat m2x3_i2d(2, 3, CV_32F, i2d);
             cv::Mat m2x3_d2i(2, 3, CV_32F, d2i);

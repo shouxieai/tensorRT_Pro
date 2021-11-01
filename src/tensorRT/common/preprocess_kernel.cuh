@@ -45,11 +45,6 @@ namespace CUDAKernel{
         float* matrix_2_3, uint8_t const_value, const Norm& norm,
         cudaStream_t stream);
 
-    void resize_bilinear_and_normalize(
-		uint8_t* src, int src_line_size, int src_width, int src_height, float* dst, int dst_width, int dst_height,
-		uint8_t const_value, const Norm& norm,
-		cudaStream_t stream);
-
     void norm_feature(
         float* feature_array, int num_feature, int feature_length,
         cudaStream_t stream

@@ -28,8 +28,8 @@ namespace AlphaPose{
             float pad_width  = box_.width  * (1 + 2 * rate);
             float pad_height = box_.height * (1 + 1 * rate);
             float scale = min(net_size.width  / pad_width,  net_size.height / pad_height);
-            i2d[0] = scale;  i2d[1] = 0;      i2d[2] = -(box_.x - box_.width  * 1 * rate + pad_width * 0.5)  * scale + net_size.width  * 0.5;  
-            i2d[3] = 0;      i2d[4] = scale;  i2d[5] = -(box_.y - box_.height * 1 * rate + pad_height * 0.5) * scale + net_size.height * 0.5;
+            i2d[0] = scale;  i2d[1] = 0;      i2d[2] = -(box_.x - box_.width  * 1 * rate + pad_width * 0.5)  * scale + net_size.width  * 0.5 + scale * 0.5 - 0.5;  
+            i2d[3] = 0;      i2d[4] = scale;  i2d[5] = -(box_.y - box_.height * 1 * rate + pad_height * 0.5) * scale + net_size.height * 0.5 + scale * 0.5 - 0.5;
 
             cv::Mat m2x3_i2d(2, 3, CV_32F, i2d);
             cv::Mat m2x3_d2i(2, 3, CV_32F, d2i);

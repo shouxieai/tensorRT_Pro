@@ -104,8 +104,8 @@ namespace YoloFast{
             float scale_x = to.width / (float)from.width;
             float scale_y = to.height / (float)from.height;
             float scale = std::min(scale_x, scale_y);
-            i2d[0] = scale;  i2d[1] = -scale * from.width  * 0.5  + to.width * 0.5;
-                             i2d[2] = -scale * from.height * 0.5 + to.height * 0.5;
+            i2d[0] = scale;  i2d[1] = -scale * from.width  * 0.5  + to.width * 0.5 + scale * 0.5 - 0.5;
+                             i2d[2] = -scale * from.height * 0.5 + to.height * 0.5 + scale * 0.5 - 0.5;
 
             // y = kx + b
             // x = (y-b)/k = y*1/k + (-b)/k

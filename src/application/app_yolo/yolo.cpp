@@ -78,8 +78,12 @@ namespace Yolo{
             去掉第三行就得到opencv需要的输入2x3矩阵
             **/
 
-            i2d[0] = scale;  i2d[1] = 0;  i2d[2] = -scale * from.width  * 0.5  + to.width * 0.5;
-            i2d[3] = 0;  i2d[4] = scale;  i2d[5] = -scale * from.height * 0.5 + to.height * 0.5;
+            /* 
+                 + scale * 0.5 - 0.5 的主要原因是使得中心更加对齐，下采样不明显，但是上采样时就比较明显
+                参考：https://www.iteye.com/blog/handspeaker-1545126
+            */
+            i2d[0] = scale;  i2d[1] = 0;  i2d[2] = -scale * from.width  * 0.5  + to.width * 0.5 + scale * 0.5 - 0.5;
+            i2d[3] = 0;  i2d[4] = scale;  i2d[5] = -scale * from.height * 0.5 + to.height * 0.5 + scale * 0.5 - 0.5;
 
             cv::Mat m2x3_i2d(2, 3, CV_32F, i2d);
             cv::Mat m2x3_d2i(2, 3, CV_32F, d2i);
