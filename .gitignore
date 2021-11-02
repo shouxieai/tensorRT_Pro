@@ -88,3 +88,6 @@ __pycache__
 /workspace/perf.result.log
 /simple_yolo/workspace/pro
 /simple_yolo/objs
+
+/workspace/absdiff_image.png
+/workspace/opencv_cpu_warpaffine.png

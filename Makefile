@@ -137,6 +137,9 @@ retinaface : workspace/pro
 arcface    : workspace/pro
 	@cd workspace && ./pro arcface
 
+test_warpaffine    : workspace/pro
+	@cd workspace && ./pro test_warpaffine
+
 arcface_video    : workspace/pro
 	@cd workspace && ./pro arcface_video
 
