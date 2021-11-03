@@ -14,6 +14,7 @@ class Dataset:
     def __len__(self):
         return 10
     
+# 如果有spawn，必须保证得有if __name__ == "__main__":作为入口
 if __name__ == "__main__":
 
     # 这一句很关键，否则会报错cuda initialize failed
