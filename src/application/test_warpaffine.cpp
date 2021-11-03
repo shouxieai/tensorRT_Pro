@@ -80,25 +80,16 @@ cv::Mat load_image(){
 int _resize(){
 
     cudaStream_t stream = nullptr;
-    TRT::MixMemory memory, matrix;
+    TRT::MixMemory memory;
     TRT::Tensor my_gpu_resize;
     cv::Mat opencv_cpu_resize;
-    cv::Mat_<float> i2d_matrix(2, 3), d2i_matrix(2, 3);
     cv::Size test_size(100, 100);
 
     auto image  = load_image();
     float sx    = test_size.width / (float)image.cols;
     float sy    = test_size.height / (float)image.rows;
-    float i2d_matrix_values[] = {
-        sx, 0, sx * 0.5f - 0.5f,
-        0, sy, sy * 0.5f - 0.5f,
-    };
-
     cv::resize(image, opencv_cpu_resize, test_size);
     cv::imwrite("opencv_cpu_resize.png", opencv_cpu_resize);
-
-    memcpy(i2d_matrix.ptr<float>(0), i2d_matrix_values, sizeof(i2d_matrix_values));
-    cv::invertAffineTransform(i2d_matrix, d2i_matrix);
 
     uint8_t* image_data_device = (uint8_t*)memory.gpu(image.rows * image.cols * 3);
 
@@ -106,15 +97,12 @@ int _resize(){
     cudaMemcpyAsync(image_data_device, image.data, memory.gpu_size(), cudaMemcpyHostToDevice, stream);
 
     auto norm = CUDAKernel::Norm::None();
-    float* d2i_matrix_device = (float*)matrix.gpu(6 * sizeof(float));
-    cudaMemcpyAsync(d2i_matrix_device, d2i_matrix.ptr<float>(0), matrix.gpu_size(), cudaMemcpyHostToDevice, stream);
-
     my_gpu_resize.resize(1, 3, test_size.height, test_size.width);
     CUDAKernel::resize_bilinear_and_normalize(
         image_data_device, image.cols * 3, image.cols, image.rows,
         my_gpu_resize.gpu<float>(), my_gpu_resize.width(), my_gpu_resize.height(), 
         norm, stream
-    );
+    ); 
     cudaStreamSynchronize(stream);
     cudaStreamDestroy(stream);
     my_gpu_resize.save_to_file("my_gpu_resize.tensor");
