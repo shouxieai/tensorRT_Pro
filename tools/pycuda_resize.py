@@ -58,6 +58,7 @@ resize_bilinear_and_normalize_kernel = mod.get_function("resize_bilinear_and_nor
 def resize(image, dsize):
         
     assert image.ndim == 3 and image.shape[2] == 3, "Image must be 3 channels"
+    assert image.dtype == np.uint8, "Image.dtype must be np.uint8"
     
     sh, sw = image.shape[:2]
     dw, dh = dsize
