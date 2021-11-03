@@ -71,6 +71,4 @@ def resize(image, dsize):
         drv.Out(gpu_dst), np.int32(gpu_dst.strides[0]), np.int32(dw), np.int32(dh),
         np.float32(sw / dw), np.float32(sh / dh), np.int32(jobs),
         block=(block, 1, 1), grid=(grid, 1))
-
-    print(image.shape, gpu_dst.shape, image.strides, np.int32(sw), np.int32(sh), gpu_dst.strides, np.int32(dw), np.int32(dh), np.float32(sw / dw), np.float32(sh / dh), np.int32(jobs), block, grid, sw, dw, sh, dh)
     return gpu_dst
