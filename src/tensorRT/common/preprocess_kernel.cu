@@ -43,6 +43,9 @@ namespace CUDAKernel{
 	// same to opencv
 	// reference: https://github.com/opencv/opencv/blob/24fcb7f8131f707717a9f1871b17d95e7cf519ee/modules/imgproc/src/resize.cpp
 	// reference: https://github.com/openppl-public/ppl.cv/blob/04ef4ca48262601b99f1bb918dcd005311f331da/src/ppl/cv/cuda/resize.cu
+	/*
+	  可以考虑用同样实现的resize函数进行训练，python代码在：tools/test_resize.py
+	*/
 	__global__ void resize_bilinear_and_normalize_kernel(
 		uint8_t* src, int src_line_size, int src_width, int src_height, float* dst, int dst_width, int dst_height, 
 		float sx, float sy, Norm norm, int edge
