@@ -89,5 +89,4 @@ __pycache__
 /simple_yolo/workspace/pro
 /simple_yolo/objs
 
-/workspace/absdiff_image.png
-/workspace/opencv_cpu_warpaffine.png
+/workspace/*.png

@@ -33,6 +33,11 @@ namespace CUDAKernel{
         static Norm None();
     };
 
+    void resize_bilinear_and_normalize(
+		uint8_t* src, int src_line_size, int src_width, int src_height, float* dst, int dst_width, int dst_height,
+		const Norm& norm,
+		cudaStream_t stream);
+
     void warp_affine_bilinear_and_normalize_plane(
         uint8_t* src, int src_line_size, int src_width, int src_height, 
         float* dst  , int dst_width, int dst_height,
