@@ -1,6 +1,5 @@
 import torch
 from torch.utils.data import DataLoader
-import multiprocessing
 import pycuda_resize as pr
 import numpy as np
 import cv2
