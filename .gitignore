@@ -88,5 +88,5 @@ __pycache__
 /workspace/perf.result.log
 /simple_yolo/workspace/pro
 /simple_yolo/objs
-
+/workspace/*.json
 /workspace/*.png

@@ -113,9 +113,12 @@ namespace Yolo{
         auto grid = CUDATools::grid_dims(num_bboxes);
         auto block = CUDATools::block_dims(num_bboxes);
         checkCudaKernel(decode_kernel<<<grid, block, 0, stream>>>(predict, num_bboxes, num_classes, confidence_threshold, invert_affine_matrix, parray, max_objects));
+    }
 
-        grid = CUDATools::grid_dims(max_objects);
-        block = CUDATools::block_dims(max_objects);
+    void nms_kernel_invoker(float* parray, float nms_threshold, int max_objects, cudaStream_t stream){
+        
+        auto grid = CUDATools::grid_dims(max_objects);
+        auto block = CUDATools::block_dims(max_objects);
         checkCudaKernel(nms_kernel<<<grid, block, 0, stream>>>(parray, max_objects, nms_threshold));
     }
 };

@@ -140,6 +140,9 @@ arcface    : workspace/pro
 test_warpaffine    : workspace/pro
 	@cd workspace && ./pro test_warpaffine
 
+test_yolo_map    : workspace/pro
+	@cd workspace && ./pro test_yolo_map
+
 arcface_video    : workspace/pro
 	@cd workspace && ./pro arcface_video
 

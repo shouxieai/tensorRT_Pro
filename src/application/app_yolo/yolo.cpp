@@ -28,6 +28,10 @@ namespace Yolo{
         int max_objects, cudaStream_t stream
     );
 
+    void nms_kernel_invoker(
+        float* parray, float nms_threshold, int max_objects, cudaStream_t stream
+    );
+
     struct AffineMatrix{
         float i2d[6];       // image to dst(network), 2x3 matrix
         float d2i[6];       // dst to image, 2x3 matrix
@@ -84,7 +88,7 @@ namespace Yolo{
             */
             i2d[0] = scale;  i2d[1] = 0;  i2d[2] = -scale * from.width  * 0.5  + to.width * 0.5 + scale * 0.5 - 0.5;
             i2d[3] = 0;  i2d[4] = scale;  i2d[5] = -scale * from.height * 0.5 + to.height * 0.5 + scale * 0.5 - 0.5;
-
+            
             cv::Mat m2x3_i2d(2, 3, CV_32F, i2d);
             cv::Mat m2x3_d2i(2, 3, CV_32F, d2i);
             cv::invertAffineTransform(m2x3_i2d, m2x3_d2i);
@@ -94,6 +98,51 @@ namespace Yolo{
             return cv::Mat(2, 3, CV_32F, i2d);
         }
     };
+
+    static float iou(const Box& a, const Box& b){
+        float cleft 	= max(a.left, b.left);
+        float ctop 		= max(a.top, b.top);
+        float cright 	= min(a.right, b.right);
+        float cbottom 	= min(a.bottom, b.bottom);
+        
+        float c_area = max(cright - cleft, 0.0f) * max(cbottom - ctop, 0.0f);
+        if(c_area == 0.0f)
+            return 0.0f;
+        
+        float a_area = max(0.0f, a.right - a.left) * max(0.0f, a.bottom - a.top);
+        float b_area = max(0.0f, b.right - b.left) * max(0.0f, b.bottom - b.top);
+        return c_area / (a_area + b_area - c_area);
+    }
+
+    static BoxArray cpu_nms(BoxArray& boxes, float threshold){
+
+        std::sort(boxes.begin(), boxes.end(), [](Box& a, Box& b){
+            return a.confidence > b.confidence;
+        });
+
+        BoxArray output;
+        output.reserve(boxes.size());
+
+        vector<bool> remove_flags(boxes.size());
+        for(int i = 0; i < boxes.size(); ++i){
+
+            if(remove_flags[i]) continue;
+
+            auto& a = boxes[i];
+            output.emplace_back(a);
+
+            for(int j = i + 1; j < boxes.size(); ++j){
+                if(remove_flags[j]) continue;
+                
+                auto& b = boxes[j];
+                if(b.class_label == a.class_label){
+                    if(iou(a, b) >= threshold)
+                        remove_flags[j] = true;
+                }
+            }
+        }
+        return output;
+    }
 
     using ControllerImpl = InferController
     <
@@ -110,8 +159,11 @@ namespace Yolo{
             stop();
         }
 
-        virtual bool startup(const string& file, Type type, int gpuid, float confidence_threshold, float nms_threshold){
-
+        virtual bool startup(
+            const string& file, Type type, int gpuid, 
+            float confidence_threshold, float nms_threshold,
+            NMSMethod nms_method, int max_objects
+        ){
             if(type == Type::V5){
                 normalize_ = CUDAKernel::Norm::alpha_beta(1 / 255.0f, 0.0f, CUDAKernel::ChannelType::Invert);
             }else if(type == Type::X){
@@ -125,6 +177,8 @@ namespace Yolo{
             
             confidence_threshold_ = confidence_threshold;
             nms_threshold_        = nms_threshold;
+            nms_method_           = nms_method;
+            max_objects_          = max_objects;
             return ControllerImpl::startup(make_tuple(file, gpuid));
         }
 
@@ -143,7 +197,7 @@ namespace Yolo{
 
             engine->print();
 
-            const int MAX_IMAGE_BBOX  = 1024;
+            const int MAX_IMAGE_BBOX  = max_objects_;
             const int NUM_BOX_ELEMENT = 7;      // left, top, right, bottom, confidence, class, keepflag
             TRT::Tensor affin_matrix_device(TRT::DataType::Float);
             TRT::Tensor output_array_device(TRT::DataType::Float);
@@ -192,6 +246,10 @@ namespace Yolo{
                     auto affine_matrix        = affin_matrix_device.gpu<float>(ibatch);
                     checkCudaRuntime(cudaMemsetAsync(output_array_ptr, 0, sizeof(int), stream_));
                     decode_kernel_invoker(image_based_output, output->size(1), num_classes, confidence_threshold_, nms_threshold_, affine_matrix, output_array_ptr, MAX_IMAGE_BBOX, stream_);
+
+                    if(nms_method_ == NMSMethod::FastGPU){
+                        nms_kernel_invoker(output_array_ptr, nms_threshold_, MAX_IMAGE_BBOX, stream_);
+                    }
                 }
 
                 output_array_device.to_cpu();
@@ -208,6 +266,10 @@ namespace Yolo{
                             image_based_boxes.emplace_back(pbox[0], pbox[1], pbox[2], pbox[3], pbox[4], label);
                         }
                     }
+
+                    if(nms_method_ == NMSMethod::CPU){
+                        image_based_boxes = cpu_nms(image_based_boxes, nms_threshold_);
+                    }
                     job.pro->set_value(image_based_boxes);
                 }
                 fetch_jobs.clear();
@@ -221,6 +283,11 @@ namespace Yolo{
 
             if(tensor_allocator_ == nullptr){
                 INFOE("tensor_allocator_ is nullptr");
+                return false;
+            }
+
+            if(image.empty()){
+                INFOE("Image is empty");
                 return false;
             }
 
@@ -285,13 +352,22 @@ namespace Yolo{
         int gpu_                    = 0;
         float confidence_threshold_ = 0;
         float nms_threshold_        = 0;
+        int max_objects_            = 1024;
+        NMSMethod nms_method_       = NMSMethod::FastGPU;
         TRT::CUStream stream_       = nullptr;
         CUDAKernel::Norm normalize_;
     };
 
-    shared_ptr<Infer> create_infer(const string& engine_file, Type type, int gpuid, float confidence_threshold, float nms_threshold){
+    shared_ptr<Infer> create_infer(
+        const string& engine_file, Type type, int gpuid, 
+        float confidence_threshold, float nms_threshold,
+        NMSMethod nms_method, int max_objects
+    ){
         shared_ptr<InferImpl> instance(new InferImpl());
-        if(!instance->startup(engine_file, type, gpuid, confidence_threshold, nms_threshold)){
+        if(!instance->startup(
+            engine_file, type, gpuid, confidence_threshold, 
+            nms_threshold, nms_method, max_objects)
+        ){
             instance.reset();
         }
         return instance;

@@ -37,6 +37,7 @@
     <ClCompile Include="src\application\app_yolo.cpp" />
     <ClCompile Include="src\application\app_bert.cpp" />
     <ClCompile Include="src\application\test_warpaffine.cpp" />
+    <ClCompile Include="src\application\test_yolo_map.cpp" />
     <ClCompile Include="src\application\app_plugin.cpp" />
     <ClCompile Include="src\application\app_lesson.cpp" />
     <ClCompile Include="src\application\app_yolo\yolo.cpp" />

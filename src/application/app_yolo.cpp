@@ -37,7 +37,7 @@ static void append_to_file(const string& file, const string& data){
 
 static void inference_and_performance(int deviceid, const string& engine_file, TRT::Mode mode, Yolo::Type type, const string& model_name){
 
-    auto engine = Yolo::create_infer(engine_file, type, deviceid, 0.4f, 0.5f);
+    auto engine = Yolo::create_infer(engine_file, type, deviceid, 0.25f, 0.45f);
     if(engine == nullptr){
         INFOE("Engine is nullptr");
         return;

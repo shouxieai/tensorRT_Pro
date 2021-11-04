@@ -20,6 +20,7 @@ int app_centernet();
 int app_dbface();
 int app_bert();
 int test_warpaffine();
+int test_yolo_map();
 
 void test_all(){
     app_yolo();
@@ -66,6 +67,8 @@ int main(int argc, char** argv){
         app_scrfd();
     }else if(strcmp(method, "test_warpaffine") == 0){
         test_warpaffine();
+    }else if(strcmp(method, "test_yolo_map") == 0){
+        test_yolo_map();
     }else if(strcmp(method, "high_perf") == 0){
         app_high_performance();
     }else if(strcmp(method, "lesson") == 0){

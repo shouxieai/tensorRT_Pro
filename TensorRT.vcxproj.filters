@@ -217,6 +217,9 @@
     <ClCompile Include="src\application\test_warpaffine.cpp">
       <Filter>src\application</Filter>
     </ClCompile>
+    <ClCompile Include="src\application\test_yolo_map.cpp">
+      <Filter>src\application</Filter>
+    </ClCompile>
     <ClCompile Include="src\application\app_yolo_fast\yolo_fast.cpp">
       <Filter>src\application\app_yolo_fast</Filter>
     </ClCompile>

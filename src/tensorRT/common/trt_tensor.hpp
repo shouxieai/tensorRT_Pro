@@ -199,6 +199,7 @@ namespace TRT {
 
          **/
         bool save_to_file(const std::string& file) const;
+        bool load_from_file(const std::string& file);
 
     private:
         Tensor& compute_shape_string();

@@ -618,4 +618,34 @@ namespace TRT{
 		return true;
 	}
 
+	bool Tensor::load_from_file(const std::string& file){
+
+		FILE* f = fopen(file.c_str(), "rb");
+		if(f == nullptr){
+			INFOE("Open %s failed.", file.c_str());
+			return false;
+		}
+
+		unsigned int head[3] = {0};
+		fread(head, 1, sizeof(head), f);
+
+		if(head[0] != 0xFCCFE2E2){
+			fclose(f);
+			INFOE("Invalid tensor file %s, magic number mismatch", file.c_str());
+			return false;
+		}
+
+		int ndims = head[1];
+		auto dtype = (TRT::DataType)head[2];
+		vector<int> dims(ndims);
+		fread(dims.data(), 1, ndims * sizeof(dims[0]), f);
+		
+		this->dtype_ = dtype;
+		this->resize(dims);
+
+		fread(this->cpu(), 1, bytes_, f);
+		fclose(f);
+		return true;
+	}
+
 }; // TRTTensor
