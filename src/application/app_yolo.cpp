@@ -165,7 +165,7 @@ void multi_gpu_test(){
 
 int app_yolo(){
 
-    // multi_gpu_test();
+    multi_gpu_test();
     //iLogger::set_log_level(iLogger::LogLevel::Debug);
     //test(Yolo::Type::X, TRT::Mode::FP32, "yolox_s");
 
