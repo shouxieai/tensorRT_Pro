@@ -3,6 +3,7 @@
 #include <infer/trt_infer.hpp>
 #include <common/ilogger.hpp>
 #include "app_yolo/yolo.hpp"
+#include "app_yolo/multi_gpu.hpp"
 
 using namespace std;
 
@@ -143,7 +144,28 @@ static void test(Yolo::Type type, TRT::Mode mode, const string& model){
     inference_and_performance(deviceid, model_file, mode, type, name);
 }
 
+void multi_gpu_test(){
+    
+    vector<int> devices{0, 1, 2};
+    auto multi_gpu_infer = Yolo::create_multi_gpu_infer(
+        "yolov5s-6.0.FP32.trtmodel", Yolo::Type::V5, devices
+    );
+
+    auto files = iLogger::find_files("inference", "*.jpg");
+    #pragma omp parallel for num_threads(devices.size())
+    for(int i = 0; i < devices.size(); ++i){
+
+        auto image = cv::imread(files[i]);
+        for(int j = 0; j < 1000; ++j){
+            multi_gpu_infer->commit(image).get();
+        }
+    }
+    INFO("Done");
+}
+
 int app_yolo(){
+
+    // multi_gpu_test();
     //iLogger::set_log_level(iLogger::LogLevel::Debug);
     //test(Yolo::Type::X, TRT::Mode::FP32, "yolox_s");
 

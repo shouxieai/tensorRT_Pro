@@ -208,6 +208,9 @@
     <ClCompile Include="src\application\app_yolo\yolo.cpp">
       <Filter>src\application\app_yolo</Filter>
     </ClCompile>
+    <ClCompile Include="src\application\app_yolo\multi_gpu.cpp">
+      <Filter>src\application\app_yolo</Filter>
+    </ClCompile>
     <ClCompile Include="src\application\app_centernet\centernet.cpp">
       <Filter>src\application\app_centernet</Filter>
     </ClCompile>
@@ -370,6 +373,9 @@
       <Filter>src\application\tools</Filter>
     </ClInclude>
     <ClInclude Include="src\application\app_yolo\yolo.hpp">
+      <Filter>src\application\app_yolo</Filter>
+    </ClInclude>
+    <ClInclude Include="src\application\app_yolo\multi_gpu.hpp">
       <Filter>src\application\app_yolo</Filter>
     </ClInclude>
     <ClInclude Include="src\application\app_centernet\centernet.hpp">
