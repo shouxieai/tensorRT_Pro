@@ -1,6 +1,7 @@
 *Read this in other languages: [English](README.md), [简体中文](README.zh-cn.md).*
 
 ## News: 
+- tensorRT_Pro_comments_version is provided for a better learning experience. Repo: https://github.com/Guanbin-Huang/tensorRT_Pro_comments
 - Tutorial for exporting CenterNet from pytorch to tensorRT is released. 
 - 🔥 [Simple yolov5/yolox implemention is released. Simple and easy to use.](simple_yolo)
 - 🔥 yolov5-1.0-6.0/master are supported.
