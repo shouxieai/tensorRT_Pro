@@ -44,8 +44,7 @@ library_paths := $(lean_protobuf)/lib \
 			$(lean_opencv)/lib    \
 			$(lean_tensor_rt)/lib \
 			$(lean_cuda)/lib64  \
-			$(lean_cudnn)/lib \
-			/datav/k12/lean/ffmpeg4.2/lib
+			$(lean_cudnn)/lib
 
 link_librarys := opencv_core opencv_imgproc opencv_videoio opencv_imgcodecs \
 			nvinfer nvinfer_plugin \
