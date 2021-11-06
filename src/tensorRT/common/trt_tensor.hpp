@@ -157,8 +157,9 @@ namespace TRT {
         std::shared_ptr<MixMemory> get_workspace()        const {return workspace_;}
         Tensor& set_workspace(std::shared_ptr<MixMemory> workspace) {workspace_ = workspace; return *this;}
 
+        bool is_stream_owner() const {return stream_owner_;}
         CUStream get_stream() const{return stream_;}
-        Tensor& set_stream(CUStream stream){stream_ = stream; return *this;}
+        Tensor& set_stream(CUStream stream, bool owner=false){stream_ = stream; stream_owner_ = owner; return *this;}
 
         Tensor& set_mat     (int n, const cv::Mat& image);
         Tensor& set_norm_mat(int n, const cv::Mat& image, float mean[3], float std[3]);
@@ -213,6 +214,7 @@ namespace TRT {
         DataHead head_   = DataHead::Init;
         DataType dtype_  = DataType::Float;
         CUStream stream_ = nullptr;
+        bool stream_owner_ = false;
         int device_id_   = 0;
         char shape_string_[100];
         char descriptor_string_[100];

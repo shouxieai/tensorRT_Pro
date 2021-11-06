@@ -147,7 +147,7 @@ namespace Yolo{
     using ControllerImpl = InferController
     <
         Mat,                    // input
-        BoxArray,         // output
+        BoxArray,               // output
         tuple<string, int>,     // start param
         AffineMatrix            // additional
     >;
@@ -162,7 +162,8 @@ namespace Yolo{
         virtual bool startup(
             const string& file, Type type, int gpuid, 
             float confidence_threshold, float nms_threshold,
-            NMSMethod nms_method, int max_objects
+            NMSMethod nms_method, int max_objects,
+            bool use_multi_preprocess_stream
         ){
             if(type == Type::V5){
                 normalize_ = CUDAKernel::Norm::alpha_beta(1 / 255.0f, 0.0f, CUDAKernel::ChannelType::Invert);
@@ -175,6 +176,7 @@ namespace Yolo{
                 INFOE("Unsupport type %d", type);
             }
             
+            use_multi_preprocess_stream_ = use_multi_preprocess_stream;
             confidence_threshold_ = confidence_threshold;
             nms_threshold_        = nms_threshold;
             nms_method_           = nms_method;
@@ -231,6 +233,12 @@ namespace Yolo{
                 for(int ibatch = 0; ibatch < infer_batch_size; ++ibatch){
                     auto& job  = fetch_jobs[ibatch];
                     auto& mono = job.mono_tensor->data();
+
+                    if(mono->get_stream() != stream_){
+                        // synchronize preprocess stream finish
+                        checkCudaRuntime(cudaStreamSynchronize(mono->get_stream()));
+                    }
+
                     affin_matrix_device.copy_from_gpu(affin_matrix_device.offset(ibatch), mono->get_workspace()->gpu(), 6);
                     input->copy_from_gpu(input->offset(ibatch), mono->gpu(), mono->count());
                     job.mono_tensor->release();
@@ -299,16 +307,30 @@ namespace Yolo{
 
             CUDATools::AutoDevice auto_device(gpu_);
             auto& tensor = job.mono_tensor->data();
+            TRT::CUStream preprocess_stream = nullptr;
+
             if(tensor == nullptr){
                 // not init
                 tensor = make_shared<TRT::Tensor>();
                 tensor->set_workspace(make_shared<TRT::MixMemory>());
+
+                if(use_multi_preprocess_stream_){
+                    checkCudaRuntime(cudaStreamCreate(&preprocess_stream));
+
+                    // owner = true, stream needs to be free during deconstruction
+                    tensor->set_stream(preprocess_stream, true);
+                }else{
+                    preprocess_stream = stream_;
+
+                    // owner = false, tensor ignored the stream
+                    tensor->set_stream(preprocess_stream, false);
+                }
             }
 
             Size input_size(input_width_, input_height_);
             job.additional.compute(image.size(), input_size);
             
-            tensor->set_stream(stream_);
+            preprocess_stream = tensor->get_stream();
             tensor->resize(1, 3, input_height_, input_width_);
 
             size_t size_image      = image.cols * image.rows * 3;
@@ -326,14 +348,14 @@ namespace Yolo{
             // speed up
             memcpy(image_host, image.data, size_image);
             memcpy(affine_matrix_host, job.additional.d2i, sizeof(job.additional.d2i));
-            checkCudaRuntime(cudaMemcpyAsync(image_device, image_host, size_image, cudaMemcpyHostToDevice, stream_));
-            checkCudaRuntime(cudaMemcpyAsync(affine_matrix_device, affine_matrix_host, sizeof(job.additional.d2i), cudaMemcpyHostToDevice, stream_));
+            checkCudaRuntime(cudaMemcpyAsync(image_device, image_host, size_image, cudaMemcpyHostToDevice, preprocess_stream));
+            checkCudaRuntime(cudaMemcpyAsync(affine_matrix_device, affine_matrix_host, sizeof(job.additional.d2i), cudaMemcpyHostToDevice, preprocess_stream));
 
             CUDAKernel::warp_affine_bilinear_and_normalize_plane(
                 image_device,         image.cols * 3,       image.cols,       image.rows, 
                 tensor->gpu<float>(), input_width_,         input_height_, 
                 affine_matrix_device, 114, 
-                normalize_, stream_
+                normalize_, preprocess_stream
             );
             return true;
         }
@@ -355,18 +377,20 @@ namespace Yolo{
         int max_objects_            = 1024;
         NMSMethod nms_method_       = NMSMethod::FastGPU;
         TRT::CUStream stream_       = nullptr;
+        bool use_multi_preprocess_stream_ = false;
         CUDAKernel::Norm normalize_;
     };
 
     shared_ptr<Infer> create_infer(
         const string& engine_file, Type type, int gpuid, 
         float confidence_threshold, float nms_threshold,
-        NMSMethod nms_method, int max_objects
+        NMSMethod nms_method, int max_objects,
+        bool use_multi_preprocess_stream
     ){
         shared_ptr<InferImpl> instance(new InferImpl());
         if(!instance->startup(
             engine_file, type, gpuid, confidence_threshold, 
-            nms_threshold, nms_method, max_objects)
+            nms_threshold, nms_method, max_objects, use_multi_preprocess_stream)
         ){
             instance.reset();
         }

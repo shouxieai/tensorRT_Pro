@@ -38,7 +38,16 @@ static void append_to_file(const string& file, const string& data){
 
 static void inference_and_performance(int deviceid, const string& engine_file, TRT::Mode mode, Yolo::Type type, const string& model_name){
 
-    auto engine = Yolo::create_infer(engine_file, type, deviceid, 0.25f, 0.45f);
+    auto engine = Yolo::create_infer(
+        engine_file,                // engine file
+        type,                       // yolo type, Yolo::Type::V5 / Yolo::Type::X
+        deviceid,                   // gpu id
+        0.25f,                      // confidence threshold
+        0.45f,                      // nms threshold
+        Yolo::NMSMethod::FastGPU,   // NMS method, fast GPU / CPU
+        1024,                       // max objects
+        false                       // preprocess use multi stream
+    );
     if(engine == nullptr){
         INFOE("Engine is nullptr");
         return;
@@ -165,6 +174,8 @@ void multi_gpu_test(){
 
 int app_yolo(){
 
+    test(Yolo::Type::V5, TRT::Mode::FP32, "yolov5s");
+
     // multi_gpu_test();
     //iLogger::set_log_level(iLogger::LogLevel::Debug);
     //test(Yolo::Type::X, TRT::Mode::FP32, "yolox_s");
@@ -190,7 +201,6 @@ int app_yolo(){
     // test(Yolo::Type::V5, TRT::Mode::FP32, "yolov5x");
     // test(Yolo::Type::V5, TRT::Mode::FP32, "yolov5l");
     // test(Yolo::Type::V5, TRT::Mode::FP32, "yolov5m");
-    test(Yolo::Type::V5, TRT::Mode::FP32, "yolov5s");
 
     // test(Yolo::Type::V5, TRT::Mode::FP16, "yolov5x6");
     // test(Yolo::Type::V5, TRT::Mode::FP16, "yolov5l6");

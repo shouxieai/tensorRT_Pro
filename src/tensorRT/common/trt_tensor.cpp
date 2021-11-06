@@ -334,6 +334,12 @@ namespace TRT{
 		shape_.clear();
 		bytes_ = 0;
 		head_ = DataHead::Init;
+		if(stream_owner_ && stream_ != nullptr){
+			CUDATools::AutoDevice auto_device_exchange(this->device());
+			checkCudaRuntime(cudaStreamDestroy(stream_));
+		}
+		stream_owner_ = false;
+		stream_ = nullptr;
 		return *this;
 	}
 
