@@ -1,4 +1,4 @@
-# http_server_cpp
+# 基于Yolo推理的Resful API http server
 - C++的http服务器，简单好用
 
 ## 执行方式
