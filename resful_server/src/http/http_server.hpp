@@ -100,6 +100,7 @@ protected:
 	std::shared_ptr<Session> get_current_session();
 };
 
+std::shared_ptr<Controller> create_redirect_access_controller(const std::string& root_directory, const std::string& root_redirect_file="");
 std::shared_ptr<Controller> create_file_access_controller(const std::string& root_directory);
 
 class HttpServer{

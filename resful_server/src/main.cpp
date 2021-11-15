@@ -25,30 +25,17 @@ class InferInstance{
 public:
 	bool startup(){
 
-		infer_ = get_infer(SimpleYolo::Type::V5, SimpleYolo::Mode::FP32, "yolov5s");
+		infer_ = get_infer(SimpleYolo::Type::X, SimpleYolo::Mode::FP32, "yolox_s");
 		return infer_ != nullptr;
 	}
 
-	bool inference_and_draw(const Mat& image_input, Mat& image_output){
+	bool inference(const Mat& image_input, SimpleYolo::BoxArray& boxarray){
 		
 		if(image_input.empty()){
 			INFOE("Image is empty.");
 			return false;
 		}
-		image_input.copyTo(image_output);
-
-		auto boxes = infer_->commit(image_input).get();
-		for(auto& obj : boxes){
-            uint8_t b, g, r;
-            tie(r, g, b) = iLogger::random_color(obj.class_label);
-            cv::rectangle(image_output, cv::Point(obj.left, obj.top), cv::Point(obj.right, obj.bottom), cv::Scalar(b, g, r), 5);
-
-            auto name    = cocolabels[obj.class_label];
-            auto caption = cv::format("%s %.2f", name, obj.confidence);
-            int width    = cv::getTextSize(caption, 0, 1, 2, nullptr).width + 10;
-            cv::rectangle(image_output, cv::Point(obj.left-3, obj.top-33), cv::Point(obj.left + width, obj.top), cv::Scalar(b, g, r), -1);
-            cv::putText(image_output, caption, cv::Point(obj.left, obj.top-5), 0, 1, cv::Scalar::all(0), 2, 16);
-        }
+		boxarray = infer_->commit(image_input).get();
 		return true;
 	}
 
@@ -94,7 +81,7 @@ private:
 				"inference"
 			);
 		}
-		return SimpleYolo::create_infer(model_file, type, deviceid, 0.4f, 0.5f);
+		return SimpleYolo::create_infer(model_file, type, deviceid, 0.25f, 0.5f);
 	}
 	
 private:
@@ -147,16 +134,23 @@ Json::Value LogicalController::detectBase64Image(const Json::Value& param){
 	if(image_data.empty())
 		return failure("Image is empty");
 
-	auto isok = this->infer_instance_->inference_and_draw(image, image);
-	if(!isok)
+	SimpleYolo::BoxArray boxarray;
+	if(!this->infer_instance_->inference(image, boxarray))
 		return failure("Server error1");
 	
-	if(!cv::imencode(".jpg", image, image_data))
-		return failure("Server error2");
-
-	session->response.write_binary(image_data.data(), image_data.size());
-	session->response.set_header("Content-Type", "image/jpeg");
-	return success();
+	Json::Value boxarray_json(Json::arrayValue);
+	for(auto& box : boxarray){
+		Json::Value item(Json::objectValue);
+		item["left"] = box.left;
+		item["top"] = box.top;
+		item["right"] = box.right;
+		item["bottom"] = box.bottom;
+		item["confidence"] = box.confidence;
+		item["class_label"] = box.class_label;
+		item["class_name"] = cocolabels[box.class_label];
+		boxarray_json.append(item);
+	}
+	return success(boxarray_json);
 }
 
 Json::Value LogicalController::getCustom(const Json::Value& param){
@@ -219,20 +213,21 @@ int test_http(int port = 8090){
 		return -1;
  
 	INFO("Add controller");
-	server->add_controller("/v1", logical_controller);
-	server->add_controller("/static", create_file_access_controller("./"));
-	INFO("Access url: http://%s/v1", address.c_str());
+	server->add_controller("/api", logical_controller);
+	server->add_controller("/", create_redirect_access_controller("./web"));
+	INFO("Access url: http://%s", address.c_str());
 
 	INFO(
 		"\n"
 		"访问如下地址即可看到效果:\n"
-		"1. http://%s/v1/getCustom              使用自定义写出内容作为response\n"
-		"2. http://%s/v1/getReturn              使用函数返回值中的json作为response\n"
-		"3. http://%s/v1/getBinary              使用自定义写出二进制数据作为response\n"
-		"4. http://%s/v1/getFile                使用自定义写出文件路径作为response\n"
-		"5. http://%s/v1/putBase64Image         通过提交base64图像数据进行解码后储存\n"
-		"6. http://%s/static/img.jpg            直接访问静态文件处理的controller，具体请看函数说明",
-		address.c_str(), address.c_str(), address.c_str(), address.c_str(), address.c_str(), address.c_str()
+		"1. http://%s/api/getCustom              使用自定义写出内容作为response\n"
+		"2. http://%s/api/getReturn              使用函数返回值中的json作为response\n"
+		"3. http://%s/api/getBinary              使用自定义写出二进制数据作为response\n"
+		"4. http://%s/api/getFile                使用自定义写出文件路径作为response\n"
+		"5. http://%s/api/putBase64Image         通过提交base64图像数据进行解码后储存\n"
+		"6. http://%s/static/img.jpg             直接访问静态文件处理的controller，具体请看函数说明\n"
+		"7. http://%s                            访问web页面，vue开发的",
+		address.c_str(), address.c_str(), address.c_str(), address.c_str(), address.c_str(), address.c_str(), address.c_str()
 	);
 
 	INFO("按下Ctrl + C结束程序");

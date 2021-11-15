@@ -635,6 +635,96 @@ shared_ptr<Session> Controller::get_current_session(){
 }
 
 
+class FileRedirectController : public Controller{
+public:
+	FileRedirectController(const string& root_directory, const string& root_redirect_file){
+		root_directory_ = root_directory;
+		root_redirect_file_ = root_redirect_file;
+
+		if(root_directory_.empty())
+			root_directory_ = "static";
+
+		if(root_redirect_file_.empty())
+			root_redirect_file_ = "index.html";
+
+		if(root_directory_.back() == '/' || root_directory_.back() == '\\')
+			root_directory_.pop_back();
+	}
+
+	bool is_begin_match() override{
+		return true;
+	}
+
+	virtual void process(const shared_ptr<Session>& session) override{
+		
+		if(session->request.url.size() < mapping_url_.size()){
+			session->response.set_status_code(404);
+			return;
+		}
+
+		auto split_url = session->request.url.substr(mapping_url_.size());
+		if(!split_url.empty() && split_url.back() == '/')
+			split_url.pop_back();
+
+		if(split_url.empty())
+			split_url = root_redirect_file_;
+
+		int lp = split_url.find('?');
+		if(lp != -1)
+			split_url = split_url.substr(0, lp);
+
+		int p = split_url.rfind('.');
+		int e = split_url.rfind('/');
+		const char* context_type = "application/octet-stream";
+		if(p > e){
+			auto suffix = split_url.substr(p);
+			transform(suffix.begin(), suffix.end(), suffix.begin(), ::tolower);
+			auto iter = CONTENT_TYPE.find(suffix);
+			if(iter != CONTENT_TYPE.end()){
+				context_type = iter->second.c_str();
+			}
+		}
+
+		string merge_path = iLogger::format("%s/%s", root_directory_.c_str(), split_url.c_str());
+		if(!iLogger::exists(merge_path)){
+			merge_path = iLogger::format("%s/%s", root_directory_.c_str(), root_redirect_file_.c_str());
+		}
+
+		if(!iLogger::isfile(merge_path)){
+			error_process(session, 404);
+			return;
+		}
+
+		session->response.set_header("Content-Type", context_type);
+		time_t file_last_modify = iLogger::last_modify(merge_path);
+		auto gmt = iLogger::gmtime(file_last_modify);
+		if(session->request.has_header("If-Modified-Since")){
+			auto time = session->request.get_header("If-Modified-Since");
+			if(!time.empty()){
+				time_t modified_since = iLogger::gmtime2ctime(time);
+				if(modified_since == file_last_modify){
+					const int SC_NOT_MODIFIED = 304;
+					session->response.set_status_code(SC_NOT_MODIFIED);
+					session->response.set_header("Cache-Control", "max-age=315360000");
+					session->response.set_header("Last-Modified", iLogger::gmtime(file_last_modify));
+					return;
+				}
+			}
+		}
+		//match by ccutil::gmtime
+		//INFO("Write file: %s", merge_path.c_str());
+		session->response.write_file(merge_path);
+	}
+
+private:
+	string root_redirect_file_;
+	string root_directory_;
+};
+
+shared_ptr<Controller> create_redirect_access_controller(const string& root_directory, const string& root_redirect_file){
+	return make_shared<FileRedirectController>(root_directory, root_redirect_file);
+}
+
 class FileAccessController : public Controller{
 public:
 	FileAccessController(const string& root_directory){
