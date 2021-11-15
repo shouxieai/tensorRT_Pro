@@ -31,6 +31,11 @@ public:
 
 	bool inference(const Mat& image_input, SimpleYolo::BoxArray& boxarray){
 		
+		if(infer_ == nullptr){
+			INFOE("Initialize failed.");
+			return false;
+		}
+
 		if(image_input.empty()){
 			INFOE("Image is empty.");
 			return false;
