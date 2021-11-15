@@ -1,0 +1,13 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <LocalDebuggerWorkingDirectory>workspace</LocalDebuggerWorkingDirectory>
+    <LocalDebuggerEnvironment>PATH=$(projectDir)lean/cuda10.1/bin;$(projectDir)lean/opencv3.4.6/lib;$(projectDir)lean/cudnn8.2.2.26;$(projectDir)lean/TensorRT-8.0.1.6/lib</LocalDebuggerEnvironment>
+    <DebuggerFlavor>WindowsLocalDebugger</DebuggerFlavor>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <LocalDebuggerWorkingDirectory>workspace</LocalDebuggerWorkingDirectory>
+    <LocalDebuggerEnvironment>PATH=$(projectDir)lean/cuda10.1/bin;$(projectDir)lean/opencv3.4.6/lib;$(projectDir)lean/cudnn8.2.2.26;$(projectDir)lean/TensorRT-8.0.1.6/lib</LocalDebuggerEnvironment>
+    <DebuggerFlavor>WindowsLocalDebugger</DebuggerFlavor>
+  </PropertyGroup>
+</Project>

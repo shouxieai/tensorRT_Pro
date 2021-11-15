@@ -117,8 +117,11 @@ static void inference_and_performance(int deviceid, const string& engine_file, S
         return;
     }
 
-    vector<string> files;
-    cv::glob("inference/*.jpg", files, true);
+	vector<cv::String> files_;
+	files_.reserve(10000);
+
+    cv::glob("inference/*.jpg", files_, true);
+	vector<string> files(files_.begin(), files_.end());
     
     vector<cv::Mat> images;
     for(int i = 0; i < files.size(); ++i){
