@@ -32,7 +32,7 @@ public:
 	bool inference(const Mat& image_input, SimpleYolo::BoxArray& boxarray){
 		
 		if(infer_ == nullptr){
-			INFOE("Initialize failed.");
+			INFOE("Not Initialize.");
 			return false;
 		}
 
