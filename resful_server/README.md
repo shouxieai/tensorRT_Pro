@@ -1,13 +1,13 @@
 # 基于Yolo推理的Resful API http server
 - C++的http服务器，简单好用
+![](web/preview.jpg)
 
 ## 执行方式
 ```bash
-cd http_server_cpp
 make run -j6
 ```
 
-## 案例代码
+## HTTP服务的案例代码
 ```C++
 #include "http_server.hpp"
 
