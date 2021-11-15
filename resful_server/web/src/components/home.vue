@@ -112,10 +112,6 @@ export default {
                         var base64_data = image.src;
                         var token_begin = base64_data.indexOf(token);
                         var clean_data = base64_data.substring(token_begin + token.length);
-                        // let sendData = new FormData();
-                        // sendData.append("format", "file");
-                        // sendData.append("confidence", 0.5);
-                        // sendData.append("imageFile", file);
                         Echo("/api/detectBase64Image")
                         .data(clean_data)
                         .then((boxarray)=>{
