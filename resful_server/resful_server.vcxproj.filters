@@ -1,0 +1,77 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="源文件">
+      <UniqueIdentifier>{4FC737F1-C7A5-4376-A066-2A32D752A2FF}</UniqueIdentifier>
+      <Extensions>cpp;c;cc;cxx;def;odl;idl;hpj;bat;asm;asmx</Extensions>
+    </Filter>
+    <Filter Include="头文件">
+      <UniqueIdentifier>{93995380-89BD-4b04-88EB-625FBE52EBFB}</UniqueIdentifier>
+      <Extensions>h;hh;hpp;hxx;hm;inl;inc;ipp;xsd</Extensions>
+    </Filter>
+    <Filter Include="资源文件">
+      <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
+      <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
+    </Filter>
+    <Filter Include="源文件\http">
+      <UniqueIdentifier>{2d0e3e41-5cb1-4d36-b35a-8dec74bb9dc9}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="源文件\infer">
+      <UniqueIdentifier>{b7030437-1494-48ce-ab8c-b280806be07e}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="头文件\infer">
+      <UniqueIdentifier>{6d95edca-0054-4540-9822-b8c3a7453c58}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="头文件\http">
+      <UniqueIdentifier>{64df8d60-3b27-4b6c-8c61-3c82a1ec2a05}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="src\import_lib.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="src\http\mongoose.c">
+      <Filter>源文件\http</Filter>
+    </ClCompile>
+    <ClCompile Include="src\http\binary_io.cpp">
+      <Filter>源文件\http</Filter>
+    </ClCompile>
+    <ClCompile Include="src\http\http_server.cpp">
+      <Filter>源文件\http</Filter>
+    </ClCompile>
+    <ClCompile Include="src\http\ilogger.cpp">
+      <Filter>源文件\http</Filter>
+    </ClCompile>
+    <ClCompile Include="src\http\json.cpp">
+      <Filter>源文件\http</Filter>
+    </ClCompile>
+    <ClCompile Include="src\main.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="src\http\binary_io.hpp">
+      <Filter>头文件\http</Filter>
+    </ClInclude>
+    <ClInclude Include="src\http\http_server.hpp">
+      <Filter>头文件\http</Filter>
+    </ClInclude>
+    <ClInclude Include="src\http\ilogger.hpp">
+      <Filter>头文件\http</Filter>
+    </ClInclude>
+    <ClInclude Include="src\http\json.hpp">
+      <Filter>头文件\http</Filter>
+    </ClInclude>
+    <ClInclude Include="src\http\mongoose.h">
+      <Filter>头文件\http</Filter>
+    </ClInclude>
+    <ClInclude Include="src\infer\simple_yolo.hpp">
+      <Filter>头文件\infer</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <CudaCompile Include="src\infer\simple_yolo.cu">
+      <Filter>源文件\infer</Filter>
+    </CudaCompile>
+  </ItemGroup>
+</Project>

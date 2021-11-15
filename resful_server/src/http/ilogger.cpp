@@ -27,8 +27,6 @@
 #	pragma comment(lib, "shlwapi.lib")
 #   pragma comment(lib, "ole32.lib")
 #   pragma comment(lib, "gdi32.lib")
-#	undef min
-#	undef max
 #endif
 
 #if defined(U_OS_LINUX)
@@ -264,7 +262,7 @@ namespace iLogger{
 
 #if defined(U_OS_WINDOWS)
         int e = path.rfind('\\');
-        p = std::max(p, e);
+        p = max(p, e);
 #endif
         if (p == -1)
             return nullptr;
@@ -919,7 +917,7 @@ namespace iLogger{
 
     int while_loop(){
         signal(SIGINT, signal_callback_handler);
-        signal(SIGQUIT, signal_callback_handler);
+        //signal(SIGQUIT, signal_callback_handler);
         while(!g_has_exit_signal){
             this_thread::yield();
         }

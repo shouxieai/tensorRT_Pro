@@ -19,20 +19,27 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="src\simple_yolo.hpp" />
-  </ItemGroup>
-  <ItemGroup>
+    <ClCompile Include="src\http\binary_io.cpp" />
+    <ClCompile Include="src\http\http_server.cpp" />
+    <ClCompile Include="src\http\ilogger.cpp" />
+    <ClCompile Include="src\http\json.cpp" />
+    <ClCompile Include="src\http\mongoose.c" />
     <ClCompile Include="src\import_lib.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">NotUsing</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">NotUsing</PrecompiledHeader>
     </ClCompile>
-    <ClCompile Include="src\main.cpp">
-      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">NotUsing</PrecompiledHeader>
-      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">NotUsing</PrecompiledHeader>
-    </ClCompile>
+    <ClCompile Include="src\main.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <CudaCompile Include="src\simple_yolo.cu" />
+    <ClInclude Include="src\http\binary_io.hpp" />
+    <ClInclude Include="src\http\http_server.hpp" />
+    <ClInclude Include="src\http\ilogger.hpp" />
+    <ClInclude Include="src\http\json.hpp" />
+    <ClInclude Include="src\http\mongoose.h" />
+    <ClInclude Include="src\infer\simple_yolo.hpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <CudaCompile Include="src\infer\simple_yolo.cu" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>15.0</VCProjectVersion>

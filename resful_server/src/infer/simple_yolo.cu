@@ -214,8 +214,8 @@ namespace SimpleYolo{
         FILE* f = fopen(file.c_str(), "wb");
         if (!f) return false;
 
-        if (data and length > 0){
-            if (fwrite(data, 1, length, f) not_eq length){
+        if (data && length > 0){
+            if (fwrite(data, 1, length, f) != length){
                 fclose(f);
                 return false;
             }
@@ -264,7 +264,10 @@ namespace SimpleYolo{
         }
 
         try{
-            cv::glob(directory + "/*", files, true);
+			vector<cv::String> files_;
+			files_.reserve(10000);
+            cv::glob(directory + "/*", files_, true);
+			files.insert(files.end(), files_.begin(), files_.end());
         }catch(...){
             INFOE("Glob %s failed", directory.c_str());
             return output;
