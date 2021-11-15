@@ -54,9 +54,18 @@ namespace CUDATools{
     }
 
     AutoDevice::AutoDevice(int device_id){
+
         cudaGetDevice(&old_);
         if(old_ != device_id && device_id != -1){
             checkCudaRuntime(cudaSetDevice(device_id));
+            return;
+        }
+
+        CUcontext context = nullptr;
+        cuCtxGetCurrent(&context);
+        if(context == nullptr){
+            checkCudaRuntime(cudaSetDevice(device_id));
+            return;
         }
     }
 
