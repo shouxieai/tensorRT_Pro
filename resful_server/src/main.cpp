@@ -62,7 +62,7 @@ private:
 
 	shared_ptr<SimpleYolo::Infer> get_infer(SimpleYolo::Type type, SimpleYolo::Mode mode, const string& model){
 
-		int deviceid = 0;
+		int deviceid = 1;
 		auto mode_name = SimpleYolo::mode_string(mode);
 		SimpleYolo::set_device(deviceid);
 
