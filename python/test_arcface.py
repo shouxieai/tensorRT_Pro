@@ -45,7 +45,7 @@ def compile_feature_model():
         tp.compile_onnx_to_file(5, tp.onnx_hub("arcface_iresnet50"), engine_file)
     return engine_file
 
-def extract_feature_one(detector_model, feature_model, image, save_debug_name="crop_image_debug.jpg"):
+def extract_feature_one(detector_model, feature_model, image, save_debug_name=None):
     faces = detector_model.commit(image).get()
     
     if len(faces) == 0:
