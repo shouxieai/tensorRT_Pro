@@ -489,6 +489,10 @@ PYBIND11_MODULE(libtrtpyc, m) {
 		.def_property("right",      &FaceDetector::Box::get_right,      &FaceDetector::Box::set_right)
 		.def_property("bottom",     &FaceDetector::Box::get_bottom,     &FaceDetector::Box::set_bottom)
 		.def_property("confidence", &FaceDetector::Box::get_confidence, &FaceDetector::Box::set_confidence)
+		.def_property_readonly("width", [](FaceDetector::Box& self){return self.right - self.left;})
+		.def_property_readonly("height", [](FaceDetector::Box& self){return self.bottom - self.top;})
+		.def_property_readonly("cx", [](FaceDetector::Box& self){return (self.left + self.right) / 2;})
+		.def_property_readonly("cy", [](FaceDetector::Box& self){return (self.top + self.bottom) / 2;})
 		.def_property_readonly("landmark", [](FaceDetector::Box& self){
 			return py::array(py::dtype("float32"), vector<int>{5, 2}, self.landmark);
 		})

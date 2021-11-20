@@ -70,7 +70,7 @@ link_flags        := -pthread -fopenmp -Wl,-rpath='$$ORIGIN'
 
 cpp_compile_flags += $(include_paths)
 cu_compile_flags  += $(include_paths)
-link_flags 		  += $(library_paths) $(link_librarys) $(run_paths)
+link_flags        += $(library_paths) $(link_librarys) $(run_paths)
 
 ifneq ($(MAKECMDGOALS), clean)
 -include $(cpp_mk) $(cu_mk)
