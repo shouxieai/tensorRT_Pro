@@ -108,7 +108,7 @@ objs/%.cmk : src/%.c
 objs/%.cumk : src/%.cu
 	@echo Compile depends CUDA $<
 	@mkdir -p $(dir $@)
-	@nvcc -M $< -MF $@ -MT $(@:.cumk=.o) $(cu_compile_flags)
+	@nvcc -M $< -MF $@ -MT $(@:.cumk=.cuo) $(cu_compile_flags)
 
 run : workspace/pro
 	@cd workspace && ./pro

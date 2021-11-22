@@ -127,13 +127,11 @@ namespace SimpleYolo{
     public:
         AutoDevice(int device_id = 0){
             cudaGetDevice(&old_);
-            if(old_ != device_id && device_id != -1)
-                checkCudaRuntime(cudaSetDevice(device_id));
+            checkCudaRuntime(cudaSetDevice(device_id));
         }
 
         virtual ~AutoDevice(){
-            if(old_ != -1)
-                checkCudaRuntime(cudaSetDevice(old_));
+            checkCudaRuntime(cudaSetDevice(old_));
         }
     
     private:
