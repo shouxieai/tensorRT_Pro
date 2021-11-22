@@ -1,4 +1,7 @@
-﻿
+﻿/*
+ 这个文件在windows下有效，linux下请忽略
+*/
+
 #if defined(_WIN32)
 #	define U_OS_WINDOWS
 #else
