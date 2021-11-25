@@ -69,6 +69,10 @@ set(CUDA_NVCC_FLAGS "${CUDA_NVCC_FLAGS} -std=c++11 -O0 -Xcompiler -fPIC -g -w ${
 file(GLOB_RECURSE cpp_srcs ${PROJECT_SOURCE_DIR}/src/*.cpp)
 file(GLOB_RECURSE cuda_srcs ${PROJECT_SOURCE_DIR}/src/*.cu)
 cuda_add_library(plugin_list SHARED ${cuda_srcs})
+target_link_libraries(plugin_list nvinfer nvinfer_plugin)
+target_link_libraries(plugin_list cuda cublas cudart cudnn)
+target_link_libraries(plugin_list protobuf pthread)
+target_link_libraries(plugin_list ${OpenCV_LIBS})
 
 add_executable(pro ${cpp_srcs})
 
