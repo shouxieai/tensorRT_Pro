@@ -90,7 +90,7 @@ __pycache__
 /simple_yolo/objs
 /workspace/*.json
 /workspace/*.png
-/resful_server/workspace/pro
-/resful_server/objs
-/resful_server/workspace/*.trtmodel
-/resful_server/workspace/*.onnx
+/restful_server/workspace/pro
+/restful_server/objs
+/restful_server/workspace/*.trtmodel
+/restful_server/workspace/*.onnx

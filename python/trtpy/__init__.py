@@ -299,7 +299,12 @@ if os_name == "Windows":
     os.environ["PATH"] = os.environ["PATH"] + ";" + os.path.dirname(os.path.abspath(__file__))
 else:
     os.environ["PATH"] = os.environ["PATH"] + ":" + os.path.dirname(os.path.abspath(__file__))
-    os.environ["LD_LIBRARY_PATH"] = os.environ["LD_LIBRARY_PATH"] + ":" + os.path.dirname(os.path.abspath(__file__))
+    
+    LD_LIBRARY_PATH = ""
+    if "LD_LIBRARY_PATH" in os.environ:
+        LD_LIBRARY_PATH = ":" + os.environ["LD_LIBRARY_PATH"]
+        
+    os.environ["LD_LIBRARY_PATH"] = os.path.dirname(os.path.abspath(__file__)) + LD_LIBRARY_PATH
 
 from .libtrtpyc import *
 
@@ -322,8 +327,9 @@ def onnx_hub(name):
     local_file = os.path.join(root, f"{name}.onnx")
     if not os.path.exists(local_file):
         url        = f"http://zifuture.com:1556/fs/25.shared/{name}.onnx"
-        remote     = requests.get(url)
+        
         print(f"OnnxHub: download from {url}, to {local_file}")
+        remote     = requests.get(url)
 
         with open(local_file, "wb") as f:
             f.write(remote.content)

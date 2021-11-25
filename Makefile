@@ -78,6 +78,10 @@ endif
 
 pro    : workspace/pro
 trtpyc : python/trtpy/libtrtpyc.so
+expath : library_path.txt
+
+library_path.txt : 
+	@echo LD_LIBRARY_PATH=$(export_path):"$$"LD_LIBRARY_PATH > $@
 
 workspace/pro : $(cpp_objs) $(cu_objs)
 	@echo Link $@
@@ -181,11 +185,11 @@ pyyolov5 : trtpyc
 pyyolox : trtpyc
 	@cd python && python test_yolox.py
 
+pyarcface : trtpyc
+	@cd python && python test_arcface.py
+
 pyinstall : trtpyc
 	@cd python && python setup.py install
-
-debug :
-	@echo $(export_path)
 
 clean :
 	@rm -rf objs workspace/pro python/trtpy/libtrtpyc.so python/build python/dist python/trtpy.egg-info python/trtpy/__pycache__
@@ -195,6 +199,7 @@ clean :
 	@rm -rf workspace/face/library_draw workspace/face/result
 	@rm -rf build
 	@rm -rf python/trtpy/libplugin_list.so
+	@rm -rf library_path.txt
 
 .PHONY : clean yolo alphapose fall debug
 
