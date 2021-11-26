@@ -324,8 +324,8 @@ z.append(y.view(bs, self.na * ny * nx, self.no))
 if self.grid[i].shape[2:4] != x[i].shape[2:4] or self.onnx_dynamic:
     self.grid[i], self.anchor_grid[i] = self._make_grid(nx, ny, i)
 
-    # disconnect for pytorch trace
-    anchor_grid = (self.anchors[i].clone() * self.stride[i]).view(1, -1, 1, 1, 2)
+# disconnect for pytorch trace
+anchor_grid = (self.anchors[i].clone() * self.stride[i]).view(1, -1, 1, 1, 2)
 
 # line 70 in yolov5/models/yolo.py
 # y[..., 2:4] = (y[..., 2:4] * 2) ** 2 * self.anchor_grid[i]  # wh
