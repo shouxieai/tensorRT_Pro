@@ -16,6 +16,7 @@
 #include <thread>
 #include <atomic>
 #include <fstream>
+#include <functional>
 #include <stack>
 #include <signal.h>
 

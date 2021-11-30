@@ -13,6 +13,7 @@
 #include <mutex>
 #include <thread>
 #include <queue>
+#include <functional>
 
 #if defined(_WIN32)
 #	include <Windows.h>
