@@ -1,6 +1,7 @@
 *Read this in other languages: [English](README.md), [简体中文](README.zh-cn.md).*
 
 ## News: 
+- 🔥 Docker Image has been released：https://hub.docker.com/r/hopef/tensorrt-pro
 - ⚡tensorRT_Pro_comments_version(co-contributing version) is also provided for a better learning experience. Repo: https://github.com/Guanbin-Huang/tensorRT_Pro_comments
 - 🔥 [Simple yolov5/yolox implemention is released. Simple and easy to use.](simple_yolo)
 - 🔥 yolov5-1.0-6.0/master are supported.
