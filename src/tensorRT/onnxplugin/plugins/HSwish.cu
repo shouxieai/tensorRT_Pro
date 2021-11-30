@@ -13,18 +13,18 @@ static __global__ void hswish_kernel_fp32(float* input, float* output, int edge)
 	output[position] = x * a / 6;
 }
 
-static __global__ void hswish_kernel_fp16(__half* input, __half* output, int edge) {
+// static __global__ void hswish_kernel_fp16(__half* input, __half* output, int edge) {
 
-	KernelPositionBlock;
+// 	KernelPositionBlock;
 	
-    __half _six = 6.0f;
-	__half x = input[position];
-
-    __half a = x + __half(3.0f);
-    __half _zero = 0.0f;
-    a = a < _zero ? _zero : (a >= _six ? _six : a);
-	output[position] = x * a / _six;
-}
+//     __half _six = 6.0f;
+// 	__half _three = 3.0f;
+// 	__half x = input[position];
+//     __half a = x + _three;
+//     __half _zero = 0.0f;
+//     a = a < _zero ? _zero : (a >= _six ? _six : a);
+// 	output[position] = x * a / _six;
+// }
 
 class HSwish : public TRTPlugin {
 public:
@@ -68,7 +68,8 @@ public:
 			hswish_kernel_fp32 <<<grid, block, 0, stream >>> (inputs[0].ptr<float>(), outputs[0].ptr<float>(), count);
 		}
 		else if (config_->usage_dtype_ == TRT::DataType::Float16) {
-			hswish_kernel_fp16 <<<grid, block, 0, stream >>> (inputs[0].ptr<__half>(), outputs[0].ptr<__half>(), count);
+			// hswish_kernel_fp16 <<<grid, block, 0, stream >>> (inputs[0].ptr<__half>(), outputs[0].ptr<__half>(), count);
+			INFOF("not implement function");
 		}
 		else{
 			INFOF("not implement function");

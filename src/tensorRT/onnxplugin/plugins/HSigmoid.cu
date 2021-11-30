@@ -13,18 +13,18 @@ static __global__ void hsigmoid_kernel_fp32(float* input, float* output, int edg
 	output[position] = a / 6;
 }
 
-static __global__ void hsigmoid_kernel_fp16(__half* input, __half* output, int edge) {
+// static __global__ void hsigmoid_kernel_fp16(__half* input, __half* output, int edge) {
 
-	KernelPositionBlock;
+// 	KernelPositionBlock;
 	
-    __half _six = 6.0f;
-	__half x = input[position];
-
-    __half a = x + __half(3.0f);
-    __half _zero = 0.0f;
-    a = a < _zero ? _zero : (a >= _six ? _six : a);
-	output[position] = a / _six;
-}
+//     __half _six   = 6.0f;
+// 	__half _three = 3.0f;
+// 	__half x = input[position];
+//     __half a = x + _three;
+//     __half _zero = 0.0f;
+//     a = a < _zero ? _zero : (a >= _six ? _six : a);
+// 	output[position] = a / _six;
+// }
 
 class HSigmoid : public TRTPlugin {
 public:
@@ -47,8 +47,8 @@ public:
 	virtual std::shared_ptr<LayerConfig> new_config() override{
 		auto cfg = TRTPlugin::new_config();
 
-		cfg->support_dtype_set_ = {nvinfer1::DataType::kHALF, nvinfer1::DataType::kFLOAT};
-		//cfg->support_dtype_set_ = {nvinfer1::DataType::kFLOAT};
+		// cfg->support_dtype_set_ = {nvinfer1::DataType::kHALF, nvinfer1::DataType::kFLOAT};
+		cfg->support_dtype_set_ = {nvinfer1::DataType::kFLOAT};
 		return cfg;
 	}
 
@@ -68,7 +68,8 @@ public:
 			hsigmoid_kernel_fp32 <<<grid, block, 0, stream >>> (inputs[0].ptr<float>(), outputs[0].ptr<float>(), count);
 		}
 		else if (config_->usage_dtype_ == TRT::DataType::Float16) {
-			hsigmoid_kernel_fp16 <<<grid, block, 0, stream >>> (inputs[0].ptr<__half>(), outputs[0].ptr<__half>(), count);
+			//hsigmoid_kernel_fp16 <<<grid, block, 0, stream >>> (inputs[0].ptr<__half>(), outputs[0].ptr<__half>(), count);
+			INFOF("not implement function");
 		}
 		else{
 			INFOF("not implement function");

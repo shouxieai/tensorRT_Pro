@@ -22,12 +22,12 @@ __global__ void sigmoidKernel(float* input, float* output, int edge) {
     output[position] = 1 / (1 + exp(-input[position]));
 }
 
-__global__ void sigmoidKernel(__half* input, __half* output, int edge) {
+// __global__ void sigmoidKernel(__half* input, __half* output, int edge) {
 
-    KernelPositionBlock;
-    __half one = 1.0f;
-    output[position] = one / (one + hexp(-input[position]));
-}
+//     KernelPositionBlock;
+//     __half one = 1.0f;
+//     output[position] = one / (one + hexp(-input[position]));
+// }
 
 static __device__ float dmcnIm2colBilinear(const float *bottom_data, const int data_width,
     const int height, const int width, float h, float w)
@@ -60,38 +60,38 @@ static __device__ float dmcnIm2colBilinear(const float *bottom_data, const int d
     return val;
 }
 
-static __device__ __half dmcnIm2colBilinear(const __half *bottom_data, const int data_width,
-    const int height, const int width, __half h, __half w)
-{
-    int h_low = hfloor(h);
-    int w_low = hfloor(w);
-    int h_high = h_low + 1;
-    int w_high = w_low + 1;
+// static __device__ __half dmcnIm2colBilinear(const __half *bottom_data, const int data_width,
+//     const int height, const int width, __half h, __half w)
+// {
+//     int h_low = hfloor(h);
+//     int w_low = hfloor(w);
+//     int h_high = h_low + 1;
+//     int w_high = w_low + 1;
 
-    __half one = 1.0f;
-    __half h_low_hf = h_low;
-    __half w_low_hf = w_low;
-    __half lh = h - h_low_hf;
-    __half lw = w - w_low_hf;
-    __half hh = one - lh, hw = one - lw;
+//     __half one = 1.0f;
+//     __half h_low_hf = h_low;
+//     __half w_low_hf = w_low;
+//     __half lh = h - h_low_hf;
+//     __half lw = w - w_low_hf;
+//     __half hh = one - lh, hw = one - lw;
 
-    __half zero = 0.0f;
-    __half v1 = zero;
-    if (h_low >= 0 && w_low >= 0)
-        v1 = bottom_data[h_low * data_width + w_low];
-    __half v2 = zero;
-    if (h_low >= 0 && w_high <= width - 1)
-        v2 = bottom_data[h_low * data_width + w_high];
-    __half v3 = zero;
-    if (h_high <= height - 1 && w_low >= 0)
-        v3 = bottom_data[h_high * data_width + w_low];
-    __half v4 = zero;
-    if (h_high <= height - 1 && w_high <= width - 1)
-        v4 = bottom_data[h_high * data_width + w_high];
+//     __half zero = 0.0f;
+//     __half v1 = zero;
+//     if (h_low >= 0 && w_low >= 0)
+//         v1 = bottom_data[h_low * data_width + w_low];
+//     __half v2 = zero;
+//     if (h_low >= 0 && w_high <= width - 1)
+//         v2 = bottom_data[h_low * data_width + w_high];
+//     __half v3 = zero;
+//     if (h_high <= height - 1 && w_low >= 0)
+//         v3 = bottom_data[h_high * data_width + w_low];
+//     __half v4 = zero;
+//     if (h_high <= height - 1 && w_high <= width - 1)
+//         v4 = bottom_data[h_high * data_width + w_high];
 
-    __half w1 = hh * hw, w2 = hh * lw, w3 = lh * hw, w4 = lh * lw;
-    return (w1 * v1 + w2 * v2 + w3 * v3 + w4 * v4);
-}
+//     __half w1 = hh * hw, w2 = hh * lw, w3 = lh * hw, w4 = lh * lw;
+//     return (w1 * v1 + w2 * v2 + w3 * v3 + w4 * v4);
+// }
 
 __global__ void DCNIm2colKernel(
     const float *data_input, const float *data_offset, const float *data_mask,
@@ -154,80 +154,80 @@ __global__ void DCNIm2colKernel(
     }
 }
 
-__global__ void DCNIm2colKernel(
-    const __half *data_input, const __half *data_offset, const __half *data_mask,
-    const int height_input, const int width_input, const int kernel_h, const int kernel_w,
-    const int pad_h, const int pad_w,
-    const int stride_h, const int stride_w,
-    const int dilation_h, const int dilation_w,
-    const int channel_per_deformable_group,
-    const int batch_size, const int num_channels, const int deformable_group,
-    const int height_output, const int width_output,
-    __half *data_output, int edge)
-{
-    KernelPositionBlock;
+// __global__ void DCNIm2colKernel(
+//     const __half *data_input, const __half *data_offset, const __half *data_mask,
+//     const int height_input, const int width_input, const int kernel_h, const int kernel_w,
+//     const int pad_h, const int pad_w,
+//     const int stride_h, const int stride_w,
+//     const int dilation_h, const int dilation_w,
+//     const int channel_per_deformable_group,
+//     const int batch_size, const int num_channels, const int deformable_group,
+//     const int height_output, const int width_output,
+//     __half *data_output, int edge)
+// {
+//     KernelPositionBlock;
 
-    const int f_area_input = width_input * height_input;
-    const int f_area_output = width_output * height_output;
+//     const int f_area_input = width_input * height_input;
+//     const int f_area_output = width_output * height_output;
 
-    // index index of output matrix
-    const int w_output = position % width_output;
-    const int h_output = (position / width_output) % height_output;
-    const int c_input = (position / width_output / height_output) % num_channels;
+//     // index index of output matrix
+//     const int w_output = position % width_output;
+//     const int h_output = (position / width_output) % height_output;
+//     const int c_input = (position / width_output / height_output) % num_channels;
 
-    const int c_output = c_input * kernel_h * kernel_w;
-    const int deformable_group_index = c_input / channel_per_deformable_group;
-    const int h_input = h_output * stride_h - pad_h;
-    const int w_input = w_output * stride_w - pad_w;
+//     const int c_output = c_input * kernel_h * kernel_w;
+//     const int deformable_group_index = c_input / channel_per_deformable_group;
+//     const int h_input = h_output * stride_h - pad_h;
+//     const int w_input = w_output * stride_w - pad_w;
 
-    __half width_input_hf = __float2half(width_input);
-    __half height_input_hf = __float2half(height_input);
+//     __half width_input_hf = __float2half(width_input);
+//     __half height_input_hf = __float2half(height_input);
 
-    __half h_input_hf = __float2half(h_input);
-    __half w_input_hf = __float2half(w_input);
-    __half dilation_h_hf = __float2half(dilation_h);
-    __half dilation_w_hf = __float2half(dilation_w);
+//     __half h_input_hf = __float2half(h_input);
+//     __half w_input_hf = __float2half(w_input);
+//     __half dilation_h_hf = __float2half(dilation_h);
+//     __half dilation_w_hf = __float2half(dilation_w);
 
-    int data_output_offset = c_input * kernel_h * kernel_w * f_area_output + h_output * width_output + w_output;
-    __half *data_output_ptr = data_output + data_output_offset;
-    const __half *data_input_ptr = data_input + c_input * f_area_input;
-    const __half *data_offset_ptr = data_offset + deformable_group_index * 2 * kernel_h * kernel_w * f_area_output;
-    const __half *data_mask_ptr = data_mask + deformable_group_index * kernel_h * kernel_w * f_area_output;
+//     int data_output_offset = c_input * kernel_h * kernel_w * f_area_output + h_output * width_output + w_output;
+//     __half *data_output_ptr = data_output + data_output_offset;
+//     const __half *data_input_ptr = data_input + c_input * f_area_input;
+//     const __half *data_offset_ptr = data_offset + deformable_group_index * 2 * kernel_h * kernel_w * f_area_output;
+//     const __half *data_mask_ptr = data_mask + deformable_group_index * kernel_h * kernel_w * f_area_output;
 
-    __half n_one = -1.0f;
-    __half zero = 0.0f;
+//     __half n_one = -1.0f;
+//     __half zero = 0.0f;
 
-    for (int i = 0; i < kernel_h; ++i)
-    {
-        for (int j = 0; j < kernel_w; ++j)
-        {
-            __half i_hf = __float2half(i);
-            __half j_hf = __float2half(j);
-            const int row = i + h_input;
-            const int col = j + w_input;
-            const int kernel_index = i * kernel_w + j;
+//     for (int i = 0; i < kernel_h; ++i)
+//     {
+//         for (int j = 0; j < kernel_w; ++j)
+//         {
+//             __half i_hf = __float2half(i);
+//             __half j_hf = __float2half(j);
+//             const int row = i + h_input;
+//             const int col = j + w_input;
+//             const int kernel_index = i * kernel_w + j;
 
-            const int offset_h_offset = 2 * kernel_index * f_area_output + h_output * width_output + w_output;
-            const int offset_w_offset = (2 * kernel_index + 1) * f_area_output + h_output * width_output + w_output;
-            const int mask_offset = kernel_index * f_area_output + h_output * width_output + w_output;
+//             const int offset_h_offset = 2 * kernel_index * f_area_output + h_output * width_output + w_output;
+//             const int offset_w_offset = (2 * kernel_index + 1) * f_area_output + h_output * width_output + w_output;
+//             const int mask_offset = kernel_index * f_area_output + h_output * width_output + w_output;
 
-            const __half offset_h = data_offset_ptr[offset_h_offset];
-            const __half offset_w = data_offset_ptr[offset_w_offset];
-            const __half mask = data_mask_ptr[mask_offset];
+//             const __half offset_h = data_offset_ptr[offset_h_offset];
+//             const __half offset_w = data_offset_ptr[offset_w_offset];
+//             const __half mask = data_mask_ptr[mask_offset];
 
-            __half val = zero;
-            __half h_im = h_input_hf + i_hf * dilation_h_hf + offset_h;
-            __half w_im = w_input_hf + j_hf * dilation_w_hf + offset_w;
+//             __half val = zero;
+//             __half h_im = h_input_hf + i_hf * dilation_h_hf + offset_h;
+//             __half w_im = w_input_hf + j_hf * dilation_w_hf + offset_w;
 
-            if (h_im > n_one && w_im > n_one && h_im < height_input_hf && w_im < width_input_hf)
-            {
-                val = dmcnIm2colBilinear(data_input_ptr, width_input_hf, height_input_hf, width_input_hf, h_im, w_im);
-            }
-            *data_output_ptr = val * mask;
-            data_output_ptr += f_area_output;
-        }
-    }
-}
+//             if (h_im > n_one && w_im > n_one && h_im < height_input_hf && w_im < width_input_hf)
+//             {
+//                 val = dmcnIm2colBilinear(data_input_ptr, width_input_hf, height_input_hf, width_input_hf, h_im, w_im);
+//             }
+//             *data_output_ptr = val * mask;
+//             data_output_ptr += f_area_output;
+//         }
+//     }
+// }
 
 template<typename DataType>
 static __global__ void biasKernel(DataType* data_input, const DataType* bias, const int f_area, int edge) {
@@ -255,26 +255,26 @@ inline void segemm_native(cublasHandle_t handle,
     //cublasCheck(cublasGemmEx(handle, transa, transb, m, n, k, &alpha, A, CUDA_R_32F, lda, B, CUDA_R_32F, ldb, &beta, C, CUDA_R_32F, ldc, CUDA_R_32F, CUBLAS_GEMM_DFALT));
 }
 
-inline void segemm_native(cublasHandle_t handle,
-    cublasOperation_t transa,
-    cublasOperation_t transb,
-    int m,
-    int n,
-    int k,
-    float alpha,
-    const __half *A,
-    int lda,
-    const __half *B,
-    int ldb,
-    float beta, 
-    __half *C,
-    int ldc) {
+// inline void segemm_native(cublasHandle_t handle,
+//     cublasOperation_t transa,
+//     cublasOperation_t transb,
+//     int m,
+//     int n,
+//     int k,
+//     float alpha,
+//     const __half *A,
+//     int lda,
+//     const __half *B,
+//     int ldb,
+//     float beta, 
+//     __half *C,
+//     int ldc) {
 
-    auto halpha = __float2half(alpha);
-    auto hbeta  = __float2half(beta);
-    //cublasCheck(cublasHgemm(handle, transa, transb, m, n, k, &halpha, A, lda, B, ldb, &hbeta, C, ldc));
-    cublasCheck(cublasGemmEx(handle, transa, transb, m, n, k, &halpha, A, CUDA_R_16F, lda, B, CUDA_R_16F, ldb, &hbeta, C, CUDA_R_16F, ldc, CUDA_R_16F, CUBLAS_GEMM_DFALT));
-}
+//     auto halpha = __float2half(alpha);
+//     auto hbeta  = __float2half(beta);
+//     //cublasCheck(cublasHgemm(handle, transa, transb, m, n, k, &halpha, A, lda, B, ldb, &hbeta, C, ldc));
+//     cublasCheck(cublasGemmEx(handle, transa, transb, m, n, k, &halpha, A, CUDA_R_16F, lda, B, CUDA_R_16F, ldb, &hbeta, C, CUDA_R_16F, ldc, CUDA_R_16F, CUBLAS_GEMM_DFALT));
+// }
 
 template<typename DataType>
 static void enqueue_native(cublasHandle_t handle, const std::vector<GTensor>& inputs, std::vector<GTensor>& outputs, const std::vector<GTensor>& weights, void* workspace, cudaStream_t stream) {
@@ -396,7 +396,8 @@ public:
             enqueue_native<float>(cublasHandle_, inputs, outputs, weights, workspace, stream);
         }
         else if (config_->usage_dtype_ == TRT::DataType::Float16) {
-            enqueue_native<__half>(cublasHandle_, inputs, outputs, weights, workspace, stream);
+            // enqueue_native<__half>(cublasHandle_, inputs, outputs, weights, workspace, stream);
+            INFOF("not implement function");
         }
         else{
             INFOF("not implement function");
