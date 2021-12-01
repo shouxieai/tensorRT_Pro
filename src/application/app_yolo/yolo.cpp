@@ -116,7 +116,7 @@ namespace Yolo{
 
     static BoxArray cpu_nms(BoxArray& boxes, float threshold){
 
-        std::sort(boxes.begin(), boxes.end(), [](const Box& a, const Box& b){
+        std::sort(boxes.begin(), boxes.end(), [](BoxArray::const_reference a, BoxArray::const_reference b){
             return a.confidence > b.confidence;
         });
 
