@@ -38,6 +38,12 @@ namespace CUDATools{
         return true;
     }
 
+    int current_device_id(){
+        int device_id = 0;
+        checkCudaRuntime(cudaGetDevice(&device_id));
+        return device_id;
+    }
+
     dim3 grid_dims(int numJobs) {
         int numBlockThreads = numJobs < GPU_BLOCK_THREADS ? numJobs : GPU_BLOCK_THREADS;
         return dim3(((numJobs + numBlockThreads - 1) / (float)numBlockThreads));
@@ -51,6 +57,30 @@ namespace CUDATools{
         cudaDeviceProp prop;
         checkCudaRuntime(cudaGetDeviceProperties(&prop, device_id));
         return iLogger::format("%d.%d", prop.major, prop.minor);
+    }
+
+    std::string device_name(int device_id){
+        cudaDeviceProp prop;
+        checkCudaRuntime(cudaGetDeviceProperties(&prop, device_id));
+        return prop.name;
+    }
+
+    std::string device_description(){
+
+        cudaDeviceProp prop;
+        size_t free_mem, total_mem;
+        int device_id = 0;
+
+        checkCudaRuntime(cudaGetDevice(&device_id));
+        checkCudaRuntime(cudaGetDeviceProperties(&prop, device_id));
+        checkCudaRuntime(cudaMemGetInfo(&free_mem, &total_mem));
+
+        return iLogger::format(
+            "[ID %d]<%s>[arch %d.%d][GMEM %.2f GB/%.2f GB]",
+            device_id, prop.name, prop.major, prop.minor, 
+            free_mem / 1024.0f / 1024.0f / 1024.0f,
+            total_mem / 1024.0f / 1024.0f / 1024.0f
+        );
     }
 
     AutoDevice::AutoDevice(int device_id){

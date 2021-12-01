@@ -99,11 +99,13 @@ namespace TRT {
 	void set_layer_hook_reshape(const LayerHookFuncReshape& func);
 
 	/** 当处于INT8模式时，int8process必须制定
-	//     int8ImageDirectory和int8EntropyCalibratorFile指定一个即可
-	//     如果初次生成，指定了int8EntropyCalibratorFile，calibrator会保存到int8EntropyCalibratorFile指定的文件
-	//     如果已经生成过，指定了int8EntropyCalibratorFile，calibrator会从int8EntropyCalibratorFile指定的文件加载，而不是
-	//          从int8ImageDirectory读取图片再重新生成
-	//当处于FP32或者FP16时，int8process、int8ImageDirectory、int8EntropyCalibratorFile都不需要指定 **/
+	     int8ImageDirectory和int8EntropyCalibratorFile指定一个即可
+	     如果初次生成，指定了int8EntropyCalibratorFile，calibrator会保存到int8EntropyCalibratorFile指定的文件
+	     如果已经生成过，指定了int8EntropyCalibratorFile，calibrator会从int8EntropyCalibratorFile指定的文件加载，而不是
+	          从int8ImageDirectory读取图片再重新生成
+		当处于FP32或者FP16时，int8process、int8ImageDirectory、int8EntropyCalibratorFile都不需要指定 
+		对于嵌入式设备，请把maxWorkspaceSize设置小一点，比如128MB = 1ul << 27
+	**/
 	bool compile(
 		Mode mode,
 		unsigned int maxBatchSize,
@@ -112,7 +114,9 @@ namespace TRT {
 		const std::vector<InputDims> inputsDimsSetup = {},
 		Int8Process int8process = nullptr,
 		const std::string& int8ImageDirectory = "",
-		const std::string& int8EntropyCalibratorFile = "");
+		const std::string& int8EntropyCalibratorFile = "",
+		const size_t maxWorkspaceSize = 1ul << 30                // 1ul << 30 = 1GB
+	);
 };
 
 #endif //TRT_BUILDER_HPP

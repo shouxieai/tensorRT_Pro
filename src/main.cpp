@@ -56,7 +56,7 @@ int main(int argc, char** argv){
     }else if(strcmp(method, "fall_recognize") == 0){
         app_fall_recognize();
     }else if(strcmp(method, "retinaface") == 0){
-        app_retinaface();
+        app_retinaface(); 
     }else if(strcmp(method, "arcface") == 0){
         app_arcface();
     }else if(strcmp(method, "arcface_video") == 0){

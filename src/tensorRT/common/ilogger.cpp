@@ -581,9 +581,12 @@ namespace iLogger{
             __g_logger.write(buffer);
             if (level == LogLevel::Fatal) {
                 __g_logger.flush();
-                fflush(stdout);
-                abort();
             }
+        }
+
+        if (level == LogLevel::Fatal) {
+            fflush(stdout);
+            abort();
         }
     }
 

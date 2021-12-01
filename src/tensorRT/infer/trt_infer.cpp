@@ -175,6 +175,7 @@ namespace TRT {
 		}
 
 		INFO("Infer %p detail", this);
+		INFO("\tBase device: %s", CUDATools::device_description().c_str());
 		INFO("\tMax Batch Size: %d", this->get_max_batch_size());
 		INFO("\tInputs: %d", inputs_.size());
 		for(int i = 0; i < inputs_.size(); ++i){
@@ -188,7 +189,7 @@ namespace TRT {
 			auto& tensor = outputs_[i];
 			auto& name = outputs_name_[i];
 			INFO("\t\t%d.%s : shape {%s}, %s", i, name.c_str(), tensor->shape_string(), data_type_string(tensor->type()));
-		}
+		} 
 	}
 
 	std::shared_ptr<std::vector<uint8_t>> InferImpl::serial_engine() {
@@ -359,46 +360,60 @@ namespace TRT {
 	}
 
 	int InferImpl::num_input() {
-		return this->inputs_.size();
+		return static_cast<int>(this->inputs_.size());
 	}
 
 	int InferImpl::num_output() {
-		return this->outputs_.size();
+		return static_cast<int>(this->outputs_.size());
 	}
 
 	void InferImpl::set_input (int index, std::shared_ptr<Tensor> tensor){
-		Assert(index >= 0 && index < inputs_.size());
-		this->inputs_[index] = tensor;
+		
+		if(index < 0 || index >= inputs_.size()){
+			INFOF("Input index[%d] out of range [size=%d]", index, inputs_.size());
+		}
 
+		this->inputs_[index] = tensor;
 		int order_index = inputs_map_to_ordered_index_[index];
 		this->orderdBlobs_[order_index] = tensor;
 	}
 
 	void InferImpl::set_output(int index, std::shared_ptr<Tensor> tensor){
-		Assert(index >= 0 && index < outputs_.size());
-		this->outputs_[index] = tensor;
 
+		if(index < 0 || index >= outputs_.size()){
+			INFOF("Output index[%d] out of range [size=%d]", index, outputs_.size());
+		}
+
+		this->outputs_[index] = tensor;
 		int order_index = outputs_map_to_ordered_index_[index];
 		this->orderdBlobs_[order_index] = tensor;
 	}
 
 	std::shared_ptr<Tensor> InferImpl::input(int index) {
-		Assert(index >= 0 && index < inputs_name_.size());
+		if(index < 0 || index >= inputs_.size()){
+			INFOF("Input index[%d] out of range [size=%d]", index, inputs_.size());
+		}
 		return this->inputs_[index];
 	}
 
 	std::string InferImpl::get_input_name(int index){
-		Assert(index >= 0 && index < inputs_name_.size());
+		if(index < 0 || index >= inputs_name_.size()){
+			INFOF("Input index[%d] out of range [size=%d]", index, inputs_name_.size());
+		}
 		return inputs_name_[index];
 	}
 
 	std::shared_ptr<Tensor> InferImpl::output(int index) {
-		Assert(index >= 0 && index < outputs_.size());
+		if(index < 0 || index >= outputs_.size()){
+			INFOF("Output index[%d] out of range [size=%d]", index, outputs_.size());
+		}
 		return outputs_[index];
 	}
 
 	std::string InferImpl::get_output_name(int index){
-		Assert(index >= 0 && index < outputs_name_.size());
+		if(index < 0 || index >= outputs_name_.size()){
+			INFOF("Output index[%d] out of range [size=%d]", index, outputs_name_.size());
+		}
 		return outputs_name_[index];
 	}
 
@@ -408,8 +423,12 @@ namespace TRT {
 	}
 
 	std::shared_ptr<Tensor> InferImpl::tensor(const std::string& name) {
-		Assert(this->blobsNameMapper_.find(name) != this->blobsNameMapper_.end());
-		return orderdBlobs_[blobsNameMapper_[name]];
+
+		auto node = this->blobsNameMapper_.find(name);
+		if(node == this->blobsNameMapper_.end()){
+			INFOF("Could not found the input/output node '%s', please makesure your model", name.c_str());
+		}
+		return orderdBlobs_[node->second];
 	}
 
 	std::shared_ptr<Infer> load_infer_from_memory(const void* pdata, size_t size){
