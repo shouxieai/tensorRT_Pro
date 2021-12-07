@@ -427,6 +427,83 @@ make yolo -j32
 
 </details>
 
+
+<details>
+<summary>YoloV3 Support</summary>
+  
+- if pytorch >= 1.7, and the model is 5.0+, the model is suppored by the framework 
+- if pytorch < 1.7 or yolov3, minor modification should be done in opset.
+- if you want to achieve the inference with lower pytorch, dynamic batchsize and other advanced setting, please check our [blog](http://zifuture.com:8090) (now in Chinese) and scan the QRcode via Wechat to join us.
+
+
+1. Download yolov3
+
+```bash
+git clone git@github.com:ultralytics/yolov3.git
+```
+
+2. Modify the code for dynamic batchsize
+```python
+# line 55 forward function in yolov3/models/yolo.py 
+# bs, _, ny, nx = x[i].shape  # x(bs,255,20,20) to x(bs,3,20,20,85)
+# x[i] = x[i].view(bs, self.na, self.no, ny, nx).permute(0, 1, 3, 4, 2).contiguous()
+# modified into:
+
+bs, _, ny, nx = map(int, x[i].shape)  # x(bs,255,20,20) to x(bs,3,20,20,85)
+bs = -1
+x[i] = x[i].view(bs, self.na, self.no, ny, nx).permute(0, 1, 3, 4, 2).contiguous()
+
+
+# line 70 in yolov3/models/yolo.py
+#  z.append(y.view(bs, -1, self.no))
+# modified into：
+z.append(y.view(bs, self.na * ny * nx, self.no))
+
+# line 62 in yolov3/models/yolo.py
+# if self.grid[i].shape[2:4] != x[i].shape[2:4] or self.onnx_dynamic:
+#    self.grid[i], self.anchor_grid[i] = self._make_grid(nx, ny, i)
+# modified into:
+if self.grid[i].shape[2:4] != x[i].shape[2:4] or self.onnx_dynamic:
+    self.grid[i], self.anchor_grid[i] = self._make_grid(nx, ny, i)
+anchor_grid = (self.anchors[i].clone() * self.stride[i]).view(1, -1, 1, 1, 2)
+
+# line 70 in yolov3/models/yolo.py
+# y[..., 2:4] = (y[..., 2:4] * 2) ** 2 * self.anchor_grid[i]  # wh
+# modified into:
+y[..., 2:4] = (y[..., 2:4] * 2) ** 2 * anchor_grid  # wh
+
+# line 73 in yolov3/models/yolo.py
+# wh = (y[..., 2:4] * 2) ** 2 * self.anchor_grid[i]  # wh
+# modified into:
+wh = (y[..., 2:4] * 2) ** 2 * anchor_grid  # wh
+
+
+# line 52 in yolov3/export.py
+# torch.onnx.export(dynamic_axes={'images': {0: 'batch', 2: 'height', 3: 'width'},  # shape(1,3,640,640)
+#                                'output': {0: 'batch', 1: 'anchors'}  # shape(1,25200,85) 
+# modified into:
+torch.onnx.export(dynamic_axes={'images': {0: 'batch'},  # shape(1,3,640,640)
+                                'output': {0: 'batch'}  # shape(1,25200,85) 
+```
+3. Export to onnx model
+```bash
+cd yolov3
+python export.py --weights=yolov3.pt --dynamic --include=onnx --opset=11
+```
+4. Copy the model and execute it
+```bash
+cp yolov3/yolov3.onnx tensorRT_cpp/workspace/
+cd tensorRT_cpp
+
+# change src/application/app_yolo.cpp: main
+# test(Yolo::Type::V5, TRT::Mode::FP32, "yolov3");
+
+make yolo -j32
+```
+
+</details>
+
+
 <details>
 <summary>Retinaface Support</summary>
 

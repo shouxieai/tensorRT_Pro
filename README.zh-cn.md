@@ -425,6 +425,81 @@ make yolo -j32
 
 
 <details>
+<summary>YoloV3支持</summary>
+  
+- yolov3的onnx，你的pytorch版本>=1.7时，导出的onnx模型可以直接被当前框架所使用
+- 你的pytorch版本低于1.7时，或者对于yolov3，可以对opset进行简单改动后直接被框架所支持
+- 如果你想实现低版本pytorch的tensorRT推理、动态batchsize等更多更高级的问题，请打开我们[博客地址](http://zifuture.com:8090)后找到二维码进群交流
+1. 下载yolov3
+
+```bash
+git clone git@github.com:ultralytics/yolov3.git
+```
+
+2. 修改代码，支持动态batchsize，让-1改到batch上
+```python
+# line 55 forward function in yolov3/models/yolo.py 
+# bs, _, ny, nx = x[i].shape  # x(bs,255,20,20) to x(bs,3,20,20,85)
+# x[i] = x[i].view(bs, self.na, self.no, ny, nx).permute(0, 1, 3, 4, 2).contiguous()
+# modified into:
+
+bs, _, ny, nx = map(int, x[i].shape)  # x(bs,255,20,20) to x(bs,3,20,20,85)
+bs = -1
+x[i] = x[i].view(bs, self.na, self.no, ny, nx).permute(0, 1, 3, 4, 2).contiguous()
+
+
+# line 70 in yolov3/models/yolo.py
+#  z.append(y.view(bs, -1, self.no))
+# modified into：
+z.append(y.view(bs, self.na * ny * nx, self.no))
+
+# line 62 in yolov3/models/yolo.py
+# if self.grid[i].shape[2:4] != x[i].shape[2:4] or self.onnx_dynamic:
+#    self.grid[i], self.anchor_grid[i] = self._make_grid(nx, ny, i)
+# modified into:
+if self.grid[i].shape[2:4] != x[i].shape[2:4] or self.onnx_dynamic:
+    self.grid[i], self.anchor_grid[i] = self._make_grid(nx, ny, i)
+anchor_grid = (self.anchors[i].clone() * self.stride[i]).view(1, -1, 1, 1, 2)
+
+# line 70 in yolov3/models/yolo.py
+# y[..., 2:4] = (y[..., 2:4] * 2) ** 2 * self.anchor_grid[i]  # wh
+# modified into:
+y[..., 2:4] = (y[..., 2:4] * 2) ** 2 * anchor_grid  # wh
+
+# line 73 in yolov3/models/yolo.py
+# wh = (y[..., 2:4] * 2) ** 2 * self.anchor_grid[i]  # wh
+# modified into:
+wh = (y[..., 2:4] * 2) ** 2 * anchor_grid  # wh
+
+
+# line 52 in yolov3/export.py
+# torch.onnx.export(dynamic_axes={'images': {0: 'batch', 2: 'height', 3: 'width'},  # shape(1,3,640,640)
+#                                'output': {0: 'batch', 1: 'anchors'}  # shape(1,25200,85) 
+# modified into:
+torch.onnx.export(dynamic_axes={'images': {0: 'batch'},  # shape(1,3,640,640)
+                                'output': {0: 'batch'}  # shape(1,25200,85) 
+```
+3. 导出onnx模型
+```bash
+cd yolov3
+python export.py --weights=yolov3.pt --dynamic --include=onnx --opset=11
+```
+4. 复制模型并执行
+```bash
+cp yolov3/yolov3.onnx tensorRT_cpp/workspace/
+cd tensorRT_cpp
+
+# 修改代码在 src/application/app_yolo.cpp: main函数中，使用V5的方式即可运行他
+# test(Yolo::Type::V5, TRT::Mode::FP32, "yolov3");
+
+make yolo -j32
+```
+
+</details>
+
+
+
+<details>
 <summary>Retinaface支持</summary>
 
 

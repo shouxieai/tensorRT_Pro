@@ -20,7 +20,8 @@ namespace Yolo{
 
     enum class Type : int{
         V5 = 0,
-        X  = 1
+        X  = 1,
+        V3 = V5
     };
 
     enum class NMSMethod : int{
