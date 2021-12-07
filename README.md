@@ -695,7 +695,7 @@ auto box = engine->commit(image).get();
 
 
 <details>
-<summary>C++ Interface：Comple Model in FP32/FP16</summary>
+<summary>C++ Interface：Compile Model in FP32/FP16</summary>
 
 ```cpp
 TRT::compile(
