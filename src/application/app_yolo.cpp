@@ -173,9 +173,9 @@ void multi_gpu_test(){
 }
 
 int app_yolo(){
-
-    //test(Yolo::Type::V5, TRT::Mode::FP32, "yolov5s");
-    test(Yolo::Type::V3, TRT::Mode::FP32, "yolov3");
+ 
+    test(Yolo::Type::V5, TRT::Mode::FP32, "yolov5s");
+    //test(Yolo::Type::V3, TRT::Mode::FP32, "yolov3");
 
     // multi_gpu_test();
     //iLogger::set_log_level(iLogger::LogLevel::Debug);
