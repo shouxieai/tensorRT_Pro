@@ -496,7 +496,7 @@ cp yolov3/yolov3.onnx tensorRT_cpp/workspace/
 cd tensorRT_cpp
 
 # change src/application/app_yolo.cpp: main
-# test(Yolo::Type::V5, TRT::Mode::FP32, "yolov3");
+# test(Yolo::Type::V3, TRT::Mode::FP32, "yolov3");
 
 make yolo -j32
 ```
