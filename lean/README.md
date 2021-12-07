@@ -7,7 +7,6 @@
 - tensorrt-8.0.1.6
 # For Windows
 - Visual Studio 2017 (>=2017)
-- [download the lean.rar](http://zifuture.com:1556/fs/sxai/lean.rar).
 
 ***
 
@@ -20,5 +19,4 @@
 
 # 对于Windows而言
 - Visual Studio 2017  （请大于等于2017）
-- [点击下载打包好的lean.rar](http://zifuture.com:1556/fs/sxai/lean.rar)
 
