@@ -498,6 +498,17 @@ make yolo -j32
 </details>
 
 
+<details>
+<summary>UNet 支持</summary>
+  
+- 请看这里的代码: https://github.com/shouxieai/unet-pytorch
+
+```
+make dunet -j32
+```
+
+</details>
+
 
 <details>
 <summary>Retinaface支持</summary>

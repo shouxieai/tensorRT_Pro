@@ -13,7 +13,7 @@
 namespace Yolo{
     void decode_kernel_invoker(
         float* predict, int num_bboxes, int num_classes, float confidence_threshold, 
-        float nms_threshold, float* invert_affine_matrix, float* parray,
+        float* invert_affine_matrix, float* parray,
         int max_objects, cudaStream_t stream
     );
 };
@@ -185,7 +185,7 @@ namespace YoloHighPerf{
                     float* output_array_ptr   = output_array_device.gpu<float>(ibatch);
                     auto affine_matrix        = affin_matrix_device.gpu<float>(ibatch);
                     checkCudaRuntime(cudaMemsetAsync(output_array_ptr, 0, sizeof(int), stream_));
-                    Yolo::decode_kernel_invoker(image_based_output, output->size(1), num_classes, confidence_threshold_, nms_threshold_, affine_matrix, output_array_ptr, MAX_IMAGE_BBOX, stream_);
+                    Yolo::decode_kernel_invoker(image_based_output, output->size(1), num_classes, confidence_threshold_, affine_matrix, output_array_ptr, MAX_IMAGE_BBOX, stream_);
                 }
 
                 output_array_device.to_cpu();

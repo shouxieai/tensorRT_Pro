@@ -505,6 +505,18 @@ make yolo -j32
 
 
 <details>
+<summary>UNet Support</summary>
+  
+- reference to : https://github.com/shouxieai/unet-pytorch
+
+```
+make dunet -j32
+```
+
+</details>
+
+
+<details>
 <summary>Retinaface Support</summary>
 
 - https://github.com/biubug6/Pytorch_Retinaface

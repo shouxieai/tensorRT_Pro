@@ -19,20 +19,10 @@ int app_yolo_fast();
 int app_centernet();
 int app_dbface();
 int app_bert();
+int direct_yolo();
+int direct_unet();
 int test_warpaffine();
 int test_yolo_map();
-
-void test_all(){
-    app_yolo();
-    app_alphapose();
-    app_fall_recognize();
-    app_retinaface();
-    app_arcface();
-    app_arcface_video();
-    app_arcface_tracker();
-    app_scrfd();
-    INFO("test done.");
-}
 
 int main(int argc, char** argv){
     
@@ -45,6 +35,10 @@ int main(int argc, char** argv){
         app_yolo();
     }else if(strcmp(method, "yolo_fast") == 0){
         app_yolo_fast();
+    }else if(strcmp(method, "dyolo") == 0){
+        direct_yolo();
+    }else if(strcmp(method, "dunet") == 0){
+        direct_unet();
     }else if(strcmp(method, "bert") == 0){
         app_bert();
     }else if(strcmp(method, "centernet") == 0){
@@ -75,8 +69,6 @@ int main(int argc, char** argv){
         app_lesson();
     }else if(strcmp(method, "plugin") == 0){
         app_plugin();
-    }else if(strcmp(method, "test_all") == 0){
-        test_all();
     }else{
         printf("Unknow method: %s\n", method);
         printf(

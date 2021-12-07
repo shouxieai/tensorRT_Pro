@@ -116,6 +116,12 @@ objs/%.cu.mk : src/%.cu
 yolo : workspace/pro
 	@cd workspace && ./pro yolo
 
+dyolo : workspace/pro
+	@cd workspace && ./pro dyolo
+
+dunet : workspace/pro
+	@cd workspace && ./pro dunet
+
 yolo_fast : workspace/pro
 	@cd workspace && ./pro yolo_fast
 
