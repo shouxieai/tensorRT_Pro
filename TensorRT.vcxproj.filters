@@ -71,6 +71,9 @@
     <Filter Include="src\application\app_dbface">
       <UniqueIdentifier>{992f9eed-cbae-47ef-ab11-f0e7c606e965}</UniqueIdentifier>
     </Filter>
+    <Filter Include="src\direct">
+      <UniqueIdentifier>{552f9eed-cb33-22ef-ab11-f011c6060961}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\tensorRT\builder\trt_builder.cpp">
@@ -231,6 +234,12 @@
     </ClCompile>
     <ClCompile Include="src\application\app_dbface.cpp">
       <Filter>src\application</Filter>
+    </ClCompile>
+    <ClCompile Include="src\direct\direct_unet.cpp">
+      <Filter>src\direct</Filter>
+    </ClCompile>
+    <ClCompile Include="src\direct\direct_yolo.cpp">
+      <Filter>src\direct</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
