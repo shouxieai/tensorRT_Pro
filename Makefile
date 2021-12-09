@@ -122,6 +122,9 @@ dyolo : workspace/pro
 dunet : workspace/pro
 	@cd workspace && ./pro dunet
 
+dmae : workspace/pro
+	@cd workspace && ./pro dmae
+
 yolo_fast : workspace/pro
 	@cd workspace && ./pro yolo_fast
 
