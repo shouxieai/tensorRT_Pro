@@ -46,6 +46,9 @@
     <ClCompile Include="src\application\app_yolo_fast\yolo_fast.cpp" />
     <ClCompile Include="src\application\tools\auto_download.cpp" />
     <ClCompile Include="src\application\tools\deepsort.cpp" />
+    <ClCompile Include="src\direct\direct_mae.cpp" />
+    <ClCompile Include="src\direct\direct_unet.cpp" />
+    <ClCompile Include="src\direct\direct_yolo.cpp" />
     <ClCompile Include="src\main.cpp" />
     <ClCompile Include="src\tensorRT\builder\trt_builder.cpp" />
     <ClCompile Include="src\tensorRT\common\cuda_tools.cpp" />

@@ -72,7 +72,7 @@
       <UniqueIdentifier>{992f9eed-cbae-47ef-ab11-f0e7c606e965}</UniqueIdentifier>
     </Filter>
     <Filter Include="src\direct">
-      <UniqueIdentifier>{552f9eed-cb33-22ef-ab11-f011c6060961}</UniqueIdentifier>
+      <UniqueIdentifier>{d8f597f5-d805-44d4-b592-e457cd579d67}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
@@ -234,6 +234,9 @@
     </ClCompile>
     <ClCompile Include="src\application\app_dbface.cpp">
       <Filter>src\application</Filter>
+    </ClCompile>
+    <ClCompile Include="src\direct\direct_mae.cpp">
+      <Filter>src\direct</Filter>
     </ClCompile>
     <ClCompile Include="src\direct\direct_unet.cpp">
       <Filter>src\direct</Filter>
