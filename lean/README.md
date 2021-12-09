@@ -20,3 +20,6 @@
 # 对于Windows而言
 - Visual Studio 2017  （请大于等于2017）
 
+# 直接下载lean.rar
+- 链接：https://pan.baidu.com/s/1DR21KgDBcgtScJPy3E94Fg 
+- 提取码：sxai 
