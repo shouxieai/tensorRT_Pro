@@ -498,7 +498,6 @@ namespace TRT {
 		if(source.type() == ModelSourceType::OnnX || source.type() == ModelSourceType::OnnXData){
 			
 			const auto explicitBatch = 1U << static_cast<uint32_t>(nvinfer1::NetworkDefinitionCreationFlag::kEXPLICIT_BATCH);
-			//network = shared_ptr<INetworkDefinition>(builder->createNetworkV2(explicitBatch), destroy_nvidia_pointer<INetworkDefinition>);
 			network = shared_ptr<INetworkDefinition>(builder->createNetworkV2(explicitBatch), destroy_nvidia_pointer<INetworkDefinition>);
 
 			vector<nvinfer1::Dims> dims_setup(inputsDimsSetup.size());

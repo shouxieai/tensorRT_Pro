@@ -136,7 +136,7 @@ static void test(Yolo::Type type, TRT::Mode mode, const string& model){
 
     string onnx_file = iLogger::format("%s.onnx", name);
     string model_file = iLogger::format("%s.%s.trtmodel", name, mode_name);
-    int test_batch_size = 3;
+    int test_batch_size = 16;
     
     if(not iLogger::exists(model_file)){
         TRT::compile(
@@ -174,7 +174,7 @@ void multi_gpu_test(){
 
 int app_yolo(){
  
-    test(Yolo::Type::V5, TRT::Mode::FP32, "yolov5s");
+    test(Yolo::Type::V5, TRT::Mode::INT8, "yolov5s");
     //test(Yolo::Type::V3, TRT::Mode::FP32, "yolov3");
 
     // multi_gpu_test();
