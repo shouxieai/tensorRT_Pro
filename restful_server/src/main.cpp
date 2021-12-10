@@ -220,6 +220,7 @@ int test_http(int port = 8090){
 	INFO("Add controller");
 	server->add_controller("/api", logical_controller);
 	server->add_controller("/", create_redirect_access_controller("./web"));
+	server->add_controller("/static", create_file_access_controller("./"));
 	INFO("Access url: http://%s", address.c_str());
 
 	INFO(

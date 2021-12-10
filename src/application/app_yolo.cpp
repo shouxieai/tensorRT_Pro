@@ -136,7 +136,7 @@ static void test(Yolo::Type type, TRT::Mode mode, const string& model){
 
     string onnx_file = iLogger::format("%s.onnx", name);
     string model_file = iLogger::format("%s.%s.trtmodel", name, mode_name);
-    int test_batch_size = 16;
+    int test_batch_size = 3;
     
     if(not iLogger::exists(model_file)){
         TRT::compile(

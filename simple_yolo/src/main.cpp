@@ -256,7 +256,7 @@ void direct_test(){
 
 int main(){
 
-    direct_test();
+    //direct_test();
     test(SimpleYolo::Type::V5, SimpleYolo::Mode::FP32, "yolov5s");
     //test(SimpleYolo::Type::X, SimpleYolo::Mode::INT8, "yolox_s");
     
