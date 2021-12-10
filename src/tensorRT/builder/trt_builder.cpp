@@ -458,8 +458,10 @@ namespace TRT {
 
 				if(entropyCalibratorFiles.size() < maxBatchSize){
 					INFOW("Too few images provided, %d[provided] < %d[max batch size], image copy will be performed", entropyCalibratorFiles.size(), maxBatchSize);
-					for(int i = entropyCalibratorFiles.size(); i < maxBatchSize; ++i)
-						entropyCalibratorFiles.push_back(entropyCalibratorFiles[i % entropyCalibratorFiles.size()]);
+					
+					int old_size = entropyCalibratorFiles.size();
+                    for(int i = old_size; i < maxBatchSize; ++i)
+                        entropyCalibratorFiles.push_back(entropyCalibratorFiles[i % old_size]);
 				}
 			}
 		}

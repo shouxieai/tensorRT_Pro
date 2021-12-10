@@ -2203,6 +2203,7 @@ namespace SimpleYolo{
 
                 if(entropyCalibratorFiles.size() < max_batch_size){
                     INFOW("Too few images provided, %d[provided] < %d[max batch size], image copy will be performed", entropyCalibratorFiles.size(), max_batch_size);
+                    
                     int old_size = entropyCalibratorFiles.size();
                     for(int i = old_size; i < max_batch_size; ++i)
                         entropyCalibratorFiles.push_back(entropyCalibratorFiles[i % old_size]);
