@@ -125,6 +125,9 @@ dunet : workspace/pro
 dmae : workspace/pro
 	@cd workspace && ./pro dmae
 
+dclassifier : workspace/pro
+	@cd workspace && ./pro dclassifier
+
 yolo_fast : workspace/pro
 	@cd workspace && ./pro yolo_fast
 

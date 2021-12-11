@@ -238,6 +238,9 @@
     <ClCompile Include="src\direct\direct_mae.cpp">
       <Filter>src\direct</Filter>
     </ClCompile>
+    <ClCompile Include="src\direct\direct_classifier.cpp">
+      <Filter>src\direct</Filter>
+    </ClCompile>
     <ClCompile Include="src\direct\direct_unet.cpp">
       <Filter>src\direct</Filter>
     </ClCompile>

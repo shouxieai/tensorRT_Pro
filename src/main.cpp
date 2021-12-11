@@ -22,6 +22,7 @@ int app_bert();
 int direct_yolo();
 int direct_unet();
 int direct_mae();
+int direct_classifier();
 int test_warpaffine();
 int test_yolo_map();
 
@@ -42,6 +43,8 @@ int main(int argc, char** argv){
         direct_unet();
     }else if(strcmp(method, "dmae") == 0){
         direct_mae();
+    }else if(strcmp(method, "dclassifier") == 0){
+        direct_classifier();
     }else if(strcmp(method, "bert") == 0){
         app_bert();
     }else if(strcmp(method, "centernet") == 0){
