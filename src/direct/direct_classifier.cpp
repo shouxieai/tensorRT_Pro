@@ -31,7 +31,7 @@ int direct_classifier(){
         INFOE("Engine is nullptr");
         return -1;
     }
-
+    
     auto image = cv::imread("dog.jpg");
     float mean[] = {0.485, 0.456, 0.406};
     float std[]  = {0.229, 0.224, 0.225};

@@ -43,9 +43,6 @@ namespace DeepSORT {
         return hypot(center.x - center2.x, center.y - center2.y);
     }
 
-    /**
-     * @brief 匈牙利算法
-     */
     class HungarianAlgorithm
     {
     public:
@@ -483,7 +480,7 @@ namespace DeepSORT {
     {
     public:
         KalmanFilter(const TrackerConfig& config):config_(config) {
-            // 匀速直线运动
+            /* 匀速直线运动 */
             motion_mat_ = Eigen::Matrix<float, 8, 8>::Identity(8, 8);
             for (int i = 0; i < 4; ++i) {
                 motion_mat_(i, 4 + i) = 1;
@@ -500,7 +497,7 @@ namespace DeepSORT {
                     Eigen::Matrix<float, 4, 4> &covariance_ret) {
             Eigen::Matrix<float, 4, 1> std_vel;
             
-            // 测量噪声标准差
+            /* 测量噪声标准差 */
             // std_vel << std_weight_position_ * mean(3, 0),
             //         std_weight_position_ * mean(3, 0),
             //         1e-1,
@@ -561,7 +558,7 @@ namespace DeepSORT {
                     Eigen::Matrix<float, 8, 8> &covariance) {
             Eigen::Matrix<float, 8, 1> std_pos_vel;
 
-            // 预测下一步所在位置，那么std_pos则是模型对下一步预测的标准差。可以认为是一帧运动了多少
+            /* 预测下一步所在位置，那么std_pos则是模型对下一步预测的标准差。可以认为是一帧运动了多少 */
             // std_pos_vel << std_weight_position_ * mean(3, 0),
             //             std_weight_position_ * mean(3, 0),
             //             1e-2,
@@ -610,7 +607,7 @@ namespace DeepSORT {
             mean << boxah.center_x, boxah.center_y, boxah.aspect_ratio,
                 boxah.height, 0.0f, 0.0f, 0.0f, 0.0f;
 
-            // 初始状态 **/
+            /** 初始状态 **/
             Eigen::Matrix<float, 8, 1> std_val;
             // std_val << 2.0f * std_weight_position_ * boxah.height,
             //            2.0f * std_weight_position_ * boxah.height,
@@ -713,6 +710,11 @@ namespace DeepSORT {
 
         void update(KalmanFilter &km_filter, const Box &box) {
             
+            if(has_feature_ && box.feature.empty()){
+                fprintf(stderr, "Feature is empty, ignore has_feature_ flag\n");
+                has_feature_ = false;
+            }
+
             if(has_feature_){
                 if(feature_bucket_.rows < nbuckets_){
                     feature_bucket_.push_back(box.feature);
