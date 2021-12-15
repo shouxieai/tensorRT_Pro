@@ -23,14 +23,17 @@ namespace py = pybind11;
 
 class YoloInfer { 
 public:
-	YoloInfer(string engine, Yolo::Type type, int device_id, float confidence_threshold, float nms_threshold){
-
+	YoloInfer(
+		string engine, Yolo::Type type, int device_id, float confidence_threshold, float nms_threshold,
+		Yolo::NMSMethod nms_method, int max_objects, bool use_multi_preprocess_stream
+	){
 		instance_ = Yolo::create_infer(
 			engine, 
 			type,
 			device_id,
 			confidence_threshold,
-			nms_threshold
+			nms_threshold,
+			nms_method, max_objects, use_multi_preprocess_stream
 		);
 	}
 
@@ -317,8 +320,9 @@ static bool compileTRT(
 	CUDAKernel::Norm int8_norm,
 	int int8_preprocess_const_value,
 	string int8_image_directory,
-	string int8_entropy_calibrator_file
-){
+	string int8_entropy_calibrator_file,
+	size_t max_workspace_size
+){ 
 	vector<TRT::InputDims> trt_inputs_dims;
 	if(inputs_dims.size() != 0){
 		if(inputs_dims.ndim() != 2 || inputs_dims.dtype() != py::dtype::of<int>()){
@@ -412,7 +416,7 @@ static bool compileTRT(
 	return TRT::compile(
 		mode, max_batch_size, source, saveto, trt_inputs_dims, 
 		int8process, int8_image_directory, 
-		int8_entropy_calibrator_file
+		int8_entropy_calibrator_file, max_workspace_size
 	);
 }
 
@@ -548,7 +552,12 @@ PYBIND11_MODULE(libtrtpyc, m) {
 
 	py::enum_<Yolo::Type>(m, "YoloType")
 		.value("V5", Yolo::Type::V5)
+		.value("V3", Yolo::Type::V3)
 		.value("X", Yolo::Type::X);
+
+	py::enum_<Yolo::NMSMethod>(m, "NMSMethod")
+		.value("CPU",     Yolo::NMSMethod::CPU)
+		.value("FastGPU", Yolo::NMSMethod::FastGPU);
 
 	py::class_<CUDAKernel::Norm>(m, "Norm")
 		.def_property_readonly("mean", [](CUDAKernel::Norm& self){return vector<float>(self.mean, self.mean+3);})
@@ -583,12 +592,15 @@ PYBIND11_MODULE(libtrtpyc, m) {
 		});
 
 	py::class_<YoloInfer>(m, "Yolo")
-		.def(py::init<string, Yolo::Type, int, float, float>(), 
+		.def(py::init<string, Yolo::Type, int, float, float, Yolo::NMSMethod, int, bool>(), 
 			py::arg("engine"), 
-			py::arg("type") = Yolo::Type::V5, 
-			py::arg("device_id")=0, 
-			py::arg("confidence_threshold")=0.4f,
-			py::arg("nms_threshold")=0.5f
+			py::arg("type")                 = Yolo::Type::V5, 
+			py::arg("device_id")            = 0, 
+			py::arg("confidence_threshold") = 0.4f,
+			py::arg("nms_threshold") = 0.5f,
+			py::arg("nms_method")    = Yolo::NMSMethod::FastGPU,
+			py::arg("max_objects")   = 1024,
+			py::arg("use_multi_preprocess_stream") = false
 		)
 		.def_property_readonly("valid", &YoloInfer::valid, "Infer is valid")
 		.def("commit", &YoloInfer::commit, py::arg("image"));
@@ -687,7 +699,8 @@ PYBIND11_MODULE(libtrtpyc, m) {
 		py::arg("int8_norm")                    = CUDAKernel::Norm::None(),
 		py::arg("int8_preprocess_const_value")  = 114,
 		py::arg("int8_image_directory")         = ".",
-		py::arg("int8_entropy_calibrator_file") = ""
+		py::arg("int8_entropy_calibrator_file") = "",
+		py::arg("max_workspace_size")           = 1ul << 30
 	);
 
 	py::class_<ptr_wrapper<float, ptr_base::host  >>(m, "HostFloatPointer"  )
@@ -703,7 +716,7 @@ PYBIND11_MODULE(libtrtpyc, m) {
 		.def_property_readonly("ptr", [](ptr_wrapper<float, ptr_base::device>& self){
 			return (uint64_t)self.get();
 		})
-		.def("__getitem__", [](ptr_wrapper<float, ptr_base::device>& self, int index){return self[index];})
+		// .def("__getitem__", [](ptr_wrapper<float, ptr_base::device>& self, int index){return self[index];})
 		.def("__repr__", [](ptr_wrapper<float, ptr_base::device>& self){
 			return iLogger::format("<DeviceFloatPointer ptr=%p>", self.get());
 		});

@@ -17,15 +17,15 @@ set(CUDA_GEN_CODE "-gencode=arch=compute_75,code=sm_75")
 # 如果你的opencv找不到，可以自己指定目录
 set(OpenCV_DIR   "/data/datav/expstation/lean/opencv4.2.0/lib/cmake/opencv4/")
 
-set(CUDA_DIR     "/data/sxai/lean/cuda-10.2")
+set(CUDA_TOOLKIT_ROOT_DIR     "/data/sxai/lean/cuda-10.2")
 set(CUDNN_DIR    "/data/sxai/lean/cudnn8.2.2.26")
 set(TENSORRT_DIR "/data/sxai/lean/TensorRT-8.0.1.6-cuda10.2-cudnn8.2")
 
-# set(CUDA_DIR     "/data/sxai/lean/cuda-10.2")
+# set(CUDA_TOOLKIT_ROOT_DIR     "/data/sxai/lean/cuda-10.2")
 # set(CUDNN_DIR    "/data/sxai/lean/cudnn7.6.5.32-cuda10.2")
 # set(TENSORRT_DIR "/data/sxai/lean/TensorRT-7.0.0.11")
 
-# set(CUDA_DIR     "/data/sxai/lean/cuda-11.1")
+# set(CUDA_TOOLKIT_ROOT_DIR  "/data/sxai/lean/cuda-11.1")
 # set(CUDNN_DIR    "/data/sxai/lean/cudnn8.2.2.26")
 # set(TENSORRT_DIR "/data/sxai/lean/TensorRT-7.2.1.6")
 
@@ -42,7 +42,7 @@ include_directories(
     ${PROJECT_SOURCE_DIR}/src/tensorRT
     ${PROJECT_SOURCE_DIR}/src/tensorRT/common
     ${OpenCV_INCLUDE_DIRS}
-    ${CUDA_DIR}/include
+    ${CUDA_TOOLKIT_ROOT_DIR}/include
     ${PROTOBUF_DIR}/include
     ${TENSORRT_DIR}/include
     ${CUDNN_DIR}/include
@@ -53,7 +53,7 @@ include_directories(
 link_directories(
     ${PROTOBUF_DIR}/lib
     ${TENSORRT_DIR}/lib
-    ${CUDA_DIR}/lib64
+    ${CUDA_TOOLKIT_ROOT_DIR}/lib64
     ${CUDNN_DIR}/lib
 )
 
@@ -189,6 +189,13 @@ add_custom_target(
     DEPENDS trtpyc
     WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}/python
     COMMAND python test_torch.py
+)
+
+add_custom_target(
+    pyyolov5
+    DEPENDS trtpyc
+    WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}/python
+    COMMAND python test_yolov5.py
 )
 
 add_custom_target(

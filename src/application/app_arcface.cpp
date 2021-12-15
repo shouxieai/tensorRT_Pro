@@ -90,10 +90,10 @@ tuple<Mat, vector<string>> build_library(shared_ptr<Scrfd::Infer> detector, shar
 
         INFO("New face [%s], %d feature, %.5f", face_name.c_str(), feature.cols, face.confidence);
 
-        rectangle(image, cv::Point(face.left, face.top), cv::Point(face.right, face.bottom), Scalar(0, 255, 0), 2);
+        rectangle(image, cv::Point(max_face.left, max_face.top), cv::Point(max_face.right, max_face.bottom), Scalar(0, 255, 0), 2);
         for(int j = 0; j < 5; ++j)
-            circle(image, Point(face.landmark[j*2+0], face.landmark[j*2+1]), 3, Scalar(0, 255, 0), -1, 16);
-        putText(image, face_name, cv::Point(face.left, face.top), 0, 1, Scalar(0, 255, 0), 1, 16);
+            circle(image, Point(max_face.landmark[j*2+0], max_face.landmark[j*2+1]), 3, Scalar(0, 255, 0), -1, 16);
+        putText(image, face_name, cv::Point(max_face.left, max_face.top), 0, 1, Scalar(0, 255, 0), 1, 16);
 
         string save_file = iLogger::format("face/library_draw/%s.jpg", file_name.c_str());
         imwrite(save_file, image);

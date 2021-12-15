@@ -9,7 +9,8 @@ from enum import Enum
 List  = typing.List
 Tuple = typing.Tuple
 
-torch            = None
+torch    = None
+hub_url  = "http://zifuture.com:1556/fs/25.shared"
 
 def lazy_import():
     global torch
@@ -35,7 +36,7 @@ class HostFloatPointer(object):
 
 class DeviceFloatPointer(object):
     ptr    : int
-    def __getitem__(self, index)->float: ...
+    # def __getitem__(self, index)->float: ...
 
 class DataHead(object):
     Init   = 0
@@ -50,6 +51,8 @@ class MixMemory(object):
     cpu_size  : int
     gpu_size  : int
     def __init__(self, cpu=0, cpu_size=0, gpu=0, gpu_size=0): ...
+    
+    # alloc memory and get_cpu / get_gpu
     def aget_cpu(self, size)->HostFloatPointer: ...
     def aget_gpu(self, size)->DeviceFloatPointer: ...
     def release_cpu(self): ...
@@ -185,7 +188,8 @@ def compileTRT(
     int8_norm                    : Norm        = Norm.none(),
     int8_preprocess_const_value  : int = 114,
     int8_image_directory         : str = ".",
-    int8_entropy_calibrator_file : str = ""
+    int8_entropy_calibrator_file : str = "",
+    max_workspace_size           : int = 1 << 30
 )->bool: ...
 
 class FallState(Enum):
@@ -224,7 +228,12 @@ class ObjectBox(object):
 
 class YoloType(Enum):
     V5         : int  =  0
+    V3         : int  =  0
     X          : int  =  1
+
+class NMSMethod(Enum):
+    CPU        : int  =  0
+    FastGPU    : int  =  1
 
 class SharedFutureFaceBoxArray(object):
     def get(self)->List[FaceBox]: ...
@@ -268,7 +277,10 @@ class Yolo(object):
         type : YoloType = YoloType.V5, 
         device_id : int = 0, 
         confidence_threshold : float = 0.4,
-        nms_threshold : float = 0.5
+        nms_threshold : float        = 0.5,
+        nms_method    : NMSMethod    = NMSMethod.FastGPU,
+        max_objects   : int          = 1024,
+        use_multi_preprocess_stream : bool = False
     ): ...
     def commit(self, image : np.ndarray)->SharedFutureObjectBoxArray: ...
 
@@ -298,8 +310,6 @@ os_name = platform.system()
 if os_name == "Windows":
     os.environ["PATH"] = os.environ["PATH"] + ";" + os.path.dirname(os.path.abspath(__file__))
 else:
-    os.environ["PATH"] = os.environ["PATH"] + ":" + os.path.dirname(os.path.abspath(__file__))
-    
     LD_LIBRARY_PATH = ""
     if "LD_LIBRARY_PATH" in os.environ:
         LD_LIBRARY_PATH = ":" + os.environ["LD_LIBRARY_PATH"]
@@ -326,7 +336,7 @@ def onnx_hub(name):
 
     local_file = os.path.join(root, f"{name}.onnx")
     if not os.path.exists(local_file):
-        url        = f"http://zifuture.com:1556/fs/25.shared/{name}.onnx"
+        url        = f"{hub_url}/{name}.onnx"
         
         print(f"OnnxHub: download from {url}, to {local_file}")
         remote     = requests.get(url)
@@ -524,7 +534,8 @@ def compile_onnx_to_file(
     int8_norm                    : Norm        = Norm.none(),
     int8_preprocess_const_value  : int = 114,
     int8_image_directory         : str = ".",
-    int8_entropy_calibrator_file : str = ""
+    int8_entropy_calibrator_file : str = "",
+    max_workspace_size           : int = 1 << 30
 )->bool:
     return compileTRT(
         max_batch_size               = max_batch_size,
@@ -537,6 +548,7 @@ def compile_onnx_to_file(
         int8_preprocess_const_value  = int8_preprocess_const_value,
         int8_image_directory         = int8_image_directory,
         int8_entropy_calibrator_file = int8_entropy_calibrator_file,
+        max_workspace_size           = max_workspace_size
     )
 
 def compile_onnxdata_to_memory(
@@ -548,7 +560,8 @@ def compile_onnxdata_to_memory(
     int8_norm                    : Norm        = Norm.none(),
     int8_preprocess_const_value  : int = 114,
     int8_image_directory         : str = ".",
-    int8_entropy_calibrator_file : str = ""
+    int8_entropy_calibrator_file : str = "",
+    max_workspace_size           : int = 1 << 30
 )->bytes:
     mem     = CompileOutput.to_memory()
     success = compileTRT(
@@ -562,6 +575,7 @@ def compile_onnxdata_to_memory(
         int8_preprocess_const_value  = int8_preprocess_const_value,
         int8_image_directory         = int8_image_directory,
         int8_entropy_calibrator_file = int8_entropy_calibrator_file,
+        max_workspace_size           = max_workspace_size
     )
 
     if not success:
@@ -584,7 +598,8 @@ def from_torch(torch_model, input,
     int8_norm                    : Norm        = Norm.none(),
     int8_preprocess_const_value  : int = 114,
     int8_image_directory         : str = ".",
-    int8_entropy_calibrator_file : str = ""
+    int8_entropy_calibrator_file : str = "",
+    max_workspace_size           : int = 1 << 30
 )->Infer:
 
     lazy_import()
@@ -649,17 +664,22 @@ def from_torch(torch_model, input,
         inputs_dims    = inputs_dims,
         device_id      = device_id,
         int8_norm      = int8_norm,
-        int8_preprocess_const_value = int8_preprocess_const_value,
-        int8_image_directory = int8_image_directory,
-        int8_entropy_calibrator_file = int8_entropy_calibrator_file
+        int8_preprocess_const_value  = int8_preprocess_const_value,
+        int8_image_directory         = int8_image_directory,
+        int8_entropy_calibrator_file = int8_entropy_calibrator_file,
+        max_workspace_size           = max_workspace_size
     )
 
     if engine_save_file is not None:
         with open(engine_save_file, "wb") as f:
             f.write(model_data)
 
-    trt_model = load_infer_data(model_data)
-    trt_model.stream = torch.cuda.current_stream().cuda_stream
+    trt_model    = load_infer_data(model_data)
+    torch_stream = torch.cuda.current_stream().cuda_stream
+    
+    if torch_stream != 0:
+        trt_model.stream = torch_stream
+        
     return trt_model
 
 def upbound(value, align=32):

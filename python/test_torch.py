@@ -11,7 +11,11 @@ device = "cuda" if torch.cuda.is_available() else "cpu"
 # 基于torch的tensor输入
 input     = torch.full((5, 3, 224, 224), 0.3).to(device)
 model     = models.resnet18(True).eval().to(device)
-trt_model = tp.from_torch(model, input, engine_save_file="torch.engine.trtmodel", onnx_save_file="torch.onnx")
+trt_model = tp.from_torch(model, input, 
+    engine_save_file   = "torch.engine.trtmodel", 
+    onnx_save_file     = "torch.onnx"
+)
+
 torch_out = model(input)
 trt_out   = trt_model(input)
 
@@ -20,8 +24,7 @@ trt_model.save("torch.trtmodel")
 abs_diff = (torch_out - trt_out).abs().max()
 print(f"Torch and TRTModel abs diff is {abs_diff}")
 
-
-
+print(f"trt_model.stream is {trt_model.stream}")
 print(trt_model.input().shape)
 trt_model.input().resize_single_dim(0, 1)
 print(trt_model.input().shape)
