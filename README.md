@@ -33,13 +33,41 @@
   ```
 
 - Python Interface:
-
   ```python
   import trtpy
   
   model     = models.resnet18(True).eval().to(device)
   trt_model = tp.from_torch(model, input)
   trt_out   = trt_model(input)
+  ```
+  
+  - simple yolo for python
+  - `pip install trtpy`, This is a method for experiment, which is applicable to Linux system python37, 38 and 39
+  ```python
+  import os
+  import cv2
+  import numpy as np
+  import trtpy as tp
+
+  engine_file = "yolov5s.fp32.trtmodel"
+  if not os.path.exists(engine_file):
+      tp.compile_onnx_to_file(1, tp.onnx_hub("yolov5s"), engine_file)
+
+  yolo   = tp.Yolo(engine_file, type=tp.YoloType.V5)
+  image  = cv2.imread("car.jpg")
+  bboxes = yolo.commit(image).get()
+  print(f"{len(bboxes)} objects")
+
+  for box in bboxes:
+      left, top, right, bottom = map(int, [box.left, box.top, box.right, box.bottom])
+      cv2.rectangle(image, (left, top), (right, bottom), tp.random_color(box.class_label), 5)
+
+  saveto = "yolov5.car.jpg"
+  print(f"Save to {saveto}")
+
+  cv2.imwrite(saveto, image)
+  cv2.imshow("result", image)
+  cv2.waitKey()
   ```
 
 ## INTRO
