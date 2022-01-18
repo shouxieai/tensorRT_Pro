@@ -42,6 +42,7 @@
   ```
   
   - simple yolo for python
+  - required: nvidia driver >= 440.33, linux x86_64, python37/python38/python39
   - `pip install trtpy`, This is a method for experiment, which is applicable to Linux system python37, 38 and 39
   ```python
   import os
