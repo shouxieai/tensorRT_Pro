@@ -35,7 +35,7 @@ int app_alphapose(){
     TRT::set_device(0);
     INFO("===================== test alphapose fp32 ==================================");
 
-    const char* name = "sppe";
+    const char* name = "alpha-pose-136";
     if(not requires(name))
         return 0;
 
@@ -59,7 +59,9 @@ int app_alphapose(){
     for(int i = 0; i < keys.size(); ++i){
         float x = keys[i].x;
         float y = keys[i].y;
-        cv::circle(image, Point(x, y), 5, Scalar(0, 255, 0), -1, 16);
+        if(keys[i].z > 0.05){
+            cv::circle(image, Point(x, y), 1, Scalar(0, 255, 0), -1, 16);
+        }
     }
 
     auto save_file = "pose.show.jpg";

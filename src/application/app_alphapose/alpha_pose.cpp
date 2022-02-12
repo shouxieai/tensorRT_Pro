@@ -85,7 +85,6 @@ namespace AlphaPose{
             int max_batch_size = engine->get_max_batch_size();
             auto input         = engine->input();
             auto output        = engine->output();
-            int stride         = input->width() / output->width();
             input_width_       = input->width();
             input_height_      = input->height();
             gpu_               = gpuid;
@@ -114,18 +113,16 @@ namespace AlphaPose{
                     float* image_based_output   = output->cpu<float>(ibatch);
                     auto& image_based_keypoints = job.output;
                     auto& affine_matrix         = job.additional;
-                    int begin_channel           = 17;
-                    int area                    = output->width() * output->height();
-                    image_based_keypoints.resize(output->channel() - begin_channel);
 
-                    for(int i = begin_channel; i < output->channel(); ++i){
-                        float* output_channel = output->cpu<float>(0, i);
-                        int location = std::max_element(output_channel, output_channel + area) - output_channel;
-                        float confidence = output_channel[location];
-                        float x = (location % output->width()) * stride;
-                        float y = (location / output->width()) * stride;
-                        auto& output_point = image_based_keypoints[i-begin_channel];
+                    // output -> batch x 136 x 3
+                    image_based_keypoints.resize(output->size(1));
 
+                    for(int i = 0; i < output->size(1); ++i){
+                        float* keyp = output->cpu<float>(ibatch, i);
+                        float x = keyp[0];
+                        float y = keyp[1];
+                        float confidence = keyp[2];
+                        auto& output_point = image_based_keypoints[i];
                         output_point.z = confidence;
                         tie(output_point.x, output_point.y) = affine_project(x, y, job.additional.d2i);
                     }
