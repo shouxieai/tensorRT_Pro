@@ -85,6 +85,6 @@ int app_plugin(){
 
     //test_hswish(TRT::Mode::FP32);
     test_dcnv2(TRT::Mode::FP32);
-    //stest_plugin(TRT::Mode::FP16);
+    //test_plugin(TRT::Mode::FP16);
     return 0;
 }
