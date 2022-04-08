@@ -7,7 +7,7 @@
 #include <common/ilogger.hpp>
 
 #include "app_yolo/yolo.hpp"
-#include "app_alphapose/alpha_pose.hpp"
+#include "app_alphapose_old/alpha_pose.hpp"
 #include "app_fall_gcn/fall_gcn.hpp"
 #include "tools/zmq_remote_show.hpp"
 #include "tools/deepsort.hpp"
@@ -54,7 +54,7 @@ int app_fall_recognize(){
     auto detector_model_file = "yolox_m.FP32.trtmodel";
     auto gcn_model_file      = "fall_bp.FP32.trtmodel";
     
-    auto pose_model     = AlphaPose::create_infer(pose_model_file, 0);
+    auto pose_model     = AlphaPoseOld::create_infer(pose_model_file, 0);
     auto detector_model = Yolo::create_infer(detector_model_file, Yolo::Type::X, 0, 0.4f);
     auto gcn_model      = FallGCN::create_infer(gcn_model_file, 0);
 

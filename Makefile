@@ -3,7 +3,7 @@ nvcc      = ${lean_cuda}/bin/nvcc
 
 # 如果是其他显卡，请修改-gencode=arch=compute_75,code=sm_75为对应显卡的能力
 # 显卡对应的号码参考这里：https://developer.nvidia.com/zh-cn/cuda-gpus#compute
-cuda_arch := -gencode=arch=compute_75,code=sm_75
+cuda_arch := # -gencode=arch=compute_75,code=sm_75
 
 cpp_srcs  := $(shell find src -name "*.cpp")
 cpp_objs  := $(cpp_srcs:.cpp=.cpp.o)
