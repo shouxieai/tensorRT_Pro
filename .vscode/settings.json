@@ -74,7 +74,9 @@
         "cinttypes": "cpp",
         "typeindex": "cpp",
         "valarray": "cpp",
-        "bit": "cpp"
+        "bit": "cpp",
+        "__functional_base": "cpp",
+        "locale": "cpp"
     },
     "workbench.tree.expandMode": "doubleClick"
 }

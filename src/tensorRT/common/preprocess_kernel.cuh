@@ -50,6 +50,36 @@ namespace CUDAKernel{
         float* matrix_2_3, uint8_t const_value, const Norm& norm,
         cudaStream_t stream);
 
+    // 可以用来图像校正、图像旋转等等 (测试比cpu快10倍以上)
+    // 使用示范:
+    // float* matrix_3_3 = nullptr;
+    // size_t matrix_bytes = 3 * 3 * sizeof(f32);
+    // checkCudaRuntime(cudaMalloc(&matrix_3_3, matrix_bytes));
+    // checkCudaRuntime(cudaMemset(matrix_3_3, 0,  matrix_bytes));
+    //
+    // #左上、右上、右下、左下 原图像四个点的坐标
+    //    cv::Point2f src_points[] = { 
+    //    vctvctPoints[nImageIdx][0],
+    //    vctvctPoints[nImageIdx][1],
+    //    vctvctPoints[nImageIdx][2],
+    //    vctvctPoints[nImageIdx][3]};
+    // 
+    // #左上、右上、左下、右下（Z 字形排列） 目标图像四个点的坐标
+    //    cv::Point2f dst_points[] = {
+    //        cv::Point2f(0, 0),
+    //        cv::Point2f(nw-1, 0),
+    //        cv::Point2f(0, nh-1),
+    //        cv::Point2f(nw-1, nh-1) };
+    // 利用opencv 得到变换矩阵  dst -> src 的 矩阵
+    //    cv::Mat Perspect_Matrix = cv::getPerspectiveTransform(dst_points, src_points);
+    //    Perspect_Matrix.convertTo(Perspect_Matrix,  CV_32FC1);
+    // 拷贝到 gpu 
+    //    checkCudaRuntime(cudaMemcpy(matrix_3_3, Perspect_Matrix.data, matrix_bytes, cudaMemcpyHostToDevice));
+    void warp_perspective(
+        uint8_t* src, int src_line_size, int src_width, int src_height, float* dst, int dst_width, int dst_height,
+		float* matrix_3_3, uint8_t const_value, const Norm& norm, cudaStream_t stream
+    );
+
     void norm_feature(
         float* feature_array, int num_feature, int feature_length,
         cudaStream_t stream
