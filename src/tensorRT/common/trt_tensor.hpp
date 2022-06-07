@@ -25,6 +25,7 @@ namespace TRT {
     };
 
     enum class DataType : int {
+        Unknow = -1,
         Float = 0,
         Float16 = 1,
         Int32 = 2,

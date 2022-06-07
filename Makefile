@@ -1,9 +1,9 @@
 cc        := g++
-nvcc      := nvcc
+nvcc      = ${lean_cuda}/bin/nvcc
 
 # 如果是其他显卡，请修改-gencode=arch=compute_75,code=sm_75为对应显卡的能力
 # 显卡对应的号码参考这里：https://developer.nvidia.com/zh-cn/cuda-gpus#compute
-cuda_arch := -gencode=arch=compute_75,code=sm_75
+cuda_arch := # -gencode=arch=compute_75,code=sm_75
 
 cpp_srcs  := $(shell find src -name "*.cpp")
 cpp_objs  := $(cpp_srcs:.cpp=.cpp.o)
@@ -15,13 +15,13 @@ cu_objs  := $(cu_srcs:.cu=.cu.o)
 cu_objs  := $(cu_objs:src/%=objs/%)
 cu_mk    := $(cu_objs:.cu.o=.cu.mk)
 
-lean_protobuf  := /data/sxai/lean/protobuf3.11.4
-lean_tensor_rt := /data/sxai/lean/TensorRT-8.0.1.6-cuda10.2-cudnn8.2
-lean_cudnn     := /data/sxai/lean/cudnn8.2.2.26
-lean_opencv    := /data/sxai/lean/opencv4.2.0
-lean_cuda      := /data/sxai/lean/cuda-10.2
+lean_protobuf  := /datav/lean/protobuf3.11.4
+lean_tensor_rt := /datav/lean/TensorRT-8.2.3.0-cuda11.4-cudnn8.2
+lean_cudnn     := /datav/lean/cudnn8.2.4.15-cuda11.4
+lean_opencv    := /datav/lean/opencv-4.2.0
+lean_cuda      := /datav/lean/cuda-11.2
 use_python     := false
-python_root    := /data/datav/newbb/lean/anaconda3/envs/torch1.8
+python_root    := /datav/software/anaconda3
 python_name    := python3.9
 
 include_paths := src        \

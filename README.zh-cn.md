@@ -41,10 +41,6 @@ trt_out   = trt_model(input)
 ```
 
 - 简单的yolo python接口
-  - 要求: nvidia驱动 >= 440.33, 操作系统linux x86_64, python37/python38/python39
-  - `pip install trtpy`, 这是一个实验包，您可以通过pip进行安装，目前提供了yolo支持，删除了repo中的其他项，在不久的将来会提供更新
-    - 通过这个指令安装，您就可以使用python接口，而不需要配置cuda、cudnn、tensorRT等系列
-    - 内置的版本：CUDA10.2、CUDNN8.2.2.26、TensorRT8.0.1.6、protobuf3.11.4
   ```python
   import os
   import cv2

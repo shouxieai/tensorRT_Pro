@@ -42,9 +42,6 @@
   ```
   
   - simple yolo for python
-  - required: nvidia driver >= 440.33, linux x86_64, python37/python38/python39
-  - `pip install trtpy`, This is a method for experiment, which is applicable to Linux system python37, 38 and 39
-    - builtin version(automatic download): CUDA10.2、CUDNN8.2.2.26、TensorRT8.0.1.6、protobuf3.11.4
   ```python
   import os
   import cv2

@@ -12,7 +12,7 @@ set(PythonRoot "/data/datav/newbb/lean/anaconda3/envs/torch1.8")
 set(PythonName "python3.9")
 
 # 如果你是不同显卡，请设置为显卡对应的号码参考这里：https://developer.nvidia.com/zh-cn/cuda-gpus#compute
-set(CUDA_GEN_CODE "-gencode=arch=compute_75,code=sm_75")
+#set(CUDA_GEN_CODE "-gencode=arch=compute_75,code=sm_75")
 
 # 如果你的opencv找不到，可以自己指定目录
 set(OpenCV_DIR   "/data/datav/expstation/lean/opencv4.2.0/lib/cmake/opencv4/")

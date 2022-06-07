@@ -165,6 +165,18 @@ DEFINE_BUILTIN_OP_IMPORTER(AveragePool)
     return poolingHelper(ctx, node, inputs, nvinfer1::PoolingType::kAVERAGE);
 }
 
+static TRT::DataType convert_trt_datatype(::onnx::TensorProto::DataType dt){
+    switch(dt){
+        case ::onnx::TensorProto::FLOAT: return TRT::DataType::Float;
+        case ::onnx::TensorProto::FLOAT16: return TRT::DataType::Float16;
+        case ::onnx::TensorProto::INT32: return TRT::DataType::Int32;
+        case ::onnx::TensorProto::UINT8: return TRT::DataType::UInt8;
+        default:
+            printf("Unsupport data type %d\n", dt);
+            return TRT::DataType::Unknow;
+    }
+}
+
 DEFINE_BUILTIN_OP_IMPORTER(Plugin)
 {
     std::vector<nvinfer1::ITensor*> inputTensors;
@@ -204,12 +216,12 @@ DEFINE_BUILTIN_OP_IMPORTER(Plugin)
     for(int i = 0; i < weights.size(); ++i){
         auto& weight = weights[i];
         std::vector<int> dims(weight.shape.d, weight.shape.d + weight.shape.nbDims);
-        std::shared_ptr<TRT::Tensor> dweight(new TRT::Tensor(dims));
-        
-        if(weight.type != ::onnx::TensorProto::FLOAT){
+        auto onnx_dtype = convert_trt_datatype((::onnx::TensorProto::DataType)weight.type);
+        if(onnx_dtype == TRT::DataType::Unknow){
             LOG_ERROR("unsupport weight type: " << weight.type);
         }
         
+        std::shared_ptr<TRT::Tensor> dweight(new TRT::Tensor(dims, onnx_dtype));
         memcpy(dweight->cpu(), weight.values, dweight->bytes());
         weightTensors.push_back(dweight);
     }
