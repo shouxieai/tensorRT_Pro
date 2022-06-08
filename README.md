@@ -1,4 +1,4 @@
-*Read this in other languages: [English](README.md), [简体中文](README.zh-cn.md).*
+*Read this in other languages: [English](README.md), [简体中文](tutorial/README.zh-cn.md).*
 
 ## News: 
 - 🔥 Docker Image has been released：https://hub.docker.com/r/hopef/tensorrt-pro

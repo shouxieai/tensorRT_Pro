@@ -87,8 +87,8 @@ trt_out   = trt_model(input)
 4. cuda10.2，cudnn8.2.2.26，TensorRT-8.0.1.6
 5. RTX2080Ti
 6. 测试次数，100次取平均，去掉warmup
-7. 测试结果：[workspace/perf.result.std.log](workspace/perf.result.std.log)
-8. 测试代码：[src/application/app_yolo.cpp](src/application/app_yolo.cpp)
+7. 测试结果：[workspace/perf.result.std.log](../workspace/perf.result.std.log)
+8. 测试代码：[src/application/app_yolo.cpp](../src/application/app_yolo.cpp)
 9. 测试图像，6张。目录：workspace/inference
     - 分辨率分别为：810x1080，500x806，1024x684，550x676，1280x720，800x533
 10. 测试方式，加载6张图后，以原图重复100次不停塞进去。让模型经历完整的图像的预处理，后处理
@@ -140,8 +140,8 @@ trt_out   = trt_model(input)
 <summary>app_yolo_fast.cpp速度测试，速度只会无止境的追求快</summary>
 
 - 相比上面，模型去头去尾，去掉了Focus和尾部的多余的transpose等节点，融合到了CUDA核函数中实现。其他都是一样的。没有精度区别，速度上提升大约0.5ms
-- 测试结果：[workspace/perf.result.std.log](workspace/perf.result.std.log)
-- 测试代码：[src/application/app_yolo_fast.cpp](src/application/app_yolo_fast.cpp)
+- 测试结果：[workspace/perf.result.std.log](../workspace/perf.result.std.log)
+- 测试代码：[src/application/app_yolo_fast.cpp](../src/application/app_yolo_fast.cpp)
 - 可以自己参照下载后的onnx做修改，或者群里提要求讲一讲
 - 这个工作的主要目的，是优化前后处理的时间，这在任何时候都是有用的。如果你用yolox、yolov5更小的系列，都可以考虑这东西
 
@@ -233,7 +233,7 @@ trt_out   = trt_model(input)
 <details>
 <summary>Windows下配置</summary>
 
-1. 依赖请查看[lean/README.md](lean/README.md)
+1. 依赖请查看[lean/README.md](../lean/README.md)
 2. TensorRT.vcxproj文件中，修改`<Import Project="$(VCTargetsPath)\BuildCustomizations\CUDA 10.0.props" />`为你配置的CUDA路径
 3. TensorRT.vcxproj文件中，修改`<Import Project="$(VCTargetsPath)\BuildCustomizations\CUDA 10.0.targets" />`为你配置的CUDA路径
 4. TensorRT.vcxproj文件中，修改`<CodeGeneration>compute_61,sm_61</CodeGeneration>`为你显卡配备的计算能力

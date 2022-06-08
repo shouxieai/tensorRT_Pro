@@ -20,7 +20,7 @@ lean_tensor_rt := /datav/lean/TensorRT-8.2.3.0-cuda11.4-cudnn8.2
 lean_cudnn     := /datav/lean/cudnn8.2.4.15-cuda11.4
 lean_opencv    := /datav/lean/opencv-4.2.0
 lean_cuda      := /datav/lean/cuda-11.2
-use_python     := true
+use_python     := false
 python_root    := /datav/software/anaconda3
 python_name    := python3.9
 
