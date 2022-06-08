@@ -18,3 +18,17 @@ if [ ! -L ${sopath}/libnvidia-encode.so ]; then
     echo Create soft link ${sopath}/libnvidia-encode.so.1
     sudo ln -s ${sopath}/libnvidia-encode.so.1 ${sopath}/libnvidia-encode.so
 fi
+
+# process ffmpeg soft link
+files=`find ffmpeg/lib/lib*.so.*`
+pwd=`pwd`
+
+for file in $files
+do
+    dst=`echo $file | sed 's/.so.*/.so/'`
+    dst=`echo $dst  | sed 's/-[0-9a-z]*.so/.so/'`
+    if [ ! -L $dst ]; then
+        echo Create ffmpeg soft link $dst
+        ln -s $pwd/$file $pwd/$dst
+    fi
+done

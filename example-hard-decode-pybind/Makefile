@@ -29,8 +29,9 @@ link_librarys  := $(link_cuda) $(link_sys) $(link_ffmpeg)
 # 定义cuda和opencv的库路径
 nvcc              := $(cuda_home)/bin/nvcc -ccbin=$(cc)
 include_cuda      := $(cuda_home)/include
+current_dir       := $(shell pwd)
 
-lib_all        := $(cuda_home)/lib64 $(cudnn_home)/lib /lib/x86_64-linux-gnu /datav/software/anaconda3/lib
+lib_all        := $(cuda_home)/lib64 $(cudnn_home)/lib $(current_dir)/ffmpeg/lib /lib/x86_64-linux-gnu /datav/software/anaconda3/lib
 
 # 定义头文件路径，请注意斜杠后边不能有空格
 # 只需要写路径，不需要写-I
@@ -38,7 +39,7 @@ include_paths := src    \
     $(include_cuda)     \
 	/datav/software/anaconda3/include/python3.9 \
 	src/application     \
-	ffmpeg-include      \
+	ffmpeg/include      \
 	cuvid-include        
 
 # 定义库文件路径，只需要写路径，不需要写-L
