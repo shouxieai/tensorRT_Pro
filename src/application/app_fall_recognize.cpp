@@ -7,7 +7,7 @@
 #include <common/ilogger.hpp>
 
 #include "app_yolo/yolo.hpp"
-#include "app_alphapose_old/alpha_pose.hpp"
+#include "app_alphapose_old/alpha_pose_old.hpp"
 #include "app_fall_gcn/fall_gcn.hpp"
 #include "tools/zmq_remote_show.hpp"
 #include "tools/deepsort.hpp"

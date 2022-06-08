@@ -76,7 +76,8 @@
         "valarray": "cpp",
         "bit": "cpp",
         "__functional_base": "cpp",
-        "locale": "cpp"
+        "locale": "cpp",
+        "__atomic": "cpp"
     },
     "workbench.tree.expandMode": "doubleClick"
 }

@@ -20,7 +20,7 @@ lean_tensor_rt := /datav/lean/TensorRT-8.2.3.0-cuda11.4-cudnn8.2
 lean_cudnn     := /datav/lean/cudnn8.2.4.15-cuda11.4
 lean_opencv    := /datav/lean/opencv-4.2.0
 lean_cuda      := /datav/lean/cuda-11.2
-use_python     := false
+use_python     := true
 python_root    := /datav/software/anaconda3
 python_name    := python3.9
 
@@ -77,7 +77,7 @@ ifneq ($(MAKECMDGOALS), clean)
 endif
 
 pro    : workspace/pro
-trtpyc : python/trtpy/libtrtpyc.so
+pytrtc : example-python/pytrt/libpytrtc.so
 expath : library_path.txt
 
 library_path.txt : 
@@ -88,7 +88,7 @@ workspace/pro : $(cpp_objs) $(cu_objs)
 	@mkdir -p $(dir $@)
 	@$(cc) $^ -o $@ $(link_flags)
 
-python/trtpy/libtrtpyc.so : $(cpp_objs) $(cu_objs)
+example-python/pytrt/libpytrtc.so : $(cpp_objs) $(cu_objs)
 	@echo Link $@
 	@mkdir -p $(dir $@)
 	@$(cc) -shared $^ -o $@ $(link_flags)
@@ -115,6 +115,9 @@ objs/%.cu.mk : src/%.cu
 
 yolo : workspace/pro
 	@cd workspace && ./pro yolo
+
+yolo_gpuptr : workspace/pro
+	@cd workspace && ./pro yolo_gpuptr
 
 dyolo : workspace/pro
 	@cd workspace && ./pro dyolo
@@ -179,38 +182,38 @@ lesson : workspace/pro
 plugin : workspace/pro
 	@cd workspace && ./pro plugin
 
-pytorch : trtpyc
-	@cd python && python test_torch.py
+pytorch : pytrtc
+	@cd example-python && python test_torch.py
 
-pyscrfd : trtpyc
-	@cd python && python test_scrfd.py
+pyscrfd : pytrtc
+	@cd example-python && python test_scrfd.py
 
-pyretinaface : trtpyc
-	@cd python && python test_retinaface.py
+pyretinaface : pytrtc
+	@cd example-python && python test_retinaface.py
 
-pycenternet : trtpyc
-	@cd python && python test_centernet.py
+pycenternet : pytrtc
+	@cd example-python && python test_centernet.py
 
-pyyolov5 : trtpyc
-	@cd python && python test_yolov5.py
+pyyolov5 : pytrtc
+	@cd example-python && python test_yolov5.py
 
-pyyolox : trtpyc
-	@cd python && python test_yolox.py
+pyyolox : pytrtc
+	@cd example-python && python test_yolox.py
 
-pyarcface : trtpyc
-	@cd python && python test_arcface.py
+pyarcface : pytrtc
+	@cd example-python && python test_arcface.py
 
-pyinstall : trtpyc
-	@cd python && python setup.py install
+pyinstall : pytrtc
+	@cd example-python && python setup.py install
 
 clean :
-	@rm -rf objs workspace/pro python/trtpy/libtrtpyc.so python/build python/dist python/trtpy.egg-info python/trtpy/__pycache__
+	@rm -rf objs workspace/pro example-python/pytrt/libpytrtc.so example-python/build example-python/dist example-python/pytrt.egg-info example-python/pytrt/__pycache__
 	@rm -rf workspace/single_inference
 	@rm -rf workspace/scrfd_result workspace/retinaface_result
 	@rm -rf workspace/YoloV5_result workspace/YoloX_result
 	@rm -rf workspace/face/library_draw workspace/face/result
 	@rm -rf build
-	@rm -rf python/trtpy/libplugin_list.so
+	@rm -rf example-python/pytrt/libplugin_list.so
 	@rm -rf library_path.txt
 
 .PHONY : clean yolo alphapose fall debug

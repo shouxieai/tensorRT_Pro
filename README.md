@@ -34,7 +34,7 @@
 
 - Python Interface:
   ```python
-  import trtpy
+  import pytrt
   
   model     = models.resnet18(True).eval().to(device)
   trt_model = tp.from_torch(model, input)
@@ -46,7 +46,7 @@
   import os
   import cv2
   import numpy as np
-  import trtpy as tp
+  import pytrt as tp
 
   engine_file = "yolov5s.fp32.trtmodel"
   if not os.path.exists(engine_file):
@@ -222,7 +222,7 @@
     - CMakeLists.txt:
         - `set(HAS_PYTHON ON)` in CMakeLists.txt
     - Type in `make pyinstall -j8`
-    - Complied files are in `python/trtpy/libtrtpyc.so`
+    - Complied files are in `python/pytrt/libpytrtc.so`
 
 </details>
   
@@ -247,11 +247,11 @@
 <summary>Windows: Compile for Python</summary>
 
   
-1. Compile trtpyc.pyd. Choose python in visual studio to compile
-2. Copy dll and execute 'python/copy_dll_to_trtpy.bat'
+1. Compile pytrtc.pyd. Choose python in visual studio to compile
+2. Copy dll and execute 'python/copy_dll_to_pytrt.bat'
 3. Execute the example in python dir by 'python test_yolov5.py'
   - if installation is needed, switch to target env(e.g. your conda env) then 'python setup.py install', which has to be followed by step 1 and step 2.
-  - the compiled files are in `python/trtpy/libtrtpyc.pyd`
+  - the compiled files are in `python/pytrt/libpytrtc.pyd`
 
 </details>
   
@@ -677,10 +677,10 @@ check the great details in tutorial/2.0
 
 - Just one line of code to export onnx and trtmodel. And save them for usage in the future.
 ```python
-import trtpy
+import pytrt
 
 model = models.resnet18(True).eval()
-trtpy.from_torch(
+pytrt.from_torch(
     model, 
     dummy_input, 
     max_batch_size=16, 
@@ -696,7 +696,7 @@ trtpy.from_torch(
 
 - YoloX TensorRT Inference
 ```python
-import trtpy
+import pytrt
 
 yolo   = tp.Yolo(engine_file, type=tp.YoloType.X)   # engine_file is the trtmodel file
 image  = cv2.imread("inference/car.jpg")
@@ -705,7 +705,7 @@ bboxes = yolo.commit(image).get()
 
 - Seamless Inference from Pytorch to TensorRT
 ```python
-import trtpy
+import pytrt
 
 model     = models.resnet18(True).eval().to(device) # pt model
 trt_model = tp.from_torch(model, input)

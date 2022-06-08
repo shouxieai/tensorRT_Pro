@@ -1,0 +1,20 @@
+{
+    "configurations": [
+        {
+            "name": "Linux",
+            "includePath": [
+                "${workspaceFolder}/src/**",
+                "/datav/software/anaconda3/lib/python3.9/site-packages/pytrt/trt8cuda112cudnn8/include/**",
+                "/datav/software/anaconda3/lib/python3.9/site-packages/pytrt/cpp-packages/opencv4.2/include/**",
+                "/datav/software/anaconda3/include/python3.9",
+                "ffmpeg-include/**",
+                "cuvid-include/**"
+            ],
+            "compilerPath": "/usr/bin/gcc",
+            "cStandard": "gnu11",
+            "cppStandard": "gnu++11",
+            "intelliSenseMode": "linux-gcc-x64"
+        }
+    ],
+    "version": 4
+}

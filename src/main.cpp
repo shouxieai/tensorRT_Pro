@@ -5,6 +5,7 @@
 #include <functional>
 
 int app_yolo();
+int app_yolo_gpuptr();
 int app_alphapose();
 int app_fall_recognize();
 int app_retinaface();
@@ -35,6 +36,8 @@ int main(int argc, char** argv){
 
     if(strcmp(method, "yolo") == 0){
         app_yolo();
+    }else if(strcmp(method, "yolo_gpuptr") == 0){
+        app_yolo_gpuptr();
     }else if(strcmp(method, "yolo_fast") == 0){
         app_yolo_fast();
     }else if(strcmp(method, "dyolo") == 0){

@@ -74,6 +74,12 @@
     <Filter Include="src\direct">
       <UniqueIdentifier>{d8f597f5-d805-44d4-b592-e457cd579d67}</UniqueIdentifier>
     </Filter>
+    <Filter Include="src\application\app_yolo_gpuptr">
+      <UniqueIdentifier>{0e6260e7-3bb1-4110-8e4e-5b4c1b373a7f}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src\application\app_alphapose_old">
+      <UniqueIdentifier>{b35635fa-76e2-4b8a-988b-19370ca1b03a}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\tensorRT\builder\trt_builder.cpp">
@@ -247,6 +253,15 @@
     <ClCompile Include="src\direct\direct_yolo.cpp">
       <Filter>src\direct</Filter>
     </ClCompile>
+    <ClCompile Include="src\application\app_yolo_gpuptr.cpp">
+      <Filter>src\application</Filter>
+    </ClCompile>
+    <ClCompile Include="src\application\app_yolo_gpuptr\yolo_gpuptr.cpp">
+      <Filter>src\application\app_yolo_gpuptr</Filter>
+    </ClCompile>
+    <ClCompile Include="src\application\app_alphapose_old\alpha_pose_old.cpp">
+      <Filter>src\application\app_alphapose_old</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\tensorRT\builder\trt_builder.hpp">
@@ -402,6 +417,12 @@
     <ClInclude Include="src\application\app_dbface\dbface.hpp">
       <Filter>src\application\app_dbface</Filter>
     </ClInclude>
+    <ClInclude Include="src\application\app_yolo_gpuptr\yolo_gpuptr.hpp">
+      <Filter>src\application\app_yolo_gpuptr</Filter>
+    </ClInclude>
+    <ClInclude Include="src\application\app_alphapose_old\alpha_pose_old.hpp">
+      <Filter>src\application\app_alphapose_old</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <CudaCompile Include="src\tensorRT\common\preprocess_kernel.cu">
@@ -433,6 +454,9 @@
     </CudaCompile>
     <CudaCompile Include="src\application\app_dbface\dbface_decode.cu">
       <Filter>src\application\app_dbface</Filter>
+    </CudaCompile>
+    <CudaCompile Include="src\application\app_yolo_gpuptr\yolo_gpuptr_decode.cu">
+      <Filter>src\application\app_yolo_gpuptr</Filter>
     </CudaCompile>
   </ItemGroup>
   <ItemGroup>

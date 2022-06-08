@@ -8,18 +8,18 @@ set(EXECUTABLE_OUTPUT_PATH ${PROJECT_SOURCE_DIR}/workspace)
 set(HAS_PYTHON OFF)
 
 # 如果要支持python则设置python路径
-set(PythonRoot "/data/datav/newbb/lean/anaconda3/envs/torch1.8")
+set(PythonRoot "/datav/software/anaconda3/envs/base")
 set(PythonName "python3.9")
 
 # 如果你是不同显卡，请设置为显卡对应的号码参考这里：https://developer.nvidia.com/zh-cn/cuda-gpus#compute
 #set(CUDA_GEN_CODE "-gencode=arch=compute_75,code=sm_75")
 
 # 如果你的opencv找不到，可以自己指定目录
-set(OpenCV_DIR   "/data/datav/expstation/lean/opencv4.2.0/lib/cmake/opencv4/")
+set(OpenCV_DIR   "/datav/lean/opencv-4.2.0/lib/cmake/opencv4/")
 
-set(CUDA_TOOLKIT_ROOT_DIR     "/data/sxai/lean/cuda-10.2")
-set(CUDNN_DIR    "/data/sxai/lean/cudnn8.2.2.26")
-set(TENSORRT_DIR "/data/sxai/lean/TensorRT-8.0.1.6-cuda10.2-cudnn8.2")
+set(CUDA_TOOLKIT_ROOT_DIR     "/datav/lean/cuda-11.2")
+set(CUDNN_DIR    "/datav/lean/cudnn8.2.4.15-cuda11.4")
+set(TENSORRT_DIR "/datav/lean/TensorRT-8.2.3.0-cuda11.4-cudnn8.2")
 
 # set(CUDA_TOOLKIT_ROOT_DIR     "/data/sxai/lean/cuda-10.2")
 # set(CUDNN_DIR    "/data/sxai/lean/cudnn7.6.5.32-cuda10.2")
@@ -30,7 +30,7 @@ set(TENSORRT_DIR "/data/sxai/lean/TensorRT-8.0.1.6-cuda10.2-cudnn8.2")
 # set(TENSORRT_DIR "/data/sxai/lean/TensorRT-7.2.1.6")
 
 # 因为protobuf，需要用特定版本，所以这里指定路径
-set(PROTOBUF_DIR "/data/sxai/lean/protobuf3.11.4")
+set(PROTOBUF_DIR "/datav/lean/protobuf3.11.4")
 
 
 find_package(CUDA REQUIRED)
@@ -83,13 +83,13 @@ target_link_libraries(pro protobuf pthread plugin_list)
 target_link_libraries(pro ${OpenCV_LIBS})
 
 if("${HAS_PYTHON}" STREQUAL "ON")
-    set(LIBRARY_OUTPUT_PATH ${PROJECT_SOURCE_DIR}/python/trtpy)
-    add_library(trtpyc SHARED ${cpp_srcs})
-    target_link_libraries(trtpyc nvinfer nvinfer_plugin)
-    target_link_libraries(trtpyc cuda cublas cudart cudnn)
-    target_link_libraries(trtpyc protobuf pthread plugin_list)
-    target_link_libraries(trtpyc ${OpenCV_LIBS})
-    target_link_libraries(trtpyc "${PythonName}")
+    set(LIBRARY_OUTPUT_PATH ${PROJECT_SOURCE_DIR}/example/python/pytrt)
+    add_library(pytrtc SHARED ${cpp_srcs})
+    target_link_libraries(pytrtc nvinfer nvinfer_plugin)
+    target_link_libraries(pytrtc cuda cublas cudart cudnn)
+    target_link_libraries(pytrtc protobuf pthread plugin_list)
+    target_link_libraries(pytrtc ${OpenCV_LIBS})
+    target_link_libraries(pytrtc "${PythonName}")
     target_link_libraries(pro "${PythonName}")
 endif()
 
@@ -98,6 +98,13 @@ add_custom_target(
     DEPENDS pro
     WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}/workspace
     COMMAND ./pro yolo
+)
+
+add_custom_target(
+    yolo_gpuptr
+    DEPENDS pro
+    WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}/workspace
+    COMMAND ./pro yolo_gpuptr
 )
 
 add_custom_target(
@@ -172,35 +179,35 @@ add_custom_target(
 
 add_custom_target(
     pyscrfd
-    DEPENDS trtpyc
-    WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}/python
+    DEPENDS pytrtc
+    WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}/example/python
     COMMAND python test_scrfd.py
 )
 
 add_custom_target(
     pyinstall
-    DEPENDS trtpyc
-    WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}/python
+    DEPENDS pytrtc
+    WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}/example/python
     COMMAND python setup.py install
 )
 
 add_custom_target(
     pytorch
-    DEPENDS trtpyc
-    WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}/python
+    DEPENDS pytrtc
+    WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}/example/python
     COMMAND python test_torch.py
 )
 
 add_custom_target(
     pyyolov5
-    DEPENDS trtpyc
-    WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}/python
+    DEPENDS pytrtc
+    WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}/example/python
     COMMAND python test_yolov5.py
 )
 
 add_custom_target(
     pycenternet
-    DEPENDS trtpyc
-    WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}/python
+    DEPENDS pytrtc
+    WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}/example/python
     COMMAND python test_centernet.py
 )

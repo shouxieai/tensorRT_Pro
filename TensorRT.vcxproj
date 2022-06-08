@@ -17,6 +17,7 @@
   <ItemGroup>
     <ClCompile Include="src\application\app_alphapose.cpp" />
     <ClCompile Include="src\application\app_alphapose\alpha_pose.cpp" />
+    <ClCompile Include="src\application\app_alphapose_old\alpha_pose_old.cpp" />
     <ClCompile Include="src\application\app_arcface.cpp" />
     <ClCompile Include="src\application\app_arcface\arcface.cpp" />
     <ClCompile Include="src\application\app_centernet.cpp" />
@@ -36,6 +37,8 @@
     <ClCompile Include="src\application\app_scrfd\scrfd.cpp" />
     <ClCompile Include="src\application\app_yolo.cpp" />
     <ClCompile Include="src\application\app_bert.cpp" />
+    <ClCompile Include="src\application\app_yolo_gpuptr.cpp" />
+    <ClCompile Include="src\application\app_yolo_gpuptr\yolo_gpuptr.cpp" />
     <ClCompile Include="src\application\test_warpaffine.cpp" />
     <ClCompile Include="src\application\test_yolo_map.cpp" />
     <ClCompile Include="src\application\app_plugin.cpp" />
@@ -49,6 +52,7 @@
     <ClCompile Include="src\direct\direct_mae.cpp" />
     <ClCompile Include="src\direct\direct_unet.cpp" />
     <ClCompile Include="src\direct\direct_yolo.cpp" />
+    <ClCompile Include="src\direct\direct_classifier.cpp" />
     <ClCompile Include="src\main.cpp" />
     <ClCompile Include="src\tensorRT\builder\trt_builder.cpp" />
     <ClCompile Include="src\tensorRT\common\cuda_tools.cpp" />
@@ -75,6 +79,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\application\app_alphapose\alpha_pose.hpp" />
+    <ClInclude Include="src\application\app_alphapose_old\alpha_pose_old.hpp" />
     <ClInclude Include="src\application\app_arcface\arcface.hpp" />
     <ClInclude Include="src\application\app_centernet\centernet.hpp" />
     <ClInclude Include="src\application\app_dbface\dbface.hpp" />
@@ -87,6 +92,7 @@
     <ClInclude Include="src\application\app_yolo\yolo.hpp" />
     <ClInclude Include="src\application\app_yolo\multi_gpu.hpp" />
     <ClInclude Include="src\application\app_yolo_fast\yolo_fast.hpp" />
+    <ClInclude Include="src\application\app_yolo_gpuptr\yolo_gpuptr.hpp" />
     <ClInclude Include="src\application\common\face_detector.hpp" />
     <ClInclude Include="src\application\tools\deepsort.hpp" />
     <ClInclude Include="src\application\tools\pybind11.hpp" />
@@ -134,6 +140,7 @@
     <CudaCompile Include="src\application\app_yolo\yolo_decode.cu" />
     <CudaCompile Include="src\application\app_yolo_fast\yolov5_decode.cu" />
     <CudaCompile Include="src\application\app_yolo_fast\yolox_decode.cu" />
+    <CudaCompile Include="src\application\app_yolo_gpuptr\yolo_gpuptr_decode.cu" />
     <CudaCompile Include="src\tensorRT\common\preprocess_kernel.cu" />
     <CudaCompile Include="src\tensorRT\onnxplugin\plugins\DCNv2.cu" />
     <CudaCompile Include="src\tensorRT\onnxplugin\plugins\HSwish.cu" />
@@ -209,7 +216,7 @@
     <IntDir>build\$(Platform)\$(Configuration)\</IntDir>
     <IncludePath>./lean/cuda10.1/include;./lean/cudnn8.2.2.26;./lean/opencv3.4.6/include;./lean/TensorRT-8.0.1.6/include;./lean/protobuf3.11.4/include;./src;./src/tensorRT;./src/tensorRT/common;./src/application/tools/Eigen;./src/application;d:\ProgramData\Anaconda3\include;$(VC_IncludePath);$(WindowsSDK_IncludePath)</IncludePath>
     <LibraryPath>./lean/TensorRT-8.0.1.6/lib;./lean/opencv3.4.6/lib;./lean/cudnn8.2.2.26;./lean/protobuf3.11.4/lib;./lean/cuda10.1/lib;d:\ProgramData\Anaconda3\libs;$(VC_LibraryPath_x64);$(WindowsSDK_LibraryPath_x64)</LibraryPath>
-    <TargetName>libtrtpyc</TargetName>
+    <TargetName>libpytrtc</TargetName>
     <TargetExt>.pyd</TargetExt>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
@@ -290,7 +297,7 @@
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <AdditionalDependencies>%(AdditionalDependencies)</AdditionalDependencies>
       <ModuleDefinitionFile>dll_export.def</ModuleDefinitionFile>
-      <OutputFile>python/trtpy/$(TargetName)$(TargetExt)</OutputFile>
+      <OutputFile>python/pytrt/$(TargetName)$(TargetExt)</OutputFile>
     </Link>
     <CudaCompile>
       <CodeGeneration>compute_61,sm_61</CodeGeneration>

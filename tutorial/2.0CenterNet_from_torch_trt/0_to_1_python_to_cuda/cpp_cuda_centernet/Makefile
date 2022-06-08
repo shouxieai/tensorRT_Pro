@@ -106,7 +106,7 @@ centernet : workspace/pro
 	@cd workspace && ./pro centernet
 
 clean :
-	@rm -rf objs workspace/pro python/trtpy/libtrtpyc.so python/build python/dist python/trtpy.egg-info python/trtpy/__pycache__
+	@rm -rf objs workspace/pro python/pytrt/libpytrtc.so python/build python/dist python/pytrt.egg-info python/pytrt/__pycache__
 	@rm -rf workspace/single_inference
 	@rm -rf workspace/scrfd_result workspace/retinaface_result
 	@rm -rf workspace/YoloV5_result workspace/YoloX_result

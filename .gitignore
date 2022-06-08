@@ -60,7 +60,7 @@ tutorial/2.0CenterNet_from_torch_trt/0_to_1_python_to_cuda/cpp_cuda_centernet/wo
 __pycache__
 /tools/process_so.sh
 /tools/proc2.sh
-/python/trtpy.egg-info
+/python/pytrt.egg-info
 /python/dist
 /python/build
 /workspace/formtest.ipynb

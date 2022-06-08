@@ -1,0 +1,30 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "program-debug",
+            "type": "cppdbg",
+            "request": "launch",
+            "program": "${workspaceFolder}/workspace/pro",
+            "args": [],
+            "stopAtEntry": false,
+            "cwd": "${workspaceFolder}/workspace",
+            "externalConsole": false,
+            "MIMode": "gdb",
+            "miDebuggerPath": "/usr/bin/gdb",
+            "environment": [
+                {
+                    "name": "LD_LIBRARY_PATH", 
+                    "value": "/datav/software/anaconda3/lib/python3.9/site-packages/pytrt/trt8cuda112cudnn8/lib64:/datav/software/anaconda3/lib:/datav/software/anaconda3/lib/python3.9/site-packages/pytrt/trt8cuda112cudnn8/py39:/datav/software/anaconda3/lib/python3.9/site-packages/pytrt/cpp-packages/opencv4.2/lib:/datav/software/anaconda3/lib/python3.9/site-packages/pytrt/lib:$LD_LIBRARY_PATH"
+                }
+            ],
+            "setupCommands": [
+                {
+                    "text": "-enable-pretty-printing",
+                    "ignoreFailures": true
+                }
+            ],
+            "preLaunchTask": "build"
+        }
+    ]
+}

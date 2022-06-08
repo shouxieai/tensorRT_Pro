@@ -4,7 +4,7 @@
 #include <stdio.h>
 #include <iostream>
 #include <tools/pybind11.hpp>
-#include <app_yolo/yolo.hpp>
+#include <app_yolo_gpuptr/yolo_gpuptr.hpp>
 #include <app_retinaface/retinaface.hpp>
 #include <app_scrfd/scrfd.hpp>
 #include <app_arcface/arcface.hpp>
@@ -24,21 +24,31 @@ namespace py = pybind11;
 class YoloInfer { 
 public:
 	YoloInfer(
-		string engine, Yolo::Type type, int device_id, float confidence_threshold, float nms_threshold,
-		Yolo::NMSMethod nms_method, int max_objects, bool use_multi_preprocess_stream
+		string engine, YoloGPUPtr::Type type, int device_id, float confidence_threshold, float nms_threshold,
+		YoloGPUPtr::NMSMethod nms_method, int max_objects
 	){
-		instance_ = Yolo::create_infer(
+		instance_ = YoloGPUPtr::create_infer(
 			engine, 
 			type,
 			device_id,
 			confidence_threshold,
 			nms_threshold,
-			nms_method, max_objects, use_multi_preprocess_stream
+			nms_method, max_objects
 		);
 	}
 
 	bool valid(){
 		return instance_ != nullptr;
+	}
+
+	shared_future<ObjectDetector::BoxArray> commit_gpu(int64_t pimage, int width, int height, int device_id, YoloGPUPtr::ImageType imtype, int64_t stream){
+
+		if(!valid())
+			throw py::buffer_error("Invalid engine instance, please makesure your construct");
+
+		return instance_->commit(
+			YoloGPUPtr::Image((uint8_t*)pimage, width, height, device_id, (cudaStream_t)stream, imtype)
+		);
 	}
 
 	shared_future<ObjectDetector::BoxArray> commit(const py::array& image){
@@ -54,7 +64,7 @@ public:
 	}
 
 private:
-	shared_ptr<Yolo::Infer> instance_;
+	shared_ptr<YoloGPUPtr::Infer> instance_;
 }; 
 
 class CenterNetInfer { 
@@ -468,7 +478,7 @@ template <class T, ptr_base base=ptr_base::host> class ptr_wrapper{
         T* ptr;
 };
 
-PYBIND11_MODULE(libtrtpyc, m) {
+PYBIND11_MODULE(libpytrtc, m) {
 	py::class_<ObjectDetector::Box>(m, "ObjectBox")
 		.def_property("left",        [](ObjectDetector::Box& self){return self.left;}, [](ObjectDetector::Box& self, float nv){self.left = nv;})
 		.def_property("top",         [](ObjectDetector::Box& self){return self.top;}, [](ObjectDetector::Box& self, float nv){self.top = nv;})
@@ -541,6 +551,11 @@ PYBIND11_MODULE(libtrtpyc, m) {
 		.value("FP16", TRT::Mode::FP16)
 		.value("INT8", TRT::Mode::INT8);
 
+	py::enum_<YoloGPUPtr::ImageType>(m, "ImageType")
+		.value("CVMat", YoloGPUPtr::ImageType::CVMat)
+		.value("GPUYUVNV12", YoloGPUPtr::ImageType::GPUYUVNV12)
+		.value("GPUBGR", YoloGPUPtr::ImageType::GPUBGR);
+
 	py::enum_<CUDAKernel::NormType>(m, "NormType")
 		.value("NONE", CUDAKernel::NormType::None)
 		.value("MeanStd", CUDAKernel::NormType::MeanStd)
@@ -550,14 +565,14 @@ PYBIND11_MODULE(libtrtpyc, m) {
 		.value("NONE", CUDAKernel::ChannelType::None)
 		.value("Invert", CUDAKernel::ChannelType::Invert);
 
-	py::enum_<Yolo::Type>(m, "YoloType")
-		.value("V5", Yolo::Type::V5)
-		.value("V3", Yolo::Type::V3)
-		.value("X", Yolo::Type::X);
+	py::enum_<YoloGPUPtr::Type>(m, "YoloType")
+		.value("V5", YoloGPUPtr::Type::V5)
+		.value("V3", YoloGPUPtr::Type::V3)
+		.value("X", YoloGPUPtr::Type::X);
 
-	py::enum_<Yolo::NMSMethod>(m, "NMSMethod")
-		.value("CPU",     Yolo::NMSMethod::CPU)
-		.value("FastGPU", Yolo::NMSMethod::FastGPU);
+	py::enum_<YoloGPUPtr::NMSMethod>(m, "NMSMethod")
+		.value("CPU",     YoloGPUPtr::NMSMethod::CPU)
+		.value("FastGPU", YoloGPUPtr::NMSMethod::FastGPU);
 
 	py::class_<CUDAKernel::Norm>(m, "Norm")
 		.def_property_readonly("mean", [](CUDAKernel::Norm& self){return vector<float>(self.mean, self.mean+3);})
@@ -592,18 +607,20 @@ PYBIND11_MODULE(libtrtpyc, m) {
 		});
 
 	py::class_<YoloInfer>(m, "Yolo")
-		.def(py::init<string, Yolo::Type, int, float, float, Yolo::NMSMethod, int, bool>(), 
+		.def(py::init<string, YoloGPUPtr::Type, int, float, float, YoloGPUPtr::NMSMethod, int>(), 
 			py::arg("engine"), 
-			py::arg("type")                 = Yolo::Type::V5, 
+			py::arg("type")                 = YoloGPUPtr::Type::V5, 
 			py::arg("device_id")            = 0, 
 			py::arg("confidence_threshold") = 0.4f,
 			py::arg("nms_threshold") = 0.5f,
-			py::arg("nms_method")    = Yolo::NMSMethod::FastGPU,
-			py::arg("max_objects")   = 1024,
-			py::arg("use_multi_preprocess_stream") = false
+			py::arg("nms_method")    = YoloGPUPtr::NMSMethod::FastGPU,
+			py::arg("max_objects")   = 1024
 		)
 		.def_property_readonly("valid", &YoloInfer::valid, "Infer is valid")
-		.def("commit", &YoloInfer::commit, py::arg("image"));
+		.def("commit", &YoloInfer::commit, py::arg("image"))
+		.def("commit_gpu", &YoloInfer::commit_gpu, 
+			py::arg("pimage"), py::arg("width"), py::arg("height"), py::arg("device_id"), py::arg("imtype"), py::arg("stream")
+		);
 
 	py::class_<CenterNetInfer>(m, "CenterNet")
 		.def(py::init<string, int, float, float>(), 

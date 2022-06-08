@@ -33,7 +33,7 @@ auto box = engine->commit(image).get();  // 得到的是vector<Box>
 
 - Python接口
 ```python
-import trtpy
+import pytrt as tp
 
 model     = models.resnet18(True).eval().to(device)
 trt_model = tp.from_torch(model, input)
@@ -45,7 +45,7 @@ trt_out   = trt_model(input)
   import os
   import cv2
   import numpy as np
-  import trtpy as tp
+  import pytrt as tp
 
   engine_file = "yolov5s.fp32.trtmodel"
   if not os.path.exists(engine_file):
@@ -225,7 +225,7 @@ trt_out   = trt_model(input)
     - CMakeLists.txt方式:
         - 在CMakeLists.txt中修改`set(HAS_PYTHON ON)`
     - 执行编译`make pyinstall -j8`
-    - 编译后的文件，在`python/trtpy/libtrtpyc.so`
+    - 编译后的文件，在`python/pytrt/libpytrtc.so`
 
 </details>
 
@@ -240,18 +240,18 @@ trt_out   = trt_model(input)
     - 根据型号参考这里：https://developer.nvidia.com/zh-cn/cuda-gpus#compute
 5. 配置依赖或者下载依赖到lean中。配置VC++目录->包含目录和引用目录
 6. 配置环境，调试->环境，设置PATH路径
-7. 编译并运行案例，其中Debug为调试，Release为发布，Python为trtpyc模块
+7. 编译并运行案例，其中Debug为调试，Release为发布，Python为pytrtc模块
 
 </details>
 
 <details>
 <summary>Windows下Python编译</summary>
 
-1. 编译trtpyc.pyd，在visual studio中选择python进行编译
-2. 复制dll，执行python/copy_dll_to_trtpy.bat
+1. 编译pytrtc.pyd，在visual studio中选择python进行编译
+2. 复制dll，执行python/copy_dll_to_pytrt.bat
 3. 在python目录下执行案例，python test_yolov5.py
 - 如果需要进行安装，则在python目录下，切换到目标环境后，执行`python setup.py install`。（注意，执行了1、2两步后才行）
-- 编译后的文件，在`python/trtpy/libtrtpyc.pyd`
+- 编译后的文件，在`python/pytrt/libpytrtc.pyd`
 
 </details>
 
@@ -658,10 +658,10 @@ cout << feature << endl;  // 1x512
 
 - 使用Python接口可以一句话导出Onnx和trtmodel，一次性调试发生的问题，解决问题。并储存onnx为后续部署使用
 ```python
-import trtpy
+import pytrt
 
 model = models.resnet18(True).eval()
-trtpy.from_torch(
+pytrt.from_torch(
     model, 
     dummy_input, 
     max_batch_size=16, 
@@ -677,7 +677,7 @@ trtpy.from_torch(
 
 - YoloX的tensorRT推理
 ```python
-import trtpy
+import pytrt
 
 yolo   = tp.Yolo(engine_file, type=tp.YoloType.X)
 image  = cv2.imread("inference/car.jpg")
@@ -686,7 +686,7 @@ bboxes = yolo.commit(image).get()
 
 - Pytorch的无缝对接
 ```python
-import trtpy
+import pytrt
 
 model     = models.resnet18(True).eval().to(device)
 trt_model = tp.from_torch(model, input)
