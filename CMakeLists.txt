@@ -5,10 +5,10 @@ option(CUDA_USE_STATIC_CUDA_RUNTIME OFF)
 set(CMAKE_CXX_STANDARD 11)
 set(CMAKE_BUILD_TYPE Debug)
 set(EXECUTABLE_OUTPUT_PATH ${PROJECT_SOURCE_DIR}/workspace)
-set(HAS_PYTHON OFF)
 
 # 如果要支持python则设置python路径
-set(PythonRoot "/datav/software/anaconda3/envs/base")
+set(HAS_PYTHON ON)
+set(PythonRoot "/datav/software/anaconda3")
 set(PythonName "python3.9")
 
 # 如果你是不同显卡，请设置为显卡对应的号码参考这里：https://developer.nvidia.com/zh-cn/cuda-gpus#compute
@@ -83,7 +83,7 @@ target_link_libraries(pro protobuf pthread plugin_list)
 target_link_libraries(pro ${OpenCV_LIBS})
 
 if("${HAS_PYTHON}" STREQUAL "ON")
-    set(LIBRARY_OUTPUT_PATH ${PROJECT_SOURCE_DIR}/example/python/pytrt)
+    set(LIBRARY_OUTPUT_PATH ${PROJECT_SOURCE_DIR}/example-python/pytrt)
     add_library(pytrtc SHARED ${cpp_srcs})
     target_link_libraries(pytrtc nvinfer nvinfer_plugin)
     target_link_libraries(pytrtc cuda cublas cudart cudnn)
@@ -180,34 +180,34 @@ add_custom_target(
 add_custom_target(
     pyscrfd
     DEPENDS pytrtc
-    WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}/example/python
+    WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}/example-python
     COMMAND python test_scrfd.py
 )
 
 add_custom_target(
     pyinstall
     DEPENDS pytrtc
-    WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}/example/python
+    WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}/example-python
     COMMAND python setup.py install
 )
 
 add_custom_target(
     pytorch
     DEPENDS pytrtc
-    WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}/example/python
+    WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}/example-python
     COMMAND python test_torch.py
 )
 
 add_custom_target(
     pyyolov5
     DEPENDS pytrtc
-    WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}/example/python
+    WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}/example-python
     COMMAND python test_yolov5.py
 )
 
 add_custom_target(
     pycenternet
     DEPENDS pytrtc
-    WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}/example/python
+    WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}/example-python
     COMMAND python test_centernet.py
 )
