@@ -1,6 +1,19 @@
 cc        := g++
 nvcc      = ${lean_cuda}/bin/nvcc
 
+lean_protobuf  := /datav/lean/protobuf3.11.4
+lean_tensor_rt := /datav/lean/TensorRT-8.2.3.0-cuda11.4-cudnn8.2
+lean_cudnn     := /datav/lean/cudnn8.2.4.15-cuda11.4
+lean_opencv    := /datav/lean/opencv-4.2.0
+lean_cuda      := /datav/lean/cuda-11.2
+use_python     := false
+python_root    := /datav/software/anaconda3
+
+# python_root指向的lib目录下有个libpython3.9.so，因此这里写python3.9
+# 对于有些版本，so名字是libpython3.7m.so，你需要填写python3.7m
+# /datav/software/anaconda3/lib/libpython3.9.so
+python_name    := python3.9
+
 # 如果是其他显卡，请修改-gencode=arch=compute_75,code=sm_75为对应显卡的能力
 # 显卡对应的号码参考这里：https://developer.nvidia.com/zh-cn/cuda-gpus#compute
 cuda_arch := # -gencode=arch=compute_75,code=sm_75
@@ -14,15 +27,6 @@ cu_srcs  := $(shell find src -name "*.cu")
 cu_objs  := $(cu_srcs:.cu=.cu.o)
 cu_objs  := $(cu_objs:src/%=objs/%)
 cu_mk    := $(cu_objs:.cu.o=.cu.mk)
-
-lean_protobuf  := /datav/lean/protobuf3.11.4
-lean_tensor_rt := /datav/lean/TensorRT-8.2.3.0-cuda11.4-cudnn8.2
-lean_cudnn     := /datav/lean/cudnn8.2.4.15-cuda11.4
-lean_opencv    := /datav/lean/opencv-4.2.0
-lean_cuda      := /datav/lean/cuda-11.2
-use_python     := false
-python_root    := /datav/software/anaconda3
-python_name    := python3.9
 
 include_paths := src        \
 			src/application \
