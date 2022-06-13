@@ -324,6 +324,8 @@ namespace YoloGPUPtr{
                 checkCudaRuntime(cudaMalloc(&pimage_device, image_data_size));
                 checkCudaRuntime(cudaMemcpyPeerAsync(pimage_device, tensor->device(), image.device_data, image.device_id, image_data_size, image.stream));
                 checkCudaRuntime(cudaStreamSynchronize(image.stream));
+            }else{
+                tensor->set_stream(image.stream, false);
             }
 
             preprocess_stream = tensor->get_stream();
