@@ -8,7 +8,7 @@ os.chdir("../workspace/")
 
 # 如果执行出错，请删掉 ~/.pytrt 的缓存模型
 # rm -rf ~/.pytrt，重新下载
-device_id = 7
+device_id = 0
 engine_file = "yolov7.fp32.trtmodel"
 if not os.path.exists(engine_file):
     tp.compile_onnx_to_file(5, tp.onnx_hub("yolov7"), engine_file, device_id=device_id)
