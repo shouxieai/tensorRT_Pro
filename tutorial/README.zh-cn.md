@@ -388,6 +388,74 @@ make yolo -j32
 
 
 <details>
+<summary>YoloV7 的支持</summary>
+1. 下载 yolov7 和pth权重
+
+```bash
+# 从 cdn 下载权重
+# 或者从github下载 wget https://github.com/WongKinYiu/yolov7/releases/download/v0.1/yolov7.pt
+
+wget https://cdn.githubjs.cf/WongKinYiu/yolov7/releases/download/v0.1/yolov7.pt
+git clone git@github.com:WongKinYiu/yolov7.git
+```
+
+2. 修改动态batch size部分代码
+```python
+# 在yolov7/models/yolo.py的第45行
+# bs, _, ny, nx = x[i].shape  # x(bs,255,20,20) to x(bs,3,20,20,85)
+# x[i] = x[i].view(bs, self.na, self.no, ny, nx).permute(0, 1, 3, 4, 2).contiguous()
+# 修改为如下代码，保证view部分不会操作batch size，对于batch维度一定是-1：
+
+bs, _, ny, nx = map(int, x[i].shape)  # x(bs,255,20,20) to x(bs,3,20,20,85)
+bs = -1
+x[i] = x[i].view(bs, self.na, self.no, ny, nx).permute(0, 1, 3, 4, 2).contiguous()
+
+# 在yolov7/models/yolo.py的第52行
+# y = x[i].sigmoid()
+# y[..., 0:2] = (y[..., 0:2] * 2. - 0.5 + self.grid[i]) * self.stride[i]  # xy
+# y[..., 2:4] = (y[..., 2:4] * 2) ** 2 * self.anchor_grid[i]  # wh
+# z.append(y.view(bs, -1, self.no))
+# 修改为如下代码，目的去掉ScatterND、去掉Gather、Shape等节点：
+y = x[i].sigmoid()
+xy = (y[..., 0:2] * 2. - 0.5 + self.grid[i]) * self.stride[i]  # xy
+wh = (y[..., 2:4] * 2) ** 2 * self.anchor_grid[i].view(1, -1, 1, 1, 2)  # wh
+classif = y[..., 4:]
+y = torch.cat([xy, wh, classif], dim=-1)
+z.append(y.view(bs, self.na * ny * nx, self.no))
+
+# 在yolov7/models/yolo.py的第57行
+# return x if self.training else (torch.cat(z, 1), x)
+# 修改为如下代码，去掉多余的输出部分：
+return x if self.training else torch.cat(z, 1)
+
+
+# 在yolov7/models/export.py第52行
+# output_names=['classes', 'boxes'] if y is None else ['output'],
+# dynamic_axes={'images': {0: 'batch', 2: 'height', 3: 'width'},  # size(1,3,640,640)
+#               'output': {0: 'batch', 2: 'y', 3: 'x'}} if opt.dynamic else None)
+# 修改为如下代码，使得动态维度只出现在batch上：
+output_names=['classes', 'boxes'] if y is None else ['output'],
+dynamic_axes={'images': {0: 'batch'},  # size(1,3,640,640)
+              'output': {0: 'batch'}} if opt.dynamic else None)
+
+```
+3. 导出onnx模型
+```bash
+cd yolov7
+python models/export.py --dynamic --grid --weight=yolov7.pt
+```
+
+4. 复制模型并执行程序
+```bash
+cp yolov7/yolov7.onnx tensorRT_cpp/workspace/
+cd tensorRT_cpp
+make yolo -j32
+```
+
+</details>
+
+
+<details>
 <summary>YoloX支持</summary>
 
 - https://github.com/Megvii-BaseDetection/YOLOX
