@@ -17,10 +17,14 @@ cu_mk   := $(cu_objs:.cuo=.cumk)
 #    tensorRT下载GA版本（通用版、稳定版），EA（尝鲜版本）不要
 # 3. cuda10.2，也可以是11.x看搭配（请自行下载安装）
 
-lean_tensor_rt := /data/sxai/lean/TensorRT-8.0.1.6-cuda10.2-cudnn8.2
-lean_cudnn     := /data/sxai/lean/cudnn8.2.2.26
-lean_opencv    := /data/sxai/lean/opencv4.2.0
-lean_cuda      := /data/sxai/lean/cuda-10.2
+# lean_tensor_rt := /data/sxai/lean/TensorRT-8.0.1.6-cuda10.2-cudnn8.2
+# lean_cudnn     := /data/sxai/lean/cudnn8.2.2.26
+# lean_opencv    := /data/sxai/lean/opencv4.2.0
+# lean_cuda      := /data/sxai/lean/cuda-10.2
+lean_tensor_rt := /datav/lean/TensorRT-8.2.3.0-cuda11.4-cudnn8.2
+lean_cudnn     := /datav/lean/cudnn8.2.4.15-cuda11.4
+lean_opencv    := /datav/lean/opencv-4.2.0
+lean_cuda      := /datav/lean/cuda-11.2
 
 # lean_tensor_rt := /data/sxai/lean/TensorRT-7.0.0.11
 # lean_cudnn     := /data/sxai/lean/cudnn7.6.5.32-cuda10.2

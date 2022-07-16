@@ -568,6 +568,7 @@ PYBIND11_MODULE(libpytrtc, m) {
 	py::enum_<YoloGPUPtr::Type>(m, "YoloType")
 		.value("V5", YoloGPUPtr::Type::V5)
 		.value("V3", YoloGPUPtr::Type::V3)
+		.value("V7", YoloGPUPtr::Type::V7)
 		.value("X", YoloGPUPtr::Type::X);
 
 	py::enum_<YoloGPUPtr::NMSMethod>(m, "NMSMethod")

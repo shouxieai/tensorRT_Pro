@@ -19,7 +19,9 @@ namespace YoloHighPerf{
 
     enum class Type : int{
         V5 = 0,
-        X  = 1
+        X  = 1,
+        V3 = 2,
+        V7 = 3
     };    
 
     struct Box{

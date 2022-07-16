@@ -1771,6 +1771,8 @@ namespace SimpleYolo{
     const char* type_name(Type type){
         switch(type){
         case Type::V5: return "YoloV5";
+        case Type::V3: return "YoloV3";
+        case Type::V7: return "YoloV7";
         case Type::X: return "YoloX";
         default: return "Unknow";
         }
@@ -1814,7 +1816,7 @@ namespace SimpleYolo{
 
         virtual bool startup(const string& file, Type type, int gpuid, float confidence_threshold, float nms_threshold){
 
-            if(type == Type::V5){
+            if(type == Type::V5 || type == Type::V3 || type == Type::V7){
                 normalize_ = Norm::alpha_beta(1 / 255.0f, 0.0f, ChannelType::SwapRB);
             }else if(type == Type::X){
                 //float mean[] = {0.485, 0.456, 0.406};
@@ -1994,7 +1996,7 @@ namespace SimpleYolo{
     void image_to_tensor(const cv::Mat& image, shared_ptr<Tensor>& tensor, Type type, int ibatch){
 
         Norm normalize;
-        if(type == Type::V5){
+        if(type == Type::V5 || type == Type::V3 || type == Type::V7){
             normalize = Norm::alpha_beta(1 / 255.0f, 0.0f, ChannelType::SwapRB);
         }else if(type == Type::X){
             //float mean[] = {0.485, 0.456, 0.406};

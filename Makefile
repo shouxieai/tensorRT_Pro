@@ -6,7 +6,7 @@ lean_tensor_rt := /datav/lean/TensorRT-8.2.3.0-cuda11.4-cudnn8.2
 lean_cudnn     := /datav/lean/cudnn8.2.4.15-cuda11.4
 lean_opencv    := /datav/lean/opencv-4.2.0
 lean_cuda      := /datav/lean/cuda-11.2
-use_python     := false
+use_python     := true
 python_root    := /datav/software/anaconda3
 
 # python_root指向的lib目录下有个libpython3.9.so，因此这里写python3.9
@@ -200,6 +200,9 @@ pycenternet : pytrtc
 
 pyyolov5 : pytrtc
 	@cd example-python && python test_yolov5.py
+
+pyyolov7 : pytrtc
+	@cd example-python && python test_yolov7.py
 
 pyyolox : pytrtc
 	@cd example-python && python test_yolox.py

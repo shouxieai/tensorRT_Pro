@@ -104,7 +104,7 @@ namespace YoloHighPerf{
     public:
         virtual bool startup(const string& file, Type type, int gpuid, float confidence_threshold, float nms_threshold){
 
-            if(type == Type::V5){
+            if(type == Type::V5 || type == Type::V3 || type == Type::V7){
                 normalize_ = CUDAKernel::Norm::alpha_beta(1 / 255.0f, 0.0f, CUDAKernel::ChannelType::Invert);
             }else if(type == Type::X){
                 //float mean[] = {0.485, 0.456, 0.406};

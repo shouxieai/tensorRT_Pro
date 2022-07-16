@@ -20,8 +20,9 @@ namespace YoloGPUPtr{
 
     enum class Type : int{
         V5 = 0,
-        V3 = V5,
-        X  = 1
+        X  = 1,
+        V3 = 2,
+        V7 = 3
     };
 
     enum class NMSMethod : int{

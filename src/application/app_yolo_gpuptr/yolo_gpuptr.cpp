@@ -164,7 +164,7 @@ namespace YoloGPUPtr{
             float confidence_threshold, float nms_threshold,
             NMSMethod nms_method, int max_objects
         ){
-            if(type == Type::V5){
+            if(type == Type::V5 || type == Type::V3 || type == Type::V7){
                 normalize_ = CUDAKernel::Norm::alpha_beta(1 / 255.0f, 0.0f, CUDAKernel::ChannelType::Invert);
             }else if(type == Type::X){
                 //float mean[] = {0.485, 0.456, 0.406};
@@ -415,7 +415,7 @@ namespace YoloGPUPtr{
     void image_to_tensor(const cv::Mat& image, shared_ptr<TRT::Tensor>& tensor, Type type, int ibatch){
 
         CUDAKernel::Norm normalize;
-        if(type == Type::V5){
+        if(type == Type::V5 || type == Type::V3 || type == Type::V7){
             normalize = CUDAKernel::Norm::alpha_beta(1 / 255.0f, 0.0f, CUDAKernel::ChannelType::Invert);
         }else if(type == Type::X){
             //float mean[] = {0.485, 0.456, 0.406};

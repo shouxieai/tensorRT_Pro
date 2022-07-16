@@ -26,7 +26,8 @@ static const char* cocolabels[] = {
 enum class Type : int{
     V5 = 0,
     X  = 1,
-    V3 = V5
+    V3 = 2,
+    V7 = 3
 };
 
 struct AffineMatrix{
@@ -80,7 +81,7 @@ static const char* type_name(Type type){
 static void image_to_tensor(const cv::Mat& image, shared_ptr<TRT::Tensor>& tensor, Type type, int ibatch){
 
     CUDAKernel::Norm normalize;
-    if(type == Type::V5){
+    if(type == Type::V5 || type == Type::V3 || type == Type::V7){
         normalize = CUDAKernel::Norm::alpha_beta(1 / 255.0f, 0.0f, CUDAKernel::ChannelType::Invert);
     }else if(type == Type::X){
         //float mean[] = {0.485, 0.456, 0.406};

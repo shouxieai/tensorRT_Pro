@@ -391,6 +391,73 @@ make yolo -j32
 
 
 <details>
+<summary>YoloV7 Support</summary>
+1. Download yolov7 and pth
+
+```bash
+# from cdn
+# or wget https://github.com/WongKinYiu/yolov7/releases/download/v0.1/yolov7.pt
+
+wget https://cdn.githubjs.cf/WongKinYiu/yolov7/releases/download/v0.1/yolov7.pt
+git clone git@github.com:WongKinYiu/yolov7.git
+```
+
+2. Modify the code for dynamic batchsize
+```python
+# line 45 forward function in yolov7/models/yolo.py 
+# bs, _, ny, nx = x[i].shape  # x(bs,255,20,20) to x(bs,3,20,20,85)
+# x[i] = x[i].view(bs, self.na, self.no, ny, nx).permute(0, 1, 3, 4, 2).contiguous()
+# modified into:
+
+bs, _, ny, nx = map(int, x[i].shape)  # x(bs,255,20,20) to x(bs,3,20,20,85)
+bs = -1
+x[i] = x[i].view(bs, self.na, self.no, ny, nx).permute(0, 1, 3, 4, 2).contiguous()
+
+# line 52 in yolov7/models/yolo.py
+# y = x[i].sigmoid()
+# y[..., 0:2] = (y[..., 0:2] * 2. - 0.5 + self.grid[i]) * self.stride[i]  # xy
+# y[..., 2:4] = (y[..., 2:4] * 2) ** 2 * self.anchor_grid[i]  # wh
+# z.append(y.view(bs, -1, self.no))
+# modified into：
+y = x[i].sigmoid()
+xy = (y[..., 0:2] * 2. - 0.5 + self.grid[i]) * self.stride[i]  # xy
+wh = (y[..., 2:4] * 2) ** 2 * self.anchor_grid[i].view(1, -1, 1, 1, 2)  # wh
+classif = y[..., 4:]
+y = torch.cat([xy, wh, classif], dim=-1)
+z.append(y.view(bs, self.na * ny * nx, self.no))
+
+# line 57 in yolov7/models/yolo.py
+# return x if self.training else (torch.cat(z, 1), x)
+# modified into:
+return x if self.training else torch.cat(z, 1)
+
+
+# line 52 in yolov7/models/export.py
+# output_names=['classes', 'boxes'] if y is None else ['output'],
+# dynamic_axes={'images': {0: 'batch', 2: 'height', 3: 'width'},  # size(1,3,640,640)
+#               'output': {0: 'batch', 2: 'y', 3: 'x'}} if opt.dynamic else None)
+# modified into:
+output_names=['classes', 'boxes'] if y is None else ['output'],
+dynamic_axes={'images': {0: 'batch'},  # size(1,3,640,640)
+              'output': {0: 'batch'}} if opt.dynamic else None)
+
+```
+3. Export to onnx model
+```bash
+cd yolov7
+python models/export.py --dynamic --grid --weight=yolov7.pt
+```
+4. Copy the model and execute it
+```bash
+cp yolov7/yolov7.onnx tensorRT_cpp/workspace/
+cd tensorRT_cpp
+make yolo -j32
+```
+
+</details>
+
+
+<details>
 <summary>YoloX Support</summary>
   
 - download from: https://github.com/Megvii-BaseDetection/YOLOX

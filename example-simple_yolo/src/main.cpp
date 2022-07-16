@@ -96,7 +96,7 @@ static double timestamp_now_float() {
 
 bool requires_model(const string& name) {
 
-    auto onnx_file = cv::format("%s_dynamic.onnx", name.c_str());
+    auto onnx_file = cv::format("%s.onnx", name.c_str());
     if (!exists(onnx_file)) {
         printf("Auto download %s\n", onnx_file.c_str());
         system(cv::format("wget http://zifuture.com:1556/fs/25.shared/%s", onnx_file.c_str()).c_str());
@@ -189,8 +189,8 @@ static void test(SimpleYolo::Type type, SimpleYolo::Mode mode, const string& mod
     if(!requires_model(name))
         return;
 
-    string onnx_file = cv::format("%s_dynamic.onnx", name);
-    string model_file = cv::format("%s_dynamic.%s.trtmodel", name, mode_name);
+    string onnx_file = cv::format("%s.onnx", name);
+    string model_file = cv::format("%s.%s.trtmodel", name, mode_name);
     int test_batch_size = 16;
     
     if(!exists(model_file)){
@@ -211,11 +211,11 @@ void direct_test(){
     printf("TRTVersion: %s\n", SimpleYolo::trt_version());
     
     int device_id = 0;
-    string model = "yolox_s";
+    string model = "yolox_s_dynamic";
     auto type = SimpleYolo::Type::X;
     auto mode = SimpleYolo::Mode::FP32;
-    string onnx_file = cv::format("%s_dynamic.onnx", model.c_str());
-    string model_file = cv::format("%s_dynamic.%s.trtmodel", model.c_str(), SimpleYolo::mode_string(mode));
+    string onnx_file = cv::format("%s.onnx", model.c_str());
+    string model_file = cv::format("%s.%s.trtmodel", model.c_str(), SimpleYolo::mode_string(mode));
     SimpleYolo::set_device(device_id);
     
     if(!requires_model(model)){
@@ -257,27 +257,28 @@ void direct_test(){
 int main(){
 
     //direct_test();
-    test(SimpleYolo::Type::V5, SimpleYolo::Mode::FP32, "yolov5s");
-    //test(SimpleYolo::Type::X, SimpleYolo::Mode::INT8, "yolox_s");
+    test(SimpleYolo::Type::V7, SimpleYolo::Mode::FP32, "yolov7");
+    //test(SimpleYolo::Type::V5, SimpleYolo::Mode::FP32, "yolov5s_dynamic");
+    //test(SimpleYolo::Type::X, SimpleYolo::Mode::INT8, "yolox_s_dynamic");
     
-    //test(SimpleYolo::Type::X, SimpleYolo::Mode::FP32, "yolox_s");
-    // test(SimpleYolo::Type::X, SimpleYolo::Mode::FP32, "yolox_x");
-    // test(SimpleYolo::Type::X, SimpleYolo::Mode::FP32, "yolox_l");
-    // test(SimpleYolo::Type::X, SimpleYolo::Mode::FP32, "yolox_m");
-    // test(SimpleYolo::Type::X, SimpleYolo::Mode::FP32, "yolox_s");
-    // test(SimpleYolo::Type::X, SimpleYolo::Mode::FP16, "yolox_x");
-    // test(SimpleYolo::Type::X, SimpleYolo::Mode::FP16, "yolox_l");
-    // test(SimpleYolo::Type::X, SimpleYolo::Mode::FP16, "yolox_m");
-    // test(SimpleYolo::Type::X, SimpleYolo::Mode::FP16, "yolox_s");
+    //test(SimpleYolo::Type::X, SimpleYolo::Mode::FP32, "yolox_s_dynamic");
+    // test(SimpleYolo::Type::X, SimpleYolo::Mode::FP32, "yolox_x_dynamic");
+    // test(SimpleYolo::Type::X, SimpleYolo::Mode::FP32, "yolox_l_dynamic");
+    // test(SimpleYolo::Type::X, SimpleYolo::Mode::FP32, "yolox_m_dynamic");
+    // test(SimpleYolo::Type::X, SimpleYolo::Mode::FP32, "yolox_s_dynamic");
+    // test(SimpleYolo::Type::X, SimpleYolo::Mode::FP16, "yolox_x_dynamic");
+    // test(SimpleYolo::Type::X, SimpleYolo::Mode::FP16, "yolox_l_dynamic");
+    // test(SimpleYolo::Type::X, SimpleYolo::Mode::FP16, "yolox_m_dynamic");
+    // test(SimpleYolo::Type::X, SimpleYolo::Mode::FP16, "yolox_s_dynamic");
 
-    // test(SimpleYolo::Type::V5, SimpleYolo::Mode::FP32, "yolov5x");
-    // test(SimpleYolo::Type::V5, SimpleYolo::Mode::FP32, "yolov5l");
-    // test(SimpleYolo::Type::V5, SimpleYolo::Mode::FP32, "yolov5m");
-    // test(SimpleYolo::Type::V5, SimpleYolo::Mode::FP32, "yolov5s");
+    // test(SimpleYolo::Type::V5, SimpleYolo::Mode::FP32, "yolov5x_dynamic");
+    // test(SimpleYolo::Type::V5, SimpleYolo::Mode::FP32, "yolov5l_dynamic");
+    // test(SimpleYolo::Type::V5, SimpleYolo::Mode::FP32, "yolov5m_dynamic");
+    // test(SimpleYolo::Type::V5, SimpleYolo::Mode::FP32, "yolov5s_dynamic");
 
-    // test(SimpleYolo::Type::V5, SimpleYolo::Mode::FP16, "yolov5x");
-    // test(SimpleYolo::Type::V5, SimpleYolo::Mode::FP16, "yolov5l");
-    // test(SimpleYolo::Type::V5, SimpleYolo::Mode::FP16, "yolov5m");
-    // test(SimpleYolo::Type::V5, SimpleYolo::Mode::FP16, "yolov5s");
+    // test(SimpleYolo::Type::V5, SimpleYolo::Mode::FP16, "yolov5x_dynamic");
+    // test(SimpleYolo::Type::V5, SimpleYolo::Mode::FP16, "yolov5l_dynamic");
+    // test(SimpleYolo::Type::V5, SimpleYolo::Mode::FP16, "yolov5m_dynamic");
+    // test(SimpleYolo::Type::V5, SimpleYolo::Mode::FP16, "yolov5s_dynamic");
     return 0;
 }
