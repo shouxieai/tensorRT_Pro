@@ -63,6 +63,24 @@ public:
 		return instance_->commit(cvimage);
 	}
 
+	vector<shared_future<ObjectDetector::BoxArray>> commit_array(const vector<py::array>& image_array){
+
+		if(!valid())
+			throw py::buffer_error("Invalid engine instance, please makesure your construct");
+
+		for(auto& image : image_array){
+			if(!image.owndata())
+				throw py::buffer_error("Image muse be owner, slice is unsupport, use image.copy() instead, image[1:-1, 1:-1] etc.");
+		}
+
+		vector<YoloGPUPtr::Image> images(image_array.size());
+		for(int i = 0; i < images.size(); ++i){
+			auto& pyimage = image_array[i];
+			images[i] = cv::Mat(pyimage.shape(0), pyimage.shape(1), CV_8UC3, (unsigned char*)pyimage.data(0));
+		}
+		return instance_->commits(images);
+	}
+
 private:
 	shared_ptr<YoloGPUPtr::Infer> instance_;
 }; 
@@ -619,6 +637,7 @@ PYBIND11_MODULE(libpytrtc, m) {
 		)
 		.def_property_readonly("valid", &YoloInfer::valid, "Infer is valid")
 		.def("commit", &YoloInfer::commit, py::arg("image"))
+		.def("commit_array", &YoloInfer::commit_array, py::arg("image_array"))
 		.def("commit_gpu", &YoloInfer::commit_gpu, 
 			py::arg("pimage"), py::arg("width"), py::arg("height"), py::arg("device_id"), py::arg("imtype"), py::arg("stream")
 		);

@@ -29,6 +29,10 @@ print(f"Save to {saveto}")
 
 cv2.imwrite(saveto, image)
 
+# 提交图像数组
+futs = yolo.commit_array([image, image])
+for fut in futs:
+    print(fut.get())
 
 # try:
 #     import torch  # 如果出现invalid pointer错误，可以考虑把import torch放到import pytrt上面
