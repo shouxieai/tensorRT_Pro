@@ -228,8 +228,14 @@ class ObjectBox(object):
 
 class YoloType(Enum):
     V5         : int  =  0
-    V3         : int  =  0
     X          : int  =  1
+    V3         : int  =  2
+    V7         : int  =  3
+
+class ImageType(Enum):
+    CVMat      : int  = 0
+    GPUYUVNV12 : int  = 1
+    GPUBGR     : int  = 2
 
 class NMSMethod(Enum):
     CPU        : int  =  0
@@ -283,6 +289,15 @@ class Yolo(object):
         use_multi_preprocess_stream : bool = False
     ): ...
     def commit(self, image : np.ndarray)->SharedFutureObjectBoxArray: ...
+    def commit_gpu(
+        self, 
+        imageptr : int,    # GPU(device_id) data pointer
+        width : int, 
+        height : int, 
+        device_id : int = 0, 
+        imtype : ImageType = ImageType.GPUBGR, 
+        stream : int = 0
+    )->SharedFutureObjectBoxArray: ...
 
 class CenterNet(object):
     valid : bool
