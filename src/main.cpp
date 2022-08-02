@@ -88,6 +88,6 @@ int main(int argc, char** argv){
             "    ./pro alphapose\n"
             "    ./pro fall\n"
         );
-    }
+    } 
     return 0;
 }
