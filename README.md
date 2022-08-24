@@ -1,7 +1,7 @@
 *Read this in other languages: [English](README.md), [简体中文](tutorial/README.zh-cn.md).*
 
 ## News: 
-- 🔥 Add yolov7 support.
+- 🔥 Add yolov7 support .
 - 🔥 Released python solution for hardware decoding with tensorRT integration
 - 🔥 Docker Image has been released：https://hub.docker.com/r/hopef/tensorrt-pro
 - ⚡tensorRT_Pro_comments_version(co-contributing version) is also provided for a better learning experience. Repo: https://github.com/Guanbin-Huang/tensorRT_Pro_comments
