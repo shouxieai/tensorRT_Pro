@@ -3,7 +3,7 @@
     - 增加针对reshape层hook的函数支持register_layerhook_reshape
 2. builtin_op_importers.cpp:3543
     - 增加reshape节点中调用g_layerhook_func_reshape函数部分，使得hook生效
-3. builtin_op_importers.cpp:168
+3. onnx_parser_7.x: builtin_op_importers.cpp:1629, onnx_parser_8.x builtin_op_importers.cpp:168
     - 增加Plugin节点支持，并转发到自定义的plugin上实现自定义插件注册机制
 4. builtin_op_importers.cpp:4480
     - 对upsample屏蔽代码，并允许支持scales为3个值的情况
