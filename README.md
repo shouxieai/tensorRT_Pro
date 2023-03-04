@@ -1,6 +1,7 @@
 *Read this in other languages: [English](README.md), [简体中文](tutorial/README.zh-cn.md).*
 
 ## News: 
+- 🔥 A simple implementation is released: https://github.com/shouxieai/infer
 - 🔥 Add yolov7 support .
 - 🔥 Released python solution for hardware decoding with tensorRT integration
 - 🔥 Docker Image has been released：https://hub.docker.com/r/hopef/tensorrt-pro
