@@ -1,5 +1,7 @@
 阅读其他语言的README.md:[English](README.md), [简体中文](README.zh-cn.md).
 ## 最近的重要更新：
+- 🔥 一个更简洁的实现发布了：https://github.com/shouxieai/infer
+- 🔥 增加了YoloV7支持
 - 🔥 docker镜像已经发布，请点击： https://hub.docker.com/r/hopef/tensorrt-pro
 - ⚡tensorRT_Pro_comments_version推出(共创版),为更好的学习体验助力. Repo: https://github.com/Guanbin-Huang/tensorRT_Pro_comments
 - 🔥 [简单的YoloV5/YoloX实现已经发布，简单好使，高性能，只有2个文件哦，没有多余依赖](simple_yolo)
