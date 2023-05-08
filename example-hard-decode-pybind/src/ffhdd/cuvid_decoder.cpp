@@ -476,6 +476,10 @@ namespace FFHDDecoder{
                 cuMemFree((CUdeviceptr)m_pBGRFrame);
                 m_pBGRFrame = 0;
             }
+            
+            //2023-05-08 释放cudastream Mike
+            if (m_cuvidStream) {cudaStreamDestroy(m_cuvidStream);}
+            
             cuvidCtxLockDestroy(m_ctxLock);
         }
 
