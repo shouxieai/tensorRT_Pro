@@ -7,7 +7,8 @@
 #define INFOV(...)			SimpleLogger::__log_func(__FILE__, __LINE__, SimpleLogger::LogLevel::Verbose, __VA_ARGS__)
 #define INFO(...)			SimpleLogger::__log_func(__FILE__, __LINE__, SimpleLogger::LogLevel::Info, __VA_ARGS__)
 #define INFOW(...)			SimpleLogger::__log_func(__FILE__, __LINE__, SimpleLogger::LogLevel::Warning, __VA_ARGS__)
-#define INFOE(...)			SimpleLogger::__log_func(__FILE__, __LINE__, SimpleLogger::LogLevel::Error, __VA_ARGS__)
+//#define INFOE(...)			SimpleLogger::__log_func(__FILE__, __LINE__, SimpleLogger::LogLevel::Error, __VA_ARGS__)
+#define INFOE(...)			SimpleLogger::__log_func(__FILE__, __LINE__, SimpleLogger::LogLevel::Info, __VA_ARGS__) //修改为info，使用infoe python层会crash MIke 2020--5-11
 #define INFOF(...)			SimpleLogger::__log_func(__FILE__, __LINE__, SimpleLogger::LogLevel::Fatal, __VA_ARGS__)
 
 
